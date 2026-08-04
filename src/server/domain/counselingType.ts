@@ -31,10 +31,10 @@ export const COUNSELING_SERVICE_DEFAULTS: Record<
   CounselingServiceDefault
 > = {
   INDIVIDUAL: {
-    slug: "individual-counselling",
+    slug: "assessment",
     name: "Assessment",
     description:
-      "One-on-one counselling session tailored to a single client's goals and concerns.",
+      "A structured first consultation to understand a client's concerns, goals and support needs.",
     durationMinutes: 50,
     priceMinor: 150000,
   },

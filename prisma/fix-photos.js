@@ -31,7 +31,7 @@ const CONSULTANT_PHOTOS = {
  */
 const SERVICE_IMAGES = {
   "individual-therapy": "/team/office1.jpg",
-  "individual-counselling": "/team/office1.jpg",
+  assessment: "/team/office3.jpg",
   "couples-counseling": "/team/office2.jpg",
   "couple-family-counselling": "/team/office2.jpg",
   "career-academic-counselling": "/team/office6.jpg",

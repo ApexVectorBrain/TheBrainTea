@@ -11,21 +11,17 @@ export interface ServiceContent {
 
 export const SERVICES: ServiceContent[] = [
   {
-    slug: "individual-counselling",
+    slug: "assessment",
     name: "Assessment",
     tagline: "A steady space to understand yourself.",
     description:
-      "One-on-one sessions tailored to you -- process what's weighing on you, challenge patterns that no longer serve you, and build coping skills that last.",
+      "A structured first consultation to understand your concerns, goals, and the support that may be most helpful for you.",
     suitableFor: [
-      "Anxiety",
-      "Depression",
-      "Stress and burnout",
-      "Self-esteem",
-      "Grief and loss",
-      "Emotional regulation",
+      "Understanding current concerns",
+      "Choosing the right support",
+      "Clarifying therapy goals",
       "Career or academic concerns",
-      "Relationship difficulties",
-      "Personal growth",
+      "Emotional wellbeing",
     ],
     availability: ["Online", "Offline"],
   },

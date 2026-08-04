@@ -145,7 +145,7 @@ suite("booking & finance integration", () => {
     // other bookings reference them (a shared dev database may have some).
     await prisma.service.deleteMany({
       where: {
-        slug: { in: ["individual-counselling", "couple-family-counselling"] },
+        slug: { in: ["assessment", "individual-counselling", "couple-family-counselling"] },
         bookings: { none: {} },
       },
     });

@@ -132,7 +132,7 @@ suite("reception desk", () => {
     await prisma.therapist.delete({ where: { id: therapistId } });
     await prisma.service.deleteMany({
       where: {
-        slug: { in: ["individual-counselling", "couple-family-counselling"] },
+        slug: { in: ["assessment", "individual-counselling", "couple-family-counselling"] },
         bookings: { none: {} },
       },
     });

@@ -40,9 +40,9 @@ const SESSION_MINUTES = 50;
  */
 const KEEP_SLUGS = [
   "individual-therapy",
+  "assessment",
   "couples-counseling",
   "career-academic-counselling",
-  "individual-counselling",
   "couple-family-counselling",
 ];
 
