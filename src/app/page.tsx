@@ -164,7 +164,7 @@ export default function Home() {
             </div>
 
             {/* Right Column (7 Cols): Overlapping Rounded white Card with the content (rounded left side pill-like shape) */}
-            <div className="lg:col-span-7 flex flex-col justify-center lg:-ml-20 relative z-10">
+            <div className="lg:col-span-7 flex flex-col justify-center lg:-ml-12 relative z-10">
               <div className="bg-warm-white p-8 md:p-16 lg:py-20 lg:px-24 rounded-[40px] lg:rounded-l-[140px] lg:rounded-r-[40px] border border-muted-sage/20 shadow-warm-soft max-w-2xl">
                 <span className="inline-block text-[11px] font-bold tracking-[0.25em] text-teal-sage uppercase mb-4 font-dmsans">
                   Professional Psychology Practice

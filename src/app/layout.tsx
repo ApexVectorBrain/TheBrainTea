@@ -4,7 +4,6 @@ import "./globals.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import WhatsAppButton from "../components/WhatsAppButton";
-import PhonePreview from "../components/PhonePreview";
 import IntroOverlay from "../components/IntroOverlay";
 
 const cormorant = Cormorant_Garamond({
@@ -46,7 +45,6 @@ export default function RootLayout({
         <main className="flex-grow">{children}</main>
         <Footer />
         <WhatsAppButton />
-        <PhonePreview />
       </body>
     </html>
   );
