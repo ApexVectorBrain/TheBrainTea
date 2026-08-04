@@ -129,6 +129,19 @@ npx prisma db push
 node prisma/seed.js
 ```
 
+For a compact, remote-database-friendly dataset (about 20–30 bookings), use:
+
+```bash
+npm run db:seed:small
+```
+
+For a 90-day operational history with the updated admin and Madhumati login
+emails, use:
+
+```bash
+npm run db:seed:90-days
+```
+
 For an existing database, update the requested admin and Madhumati login
 addresses without changing passwords by running `node prisma/update-login-emails.js`.
 

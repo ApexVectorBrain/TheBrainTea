@@ -76,8 +76,13 @@ function defaultBpsAt(date) {
   return bps;
 }
 
-const HISTORY_DAYS = 200; // how far back the operating history begins
-const FUTURE_DAYS = 21; // how far ahead upcoming bookings extend
+// The normal seed creates a full operational history. Profile wrappers keep
+// the same data shape while selecting a practical historical window.
+const SEED_PROFILE = process.env.SEED_PROFILE ?? "full";
+const SMALL_SEED = SEED_PROFILE === "small";
+const NINETY_DAY_SEED = SEED_PROFILE === "90-day";
+const HISTORY_DAYS = SMALL_SEED ? 9 : NINETY_DAY_SEED ? 90 : 200;
+const FUTURE_DAYS = SMALL_SEED ? 5 : NINETY_DAY_SEED ? 14 : 21;
 
 async function main() {
   console.log("Seeding database...");
@@ -473,7 +478,7 @@ async function main() {
   // Build a wider roster of uniquely-named clients (deterministic via the
   // seeded PRNG) so the client-growth chart, Clients register, and the pool
   // that bookings draw from all read as a real, sizeable practice.
-  const CLIENT_COUNT = 96;
+  const CLIENT_COUNT = SMALL_SEED ? 24 : NINETY_DAY_SEED ? 60 : 96;
   const clientNames = [];
   const usedNames = new Set();
   while (clientNames.length < CLIENT_COUNT) {
@@ -673,10 +678,12 @@ async function main() {
       dayOffset > 0 ? Math.max(0.35, 1 - dayOffset / (FUTURE_DAYS * 1.5)) : 1;
     const baseline =
       (2.5 + growth * 4) * (0.5 + 0.5 * capacityFactor) * futureTaper;
-    const bookingsToday = Math.max(
-      2,
-      Math.round(baseline * (0.75 + rand() * 0.5)),
-    );
+    // 15 calendar days with two bookings on each eligible operating day
+    // produces a small, useful 20–30 booking dataset instead of the full
+    // long-running historical seed.
+    const bookingsToday = SMALL_SEED
+      ? 2
+      : Math.max(2, Math.round(baseline * (0.75 + rand() * 0.5)));
 
     for (let i = 0; i < bookingsToday; i++) {
       const therapist = weightedPick(

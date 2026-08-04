@@ -9,7 +9,9 @@
     "lint": "next lint",
     "test": "vitest run",
     "db:push": "prisma db push",
-    "db:seed": "node prisma/seed.js"
+    "db:seed": "node prisma/seed.js",
+    "db:seed:small": "node prisma/seed-small.js",
+    "db:seed:90-days": "node prisma/seed-90-days.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
