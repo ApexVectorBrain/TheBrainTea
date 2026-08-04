@@ -143,11 +143,11 @@ export default function Home() {
           <div className="absolute top-[10%] left-[32%] w-[420px] h-[420px] rounded-full border border-forest-slate/30 -z-10 pointer-events-none hidden lg:block" />
           <div className="absolute top-[18%] left-[28%] w-[420px] h-[420px] rounded-full border border-forest-slate/20 -z-10 pointer-events-none hidden lg:block" />
 
-          <div className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 lg:gap-8 items-center relative z-10">
+          <div className="max-w-[1240px] mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 lg:gap-[80px] items-center relative z-10">
             {/* Left Column (5 Cols): Arched shape containing the therapist portrait */}
-            <div className="lg:col-span-5 relative w-full flex justify-center lg:justify-start lg:-ml-16 xl:-ml-24 lg:translate-y-3">
+            <div className="lg:col-span-5 relative w-full flex justify-center lg:justify-center">
               <div
-                className="relative w-full max-w-[440px] lg:max-w-[500px] aspect-[4/5] overflow-hidden bg-forest-slate shadow-2xl border-t border-r border-b border-muted-sage/20 flex items-end"
+                className="relative w-full max-w-[440px] lg:w-[108%] lg:max-w-[520px] aspect-[5/6] overflow-hidden bg-forest-slate shadow-2xl border-t border-r border-b border-muted-sage/20 flex items-end"
                 style={{ borderRadius: "0 280px 280px 0" }}
               >
                 {/* The hero uses its own portrait so the Founder’s Note image
@@ -164,7 +164,7 @@ export default function Home() {
             </div>
 
             {/* Right Column (7 Cols): Overlapping Rounded white Card with the content (rounded left side pill-like shape) */}
-            <div className="lg:col-span-7 flex flex-col justify-center lg:-ml-12 relative z-10">
+            <div className="lg:col-span-7 flex flex-col justify-center relative z-10">
               <div className="bg-warm-white p-8 md:p-16 lg:py-20 lg:px-24 rounded-[40px] lg:rounded-l-[140px] lg:rounded-r-[40px] border border-muted-sage/20 shadow-warm-soft max-w-2xl">
                 <span className="inline-block text-[11px] font-bold tracking-[0.25em] text-teal-sage uppercase mb-4 font-dmsans">
                   Professional Psychology Practice
