@@ -70,8 +70,8 @@ export default function TherapistEarningsPage() {
           Your Earnings
         </h1>
         <p className="font-dmsans text-sm text-ink-muted">
-          Balance is derived from the clinic&apos;s immutable financial ledger.
-          Payouts are created and settled by admin staff.
+          A simple view of what you&apos;ve earned and what the clinic will pay
+          you. Payouts are arranged by the admin team.
         </p>
       </div>
 
@@ -82,11 +82,11 @@ export default function TherapistEarningsPage() {
       ) : balance ? (
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4 font-dmsans">
           {[
-            ["Earned", balance.earnedMinor],
-            ["Paid", balance.paidMinor],
-            ["Reserved", balance.reservedMinor],
-            ["Payable", balance.payableMinor],
-          ].map(([label, value]) => (
+            ["Earned", balance.earnedMinor, "From completed payments"],
+            ["Already paid", balance.paidMinor, "Sent to you"],
+            ["Set aside", balance.reservedMinor, "Being prepared for payout"],
+            ["Available to pay", balance.payableMinor, "Not yet scheduled for payout"],
+          ].map(([label, value, help]) => (
             <div
               key={label as string}
               className="surface-raised rounded-surface p-5 text-center"
@@ -96,6 +96,9 @@ export default function TherapistEarningsPage() {
               </div>
               <div className="mt-1 text-xl font-bold tabular-nums text-ocean-deep">
                 {formatINR(value as number)}
+              </div>
+              <div className="mt-1 text-xs leading-snug text-ink-muted">
+                {help as string}
               </div>
             </div>
           ))}
