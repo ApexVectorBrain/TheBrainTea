@@ -145,9 +145,9 @@ export default function Home() {
 
           <div className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 lg:gap-8 items-center relative z-10">
             {/* Left Column (5 Cols): Arched shape containing the therapist portrait */}
-            <div className="lg:col-span-5 relative w-full flex justify-center lg:justify-start lg:-ml-24 xl:-ml-36">
+            <div className="lg:col-span-5 relative w-full flex justify-center lg:justify-start lg:-ml-16 xl:-ml-24 lg:translate-y-3">
               <div
-                className="relative w-full max-w-[390px] aspect-[4/5] overflow-hidden bg-forest-slate shadow-2xl border-t border-r border-b border-muted-sage/20 flex items-end"
+                className="relative w-full max-w-[440px] lg:max-w-[500px] aspect-[4/5] overflow-hidden bg-forest-slate shadow-2xl border-t border-r border-b border-muted-sage/20 flex items-end"
                 style={{ borderRadius: "0 280px 280px 0" }}
               >
                 {/* The hero uses its own portrait so the Founder’s Note image
@@ -388,7 +388,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
             {/* Left Column: Portrait in Arch Frame */}
-            <div className="lg:col-span-5 relative p-4 w-full max-w-sm mx-auto">
+            <div className="lg:col-span-5 relative w-full max-w-[440px] lg:max-w-[500px] mx-auto lg:-ml-2">
               <div className="relative aspect-[4/5] rounded-t-full overflow-hidden shadow-warm-soft bg-warm-tan border border-muted-sage/35">
                 <Image
                   src="/team/madhumati-dhumak.jpg"
