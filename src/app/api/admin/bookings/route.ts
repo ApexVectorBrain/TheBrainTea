@@ -20,6 +20,7 @@ import {
 import { stripNotes } from "@/server/serializers/publicBooking";
 import { rupeesToMinor } from "@/server/money";
 import { notifyBookingCreated, notifyPaymentApproved } from "@/server/services/emailNotificationService";
+import { ensureBookingMeeting } from "@/server/services/googleCalendarService";
 
 // Admin booking list: pagination + status/payment/consultant filters,
 // free-text search over client and invoice fields, date windowing, sorting.
@@ -159,6 +160,11 @@ export const POST = handleApi(async (request: Request) => {
     session,
     ip: clientIp(request),
   });
+  try {
+    await ensureBookingMeeting(booking.id);
+  } catch (error) {
+    console.error("Unable to create Google Meet link for booking", booking.id, error);
+  }
   await notifyBookingCreated(booking.id);
   if (booking.paymentStatus === "PAID") await notifyPaymentApproved(booking.id);
 

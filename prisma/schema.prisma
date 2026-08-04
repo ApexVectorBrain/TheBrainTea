@@ -163,6 +163,10 @@ model Booking {
   cancellationReason String?
   notes              String? // AES-256-GCM encrypted clinical notes
   invoiceNumber      String?   @unique
+  // One unique Google Meet room is created for each appointment. The event
+  // id lets us extend this to rescheduling/cancellation sync later.
+  meetingUrl         String?
+  googleCalendarEventId String?
 
   slot          BookingSlot?
   payments      PaymentRecord[]

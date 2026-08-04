@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { prisma } from "@/lib/db";
+import { isGoogleCalendarConfigured } from "./googleCalendarService";
 
 const ADMIN_EMAIL = "admin@thebraintea.co.in";
 const TIME_ZONE = "Asia/Kolkata";
@@ -17,9 +18,9 @@ type BookingEmail = Awaited<ReturnType<typeof getBooking>>;
 
 function configured() {
   return Boolean(
-    process.env.RESEND_API_KEY &&
+      process.env.RESEND_API_KEY &&
       process.env.RESEND_FROM_EMAIL &&
-      process.env.GOOGLE_MEET_LINK,
+      isGoogleCalendarConfigured(),
   );
 }
 
@@ -62,7 +63,8 @@ async function getBooking(bookingId: string) {
 }
 
 function appointmentHtml(booking: NonNullable<BookingEmail>, intro: string): string {
-  const meetLink = process.env.GOOGLE_MEET_LINK!;
+  const meetLink = booking.meetingUrl;
+  if (!meetLink) throw new Error("Booking does not have a Google Meet link");
   const status = appointmentStatus(booking);
   return `<p>${escapeHtml(intro)}</p>
     <h2>Appointment details</h2>
@@ -125,6 +127,10 @@ async function sendAppointmentPair(
   subject: string,
   intro: string,
 ) {
+  if (!booking.meetingUrl) {
+    console.warn(`email-notifications: booking ${booking.id} has no Google Meet link; skipping appointment email`);
+    return;
+  }
   const html = appointmentHtml(booking, intro);
   const recipients: Array<[NotificationType, string]> = [[types[0], booking.client.email]];
   if (booking.therapist.user?.email) recipients.push([types[1], booking.therapist.user.email]);

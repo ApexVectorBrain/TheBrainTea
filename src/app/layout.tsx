@@ -5,6 +5,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import WhatsAppButton from "../components/WhatsAppButton";
 import IntroOverlay from "../components/IntroOverlay";
+import { SITE_URL } from "@/lib/site";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -20,15 +21,33 @@ const dmsans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "The Brain Tea | Mental Health Clinic | Madhumati Dhumak",
+  title: "The Brain Tea | Pune Therapy Clinic",
   description:
-    "Compassionate, evidence-based therapy for individuals, couples, and families. A warm, human-centered space to begin your journey back to yourself.",
-  metadataBase: new URL("http://localhost:3000"),
+    "A compassionate, safe, and professional mental health practice in Pune, supporting individuals, couples, and families through evidence-based psychotherapy.",
+  keywords: [
+    "therapy clinic Pune",
+    "mental health clinic Pune",
+    "individual therapy Pune",
+    "couples therapy Pune",
+    "family therapy Pune",
+    "psychotherapy Pune",
+  ],
+  metadataBase: new URL(SITE_URL),
+  alternates: { canonical: "/" },
   openGraph: {
-    title: "The Brain Tea | Mental Health Clinic",
+    title: "The Brain Tea | Pune Therapy Clinic",
     description:
-      "A warm and safe space to begin. Compassionate, evidence-based psychotherapy.",
+      "Compassionate, safe, and professional mental health support in Pune for individuals, couples, and families.",
+    url: SITE_URL,
+    siteName: "The Brain Tea",
+    locale: "en_IN",
     type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "The Brain Tea | Pune Therapy Clinic",
+    description:
+      "Evidence-based psychotherapy in Pune for individuals, couples, and families.",
   },
 };
 

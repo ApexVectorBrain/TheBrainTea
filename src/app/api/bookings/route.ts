@@ -9,6 +9,7 @@ import {
 } from "@/server/http";
 import { publicBookingView } from "@/server/serializers/publicBooking";
 import { notifyBookingCreated } from "@/server/services/emailNotificationService";
+import { ensureBookingMeeting } from "@/server/services/googleCalendarService";
 
 const bookingSchema = z.object({
   therapistSlug: z.string().min(1),
@@ -56,6 +57,14 @@ export const POST = handleApi(async (request: Request) => {
     },
     paymentOption: body.paymentOption,
   });
+  try {
+    await ensureBookingMeeting(booking.id);
+  } catch (error) {
+    // The booking is already committed. Never report it as failed merely
+    // because Google is temporarily unavailable; emails will wait for a
+    // stored per-appointment link instead of using a shared fallback.
+    console.error("Unable to create Google Meet link for booking", booking.id, error);
+  }
   // Delivery is intentionally outside the booking transaction: an email
   // provider outage must never make a booked slot disappear.
   await notifyBookingCreated(booking.id);

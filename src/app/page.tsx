@@ -403,45 +403,47 @@ export default function Home() {
             {/* Right Column: Bio Content */}
             <div className="lg:col-span-7 flex flex-col justify-center">
               <span className="text-[11px] font-bold tracking-[0.25em] text-teal-sage uppercase mb-3 block">
-                Founder, The Brain Tea
+                About The Brain Tea — Pune Therapy Clinic
               </span>
               <h2 className="font-cormorant text-4xl md:text-[54px] font-semibold text-forest-slate mb-3 leading-tight">
-                Madhumati Dhumak
+                Therapy that feels human
               </h2>
               <span className="inline-block font-dmsans text-[11px] font-semibold tracking-wider text-teal-sage bg-muted-sage/15 border border-teal-sage/10 px-4 py-2 rounded-full mb-6 max-w-max">
-                Lead Counseling Psychologist
+                Compassionate, safe, and professional care in Pune
               </span>
 
               <div className="space-y-4 font-dmsans text-base text-forest-slate/90 leading-relaxed mb-6 text-pretty">
                 <p>
-                  The Brain Tea was created with one simple belief: therapy
+                  The Brain Tea was founded on one simple belief: therapy
                   should feel human before it feels clinical.
                 </p>
                 <p>
-                  Our vision has always been to build a space where people
-                  don&apos;t have to perform, explain away their emotions, or
-                  fear being judged. A space where conversations are held with
+                  As a therapy clinic in Pune, our vision is to build a space
+                  where people don&apos;t have to perform, explain away their
+                  emotions, or fear being judged. Every conversation, whether
+                  in individual therapy or couples therapy, is held with
                   curiosity, compassion, and genuine presence.
                 </p>
                 <p>
-                  The Brain Tea isn&apos;t just a clinic, it&apos;s a
+                  The Brain Tea isn&apos;t just a mental health clinic; it&apos;s a
                   community that values authenticity, ethical practice, and
                   individualized care. Every therapist here is encouraged to
-                  move beyond rigid frameworks and meet clients where they
-                  are, creating an experience that feels collaborative, safe,
-                  and deeply personal.
+                  meet clients where they are, creating a therapy experience
+                  that feels collaborative, safe, and deeply personal—whether
+                  you&apos;re seeking individual counselling, couples therapy, or
+                  family support.
                 </p>
                 <p>
                   Whether someone walks in feeling overwhelmed, uncertain, or
                   simply looking for a place to understand themselves better,
-                  my hope is that they leave feeling lighter, more connected,
-                  and reminded that healing doesn&apos;t require perfection,
-                  it requires a space where they can simply be.
+                  our hope is that they leave feeling lighter, more connected,
+                  and reminded that healing doesn&apos;t require perfection—it
+                  requires a space where they can simply be.
                 </p>
                 <p>
                   At The Brain Tea, we&apos;re committed to making mental
-                  healthcare approachable, evidence-based, and rooted in
-                  meaningful human connection.
+                  healthcare in Pune approachable, evidence-based, and rooted
+                  in meaningful human connection.
                 </p>
               </div>
 

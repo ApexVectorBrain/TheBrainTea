@@ -80,28 +80,18 @@ export default function TherapistEarningsPage() {
       {loading ? (
         <LoadingRow label="Loading earnings..." />
       ) : balance ? (
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 font-dmsans">
-          {[
-            ["Earned", balance.earnedMinor, "From completed payments"],
-            ["Already paid", balance.paidMinor, "Sent to you"],
-            ["Set aside", balance.reservedMinor, "Being prepared for payout"],
-            ["Available to pay", balance.payableMinor, "Not yet scheduled for payout"],
-          ].map(([label, value, help]) => (
-            <div
-              key={label as string}
-              className="surface-raised rounded-surface p-5 text-center"
-            >
-              <div className="text-[10px] font-bold uppercase tracking-wider text-ink-muted">
-                {label}
-              </div>
-              <div className="mt-1 text-xl font-bold tabular-nums text-ocean-deep">
-                {formatINR(value as number)}
-              </div>
-              <div className="mt-1 text-xs leading-snug text-ink-muted">
-                {help as string}
-              </div>
+        <div className="max-w-xs font-dmsans">
+          <div className="surface-raised rounded-surface p-5 text-center">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-ink-muted">
+              Earned
             </div>
-          ))}
+            <div className="mt-1 text-xl font-bold tabular-nums text-ocean-deep">
+              {formatINR(balance.earnedMinor)}
+            </div>
+            <div className="mt-1 text-xs leading-snug text-ink-muted">
+              From completed payments
+            </div>
+          </div>
         </div>
       ) : null}
 

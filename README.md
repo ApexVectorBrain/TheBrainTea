@@ -104,13 +104,17 @@ NEXTAUTH_SECRET="change-me"
 ENCRYPTION_KEY="<32-byte hex key>"
 RESEND_API_KEY="re_..."
 RESEND_FROM_EMAIL="The Brain Tea <appointments@thebraintea.co.in>"
-GOOGLE_MEET_LINK="https://meet.google.com/your-clinic-room"
+GOOGLE_CALENDAR_ID="your-calendar-id@group.calendar.google.com"
+GOOGLE_SERVICE_ACCOUNT_EMAIL="calendar-bot@your-project.iam.gserviceaccount.com"
+GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 CRON_SECRET="<long random secret>"
 APP_BASE_URL="http://localhost:3000"
 ```
 
-`GOOGLE_MEET_LINK` is the clinic's switch-to-online link included in every
-appointment email. Verify the sending domain in Resend before using the
+The Google Calendar credentials create and store a distinct Google Meet link
+for every appointment before its email is sent. Share the chosen calendar with
+the service-account email as an editor, and enable Google Calendar API in its
+Google Cloud project. Verify the sending domain in Resend before using the
 configured `RESEND_FROM_EMAIL`. The hourly reminder and payment
 reconciliation jobs both use `APP_BASE_URL` and `CRON_SECRET`.
 
@@ -140,6 +144,13 @@ emails, use:
 
 ```bash
 npm run db:seed:90-days
+```
+
+For a real fresh start before launch—only admin, reception, Madhumati, her
+availability, and the four active services—use the destructive command:
+
+```bash
+npm run db:seed:fresh
 ```
 
 For an existing database, update the requested admin and Madhumati login

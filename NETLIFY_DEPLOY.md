@@ -18,7 +18,9 @@ APP_BASE_URL="https://<your-site>.netlify.app"
 CRON_SECRET="<long random secret>"
 RESEND_API_KEY="re_..."
 RESEND_FROM_EMAIL="The Brain Tea <appointments@thebraintea.co.in>"
-GOOGLE_MEET_LINK="https://meet.google.com/your-clinic-room"
+GOOGLE_CALENDAR_ID="your-calendar-id@group.calendar.google.com"
+GOOGLE_SERVICE_ACCOUNT_EMAIL="calendar-bot@your-project.iam.gserviceaccount.com"
+GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 PHONEPE_ENV="sandbox"                      # "production" when live
 PHONEPE_CLIENT_ID="<from PhonePe business dashboard>"
 PHONEPE_CLIENT_SECRET="<from PhonePe business dashboard>"
@@ -27,9 +29,10 @@ PHONEPE_WEBHOOK_USERNAME="<choose one; also set in PhonePe dashboard>"
 PHONEPE_WEBHOOK_PASSWORD="<choose one; also set in PhonePe dashboard>"
 ```
 
-Verify the domain used by `RESEND_FROM_EMAIL` in Resend. `GOOGLE_MEET_LINK`
-is included in the booking and reminder emails so either party can switch to
-an online consultation. The `send-appointment-reminders` scheduled function
+Verify the domain used by `RESEND_FROM_EMAIL` in Resend. The Google Calendar
+service account creates a unique Meet link for every appointment; enable the
+Google Calendar API and share the chosen calendar with that service account as
+an editor. The `send-appointment-reminders` scheduled function
 runs hourly and uses the existing `APP_BASE_URL` and `CRON_SECRET` settings.
 
 Generate `ENCRYPTION_KEY` locally:
