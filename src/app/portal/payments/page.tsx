@@ -6,13 +6,13 @@ const PAYMENTS = [
   {
     service: "Assessment",
     date: "28 Jun 2026",
-    amount: "₹1,500",
+    amount: "₹1,800",
     status: "Paid",
   },
   {
     service: "Assessment",
     date: "14 Jun 2026",
-    amount: "₹1,500",
+    amount: "₹1,800",
     status: "Paid",
   },
 ];

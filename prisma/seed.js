@@ -126,7 +126,7 @@ async function main() {
       name: "Individual Therapy",
       slug: "individual-therapy",
       durationMinutes: 50,
-      priceMinor: 150000,
+      priceMinor: 180000,
       description:
         "A focused, one-on-one session designed to explore personal narratives, address psychological blocks, and cultivate self-awareness.",
       tagline: "A steady space to understand yourself.",
@@ -146,7 +146,7 @@ async function main() {
       name: "Assessment",
       slug: "assessment",
       durationMinutes: 50,
-      priceMinor: 150000,
+      priceMinor: 180000,
       description:
         "A structured first consultation to understand your concerns, goals, and the support that may be most helpful for you.",
       tagline: "Clarity for your next step.",
@@ -241,7 +241,7 @@ async function main() {
       name: "Madhumati Dhumak",
       slug: "dr-madhumati-dhumak",
       bio: "Clinical psychologist with over 15 years of experience in mindfulness-based cognitive therapy and family counseling, guiding individuals through existential challenges, stress mitigation, and emotional stabilization.",
-      feeMinor: 150000,
+      feeMinor: 180000,
       commissionBps: null, // platform default
       status: "APPROVED",
       // Real clinic portrait served from /public, not a stock photo.

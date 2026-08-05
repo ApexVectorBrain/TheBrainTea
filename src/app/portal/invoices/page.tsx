@@ -3,8 +3,8 @@ import Surface from "../../../components/ui/Surface";
 import PrototypeBanner from "../../../components/PrototypeBanner";
 
 const INVOICES = [
-  { id: "INV-0012", date: "28 Jun 2026", amount: "₹1,500" },
-  { id: "INV-0009", date: "14 Jun 2026", amount: "₹1,500" },
+  { id: "INV-0012", date: "28 Jun 2026", amount: "₹1,800" },
+  { id: "INV-0009", date: "14 Jun 2026", amount: "₹1,800" },
 ];
 
 export default function InvoicesPage() {

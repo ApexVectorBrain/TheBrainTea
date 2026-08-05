@@ -18,7 +18,7 @@ const services = [
     name: "Individual Therapy",
     slug: "individual-therapy",
     durationMinutes: 50,
-    priceMinor: 150000,
+    priceMinor: 180000,
     description:
       "A focused, one-on-one session designed to explore personal narratives, address psychological blocks, and cultivate self-awareness.",
     tagline: "A steady space to understand yourself.",
@@ -37,7 +37,7 @@ const services = [
     name: "Assessment",
     slug: "assessment",
     durationMinutes: 50,
-    priceMinor: 150000,
+    priceMinor: 180000,
     description:
       "A structured first consultation to understand your concerns, goals, and the support that may be most helpful for you.",
     tagline: "Clarity for your next step.",
@@ -151,7 +151,7 @@ async function main() {
       name: "Madhumati Dhumak",
       slug: "madhumati-dhumak",
       bio: "Counselling psychologist offering compassionate, evidence-based support for individuals, couples, and families.",
-      feeMinor: 150000,
+      feeMinor: 180000,
       status: "APPROVED",
       isActive: true,
       photo: "/team/madhumati-dhumak.jpg",
