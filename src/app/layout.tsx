@@ -61,8 +61,25 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "The Brain Tea",
+    url: SITE_URL,
+    logo: `${SITE_URL}/tbt-logo.png`,
+    email: "admin@thebraintea.co.in",
+    description:
+      "A compassionate, safe, and professional mental health practice in Pune, dedicated to supporting individuals, couples, and families through evidence-based psychotherapy.",
+  };
+
   return (
     <html lang="en" className={`${cormorant.variable} ${dmsans.variable}`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+      </head>
       <body className="bg-ivory text-charcoal min-h-screen flex flex-col justify-between">
         <IntroOverlay />
         <Header />
