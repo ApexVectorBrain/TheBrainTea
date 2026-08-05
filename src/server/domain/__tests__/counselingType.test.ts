@@ -40,4 +40,8 @@ describe("counselingType domain", () => {
     );
     expect(new Set(slugs).size).toBe(slugs.length);
   });
+
+  it("keeps the individual assessment fee at ₹1,800", () => {
+    expect(COUNSELING_SERVICE_DEFAULTS.INDIVIDUAL.priceMinor).toBe(180000);
+  });
 });

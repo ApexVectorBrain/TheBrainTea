@@ -402,15 +402,18 @@ export default function Home() {
 
             {/* Right Column: Bio Content */}
             <div className="lg:col-span-7 flex flex-col justify-center">
-              <span className="text-[11px] font-bold tracking-[0.25em] text-teal-sage uppercase mb-3 block">
-                About The Brain Tea — Pune Therapy Clinic
-              </span>
-              <h2 className="font-cormorant text-4xl md:text-[54px] font-semibold text-forest-slate mb-3 leading-tight">
-                Therapy that feels human
+              <h2 className="font-cormorant text-4xl md:text-[54px] font-semibold text-forest-slate mb-4 leading-tight">
+                Founder, The Brain Tea
+                <br />
+                Madhumati Dhumak
               </h2>
-              <span className="inline-block font-dmsans text-[11px] font-semibold tracking-wider text-teal-sage bg-muted-sage/15 border border-teal-sage/10 px-4 py-2 rounded-full mb-6 max-w-max">
-                Compassionate, safe, and professional care in Pune
-              </span>
+              <p className="text-[11px] font-bold tracking-[0.2em] text-teal-sage uppercase mb-4 leading-relaxed">
+                About the Brain tea- Pune Counseling &amp; Psychotherapy wellness
+                &amp; Health Services
+              </p>
+              <h3 className="font-cormorant text-3xl md:text-[42px] font-semibold text-forest-slate mb-6 leading-tight">
+                Therapy that feels human
+              </h3>
 
               <div className="space-y-4 font-dmsans text-base text-forest-slate/90 leading-relaxed mb-6 text-pretty">
                 <p>

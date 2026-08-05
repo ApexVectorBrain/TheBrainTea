@@ -36,7 +36,7 @@ export const COUNSELING_SERVICE_DEFAULTS: Record<
     description:
       "A structured first consultation to understand a client's concerns, goals and support needs.",
     durationMinutes: 50,
-    priceMinor: 150000,
+    priceMinor: 180000,
   },
   COUPLE_FAMILY: {
     slug: "couple-family-counselling",
