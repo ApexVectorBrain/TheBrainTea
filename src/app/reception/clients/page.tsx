@@ -23,6 +23,7 @@ interface ClientRow {
   age: number;
   emergencyContact: string;
   gdprConsent: boolean;
+  primaryTherapist: { id: string; name: string } | null;
   createdAt: string;
   _count: { bookings: number };
 }
@@ -42,12 +43,20 @@ interface ClientDetail extends Omit<ClientRow, "_count"> {
   }[];
 }
 
+interface Consultant {
+  id: string;
+  name: string;
+  status: string;
+  isActive: boolean;
+}
+
 const EMPTY_FORM = {
   name: "",
   email: "",
   phone: "",
   age: "",
   emergencyContact: "",
+  primaryTherapistId: "",
 };
 
 type ClientForm = typeof EMPTY_FORM;
@@ -63,6 +72,7 @@ export default function ReceptionClientsPage() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("name");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [consultants, setConsultants] = useState<Consultant[]>([]);
 
   const [registering, setRegistering] = useState(false);
   const [editing, setEditing] = useState<ClientRow | null>(null);
@@ -105,6 +115,13 @@ export default function ReceptionClientsPage() {
       cancelled = true;
     };
   }, [page, search, sort, refreshKey]);
+
+  useEffect(() => {
+    fetch("/api/reception/consultants")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => data && setConsultants(data.consultants))
+      .catch(() => {});
+  }, []);
 
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
@@ -169,6 +186,7 @@ export default function ReceptionClientsPage() {
                   <th className="px-3 py-3">Client</th>
                   <th className="px-3 py-3">Contact</th>
                   <th className="px-3 py-3">Emergency contact</th>
+                  <th className="px-3 py-3">Therapist</th>
                   <th className="px-3 py-3 text-right">Sessions</th>
                   <th className="px-3 py-3">Registered</th>
                   <th className="px-3 py-3 text-right">Manage</th>
@@ -198,6 +216,9 @@ export default function ReceptionClientsPage() {
                     </td>
                     <td className="px-3 py-3.5 text-xs text-ink-muted">
                       {row.emergencyContact}
+                    </td>
+                    <td className="px-3 py-3.5 text-xs text-ink-muted">
+                      {row.primaryTherapist?.name ?? "Not assigned"}
                     </td>
                     <td className="px-3 py-3.5 text-right tabular-nums text-ink">
                       {row._count.bookings}
@@ -233,12 +254,16 @@ export default function ReceptionClientsPage() {
           title="Register Client"
           submitLabel="Register client"
           initial={EMPTY_FORM}
+          consultants={consultants}
           onClose={() => setRegistering(false)}
           onSubmit={async (form) => {
             const res = await fetch("/api/reception/clients", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(form),
+              body: JSON.stringify({
+                ...form,
+                primaryTherapistId: form.primaryTherapistId || null,
+              }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Registration failed");
@@ -258,13 +283,18 @@ export default function ReceptionClientsPage() {
             phone: editing.phone,
             age: String(editing.age),
             emergencyContact: editing.emergencyContact,
+            primaryTherapistId: editing.primaryTherapist?.id ?? "",
           }}
+          consultants={consultants}
           onClose={() => setEditing(null)}
           onSubmit={async (form) => {
             const res = await fetch(`/api/reception/clients/${editing.id}`, {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(form),
+              body: JSON.stringify({
+                ...form,
+                primaryTherapistId: form.primaryTherapistId || null,
+              }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Update failed");
@@ -289,12 +319,14 @@ function ClientFormModal({
   title,
   submitLabel,
   initial,
+  consultants,
   onClose,
   onSubmit,
 }: {
   title: string;
   submitLabel: string;
   initial: ClientForm;
+  consultants: Consultant[];
   onClose: () => void;
   onSubmit: (form: ClientForm) => Promise<void>;
 }) {
@@ -354,7 +386,7 @@ function ClientFormModal({
               className={inputClass}
             />
           </Field>
-          <Field label="Age">
+            <Field label="Age">
             <input
               type="number"
               min={1}
@@ -373,6 +405,22 @@ function ClientFormModal({
                 placeholder="Name & phone of an emergency contact"
               />
             </Field>
+          <Field label="Therapist in charge">
+            <select
+              value={form.primaryTherapistId}
+              onChange={(e) => set("primaryTherapistId", e.target.value)}
+              className={inputClass}
+            >
+              <option value="">Not assigned yet</option>
+              {consultants
+                .filter((consultant) => consultant.isActive && consultant.status === "APPROVED")
+                .map((consultant) => (
+                  <option key={consultant.id} value={consultant.id}>
+                    {consultant.name}
+                  </option>
+                ))}
+            </select>
+          </Field>
           </div>
         </div>
         <div className="flex justify-end gap-2 pt-1">
@@ -458,6 +506,8 @@ function ClientDetailModal({
                   <span>{client.age}</span>
                   <span className="font-semibold">Emergency</span>
                   <span>{client.emergencyContact}</span>
+                  <span className="font-semibold">Therapist</span>
+                  <span>{client.primaryTherapist?.name ?? "Not assigned"}</span>
                   <span className="font-semibold">Registered</span>
                   <span>{formatDate(client.createdAt)}</span>
                 </div>

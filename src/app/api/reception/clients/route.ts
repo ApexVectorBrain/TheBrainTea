@@ -48,6 +48,7 @@ export const GET = handleApi(async (request: Request) => {
         age: true,
         emergencyContact: true,
         gdprConsent: true,
+        primaryTherapist: { select: { id: true, name: true } },
         createdAt: true,
         _count: { select: { bookings: true } },
       },
@@ -67,6 +68,7 @@ const createSchema = z.object({
   phone: z.string().min(8).max(20),
   age: z.coerce.number().int().min(1).max(120),
   emergencyContact: z.string().min(3).max(200),
+  primaryTherapistId: z.string().uuid().nullable().optional(),
   gdprConsent: z.boolean().default(true),
 });
 
@@ -74,6 +76,20 @@ export const POST = handleApi(async (request: Request) => {
   const session = await requireReception(request);
   const body = parseBody(createSchema, await request.json());
   const email = body.email.toLowerCase();
+
+  if (body.primaryTherapistId) {
+    const therapist = await prisma.therapist.findFirst({
+      where: {
+        id: body.primaryTherapistId,
+        isActive: true,
+        status: "APPROVED",
+      },
+      select: { id: true },
+    });
+    if (!therapist) {
+      throw conflict("Selected therapist is not available", "THERAPIST_UNAVAILABLE");
+    }
+  }
 
   // Client.email is unique — surface a duplicate as a 409 the desk can act
   // on ("this person is already registered") rather than a 500.
@@ -94,6 +110,7 @@ export const POST = handleApi(async (request: Request) => {
         age: body.age,
         emergencyContact: body.emergencyContact,
         gdprConsent: body.gdprConsent,
+        primaryTherapistId: body.primaryTherapistId ?? null,
       },
     });
     await recordAudit(
@@ -102,7 +119,11 @@ export const POST = handleApi(async (request: Request) => {
         action: "client.create",
         entityType: "Client",
         entityId: created.id,
-        detail: { name: created.name, email: created.email },
+        detail: {
+          name: created.name,
+          email: created.email,
+          primaryTherapistId: body.primaryTherapistId ?? null,
+        },
         ip: clientIp(request),
       },
       tx,

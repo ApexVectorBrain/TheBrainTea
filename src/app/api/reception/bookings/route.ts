@@ -18,6 +18,11 @@ import {
   scheduleAdminBooking,
 } from "@/server/services/bookingService";
 import { rupeesToMinor } from "@/server/money";
+import {
+  notifyBookingCreated,
+  notifyPaymentApproved,
+} from "@/server/services/emailNotificationService";
+import { ensureBookingMeeting } from "@/server/services/googleCalendarService";
 
 // Front-desk appointment register. Same filtering surface as the admin
 // booking list, plus the desk-specific `queue` presets that drive the
@@ -215,6 +220,16 @@ export const POST = handleApi(async (request: Request) => {
     session,
     ip: clientIp(request),
   });
+
+  try {
+    await ensureBookingMeeting(booking.id);
+  } catch (error) {
+    // Scheduling remains successful if Google is temporarily unavailable.
+    // The email service will not substitute a shared Meet link.
+    console.error("Unable to create Google Meet link for booking", booking.id, error);
+  }
+  await notifyBookingCreated(booking.id);
+  if (booking.paymentStatus === "PAID") await notifyPaymentApproved(booking.id);
 
   return NextResponse.json({ booking }, { status: 201 });
 });

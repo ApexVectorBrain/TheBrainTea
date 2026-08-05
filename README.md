@@ -107,6 +107,8 @@ RESEND_FROM_EMAIL="The Brain Tea <appointments@thebraintea.co.in>"
 GOOGLE_CALENDAR_ID="your-calendar-id@group.calendar.google.com"
 GOOGLE_SERVICE_ACCOUNT_EMAIL="calendar-bot@your-project.iam.gserviceaccount.com"
 GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+# Google Workspace only: enables invitations to each therapist's own calendar.
+GOOGLE_WORKSPACE_IMPERSONATED_USER="calendar@thebraintea.co.in"
 CRON_SECRET="<long random secret>"
 APP_BASE_URL="http://localhost:3000"
 ```
@@ -114,8 +116,11 @@ APP_BASE_URL="http://localhost:3000"
 The Google Calendar credentials create and store a distinct Google Meet link
 for every appointment before its email is sent. Share the chosen calendar with
 the service-account email as an editor, and enable Google Calendar API in its
-Google Cloud project. Verify the sending domain in Resend before using the
-configured `RESEND_FROM_EMAIL`. The hourly reminder and payment
+Google Cloud project. To send each consultant a native Calendar invitation,
+use Google Workspace domain-wide delegation and set
+`GOOGLE_WORKSPACE_IMPERSONATED_USER` to a Workspace calendar-owner address.
+Verify the sending domain in Resend before using the configured
+`RESEND_FROM_EMAIL`. The hourly reminder and payment
 reconciliation jobs both use `APP_BASE_URL` and `CRON_SECRET`.
 
 Generate a secure 32-byte hex encryption key for protecting notes at rest:

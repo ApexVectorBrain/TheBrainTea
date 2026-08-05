@@ -4,8 +4,8 @@ import { prisma } from "@/lib/db";
 import { rateLimiter } from "@/lib/rateLimit";
 import { clientIp } from "@/server/http";
 
-const MAX_RESUME_BYTES = 5 * 1024 * 1024; // 5MB
-const ALLOWED_RESUME_EXTENSIONS = [".pdf", ".doc", ".docx"];
+const MAX_RESUME_BYTES = 10 * 1024 * 1024; // 10 MiB
+const PDF_MIME_TYPE = "application/pdf";
 
 const fieldsSchema = z.object({
   fullName: z.string().trim().min(2).max(120),
@@ -21,9 +21,15 @@ const fieldsSchema = z.object({
   statementOfPurpose: z.string().trim().min(20).max(5000),
 });
 
-function hasAllowedExtension(fileName: string): boolean {
-  const lower = fileName.toLowerCase();
-  return ALLOWED_RESUME_EXTENSIONS.some((ext) => lower.endsWith(ext));
+function isPdfFileName(fileName: string): boolean {
+  return fileName.toLowerCase().endsWith(".pdf");
+}
+
+function hasPdfSignature(buffer: Buffer): boolean {
+  // File.type and the filename are supplied by the browser and can be forged.
+  // Every valid PDF starts with this signature; checking it blocks renamed
+  // executables and HTML files before anything is stored or downloaded.
+  return buffer.subarray(0, 5).toString("ascii") === "%PDF-";
 }
 
 export async function POST(request: Request) {
@@ -76,18 +82,24 @@ export async function POST(request: Request) {
     }
     if (resume.size > MAX_RESUME_BYTES) {
       return NextResponse.json(
-        { error: "Resume must be under 5MB." },
+        { error: "Resume must be 10 MB or smaller." },
         { status: 400 },
       );
     }
-    if (!hasAllowedExtension(resume.name)) {
+    if (!isPdfFileName(resume.name) || resume.type !== PDF_MIME_TYPE) {
       return NextResponse.json(
-        { error: "Resume must be a PDF or Word document (.pdf, .doc, .docx)." },
+        { error: "Resume must be a PDF file." },
         { status: 400 },
       );
     }
 
     const resumeBuffer = Buffer.from(await resume.arrayBuffer());
+    if (!hasPdfSignature(resumeBuffer)) {
+      return NextResponse.json(
+        { error: "The uploaded file is not a valid PDF." },
+        { status: 400 },
+      );
+    }
 
     await prisma.internshipApplication.create({
       data: {
@@ -101,7 +113,7 @@ export async function POST(request: Request) {
         preferredStart: new Date(parsed.data.preferredStart),
         statementOfPurpose: parsed.data.statementOfPurpose,
         resumeFileName: resume.name,
-        resumeMimeType: resume.type || "application/octet-stream",
+        resumeMimeType: PDF_MIME_TYPE,
         resumeData: resumeBuffer,
       },
     });

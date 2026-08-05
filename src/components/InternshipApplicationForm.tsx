@@ -10,9 +10,24 @@ export default function InternshipApplicationForm() {
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
+  const validateResume = (file: File | undefined): string | null => {
+    if (!file) return "Please attach your resume.";
+    if (file.size > 10 * 1024 * 1024) return "Resume must be 10 MB or smaller.";
+    if (file.type !== "application/pdf" || !file.name.toLowerCase().endsWith(".pdf")) {
+      return "Please upload your resume as a PDF file.";
+    }
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMsg("");
+    const resume = new FormData(e.currentTarget).get("resume");
+    const resumeError = validateResume(resume instanceof File ? resume : undefined);
+    if (resumeError) {
+      setErrorMsg(resumeError);
+      return;
+    }
     setSubmitting(true);
 
     try {
@@ -130,10 +145,19 @@ export default function InternshipApplicationForm() {
             id="resume"
             name="resume"
             type="file"
-            accept=".pdf,.doc,.docx"
+            accept="application/pdf,.pdf"
             required
+            onChange={(event) => {
+              const file = event.currentTarget.files?.[0];
+              const resumeError = validateResume(file);
+              setErrorMsg(resumeError ?? "");
+              if (resumeError) event.currentTarget.value = "";
+            }}
             className="w-full text-sm text-charcoal/80 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-teal-sage file:text-white file:text-xs file:font-semibold file:cursor-pointer cursor-pointer"
           />
+          <p className="mt-2 text-xs text-charcoal/70">
+            PDF only, up to 10 MB.
+          </p>
         </div>
         <div className="pt-2">
           <Button

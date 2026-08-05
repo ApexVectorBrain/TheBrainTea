@@ -68,7 +68,7 @@ export default function TherapistClientsPage() {
           Your Clients
         </h1>
         <p className="font-dmsans text-sm text-ink-muted">
-          Everyone you&apos;ve held a session with.
+          Clients assigned to your care, plus everyone you&apos;ve held a session with.
         </p>
       </div>
 

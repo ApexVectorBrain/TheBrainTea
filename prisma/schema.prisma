@@ -54,6 +54,7 @@ model Therapist {
   // Services this consultant offers. The public booking flow is service-first:
   // a client picks a service, then chooses among the consultants that offer it.
   services      Service[]               @relation("TherapistServices")
+  assignedClients Client[]              @relation("ClientPrimaryTherapist")
   createdAt     DateTime                @default(now())
   updatedAt     DateTime                @updatedAt
 
@@ -120,11 +121,16 @@ model Client {
   dob              String? // YYYY-MM-DD — deprecated, retained only for records created before the age migration; run prisma/backfill-client-age.js to populate age from it
   emergencyContact String
   gdprConsent      Boolean   @default(false)
+  // The consultant responsible for this client outside of any one booking.
+  // Optional so public/self-service clients continue to work normally.
+  primaryTherapistId String?
+  primaryTherapist   Therapist? @relation("ClientPrimaryTherapist", fields: [primaryTherapistId], references: [id], onDelete: SetNull)
   bookings         Booking[]
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
   @@index([createdAt])
+  @@index([primaryTherapistId])
 }
 
 model Booking {

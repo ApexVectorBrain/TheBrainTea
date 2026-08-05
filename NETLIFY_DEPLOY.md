@@ -21,6 +21,8 @@ RESEND_FROM_EMAIL="The Brain Tea <appointments@thebraintea.co.in>"
 GOOGLE_CALENDAR_ID="your-calendar-id@group.calendar.google.com"
 GOOGLE_SERVICE_ACCOUNT_EMAIL="calendar-bot@your-project.iam.gserviceaccount.com"
 GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+# Google Workspace only: enables invitations to each therapist's own calendar.
+GOOGLE_WORKSPACE_IMPERSONATED_USER="calendar@thebraintea.co.in"
 PHONEPE_ENV="sandbox"                      # "production" when live
 PHONEPE_CLIENT_ID="<from PhonePe business dashboard>"
 PHONEPE_CLIENT_SECRET="<from PhonePe business dashboard>"
@@ -30,9 +32,11 @@ PHONEPE_WEBHOOK_PASSWORD="<choose one; also set in PhonePe dashboard>"
 ```
 
 Verify the domain used by `RESEND_FROM_EMAIL` in Resend. The Google Calendar
-service account creates a unique Meet link for every appointment; enable the
+service account creates a unique Meet link for every appointment. Enable the
 Google Calendar API and share the chosen calendar with that service account as
-an editor. The `send-appointment-reminders` scheduled function
+an editor. To invite the assigned consultant to their own Google Calendar,
+configure Google Workspace domain-wide delegation and set
+`GOOGLE_WORKSPACE_IMPERSONATED_USER`. The `send-appointment-reminders` scheduled function
 runs hourly and uses the existing `APP_BASE_URL` and `CRON_SECRET` settings.
 
 Generate `ENCRYPTION_KEY` locally:

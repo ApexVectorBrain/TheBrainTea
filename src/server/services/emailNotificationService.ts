@@ -86,7 +86,7 @@ async function sendOnce(
   html: string,
 ): Promise<boolean> {
   if (!configured()) {
-    console.warn("email-notifications: RESEND_API_KEY, RESEND_FROM_EMAIL, or GOOGLE_MEET_LINK is not configured; skipping email");
+    console.warn("email-notifications: Resend or Google Calendar configuration is incomplete; skipping email");
     return false;
   }
   try {
@@ -172,10 +172,10 @@ export async function notifyPaymentApproved(bookingId: string) {
 
 export async function sendUpcomingReminders() {
   const now = new Date();
-  const inTwentyEightHours = new Date(now.getTime() + 28 * 60 * 60 * 1000);
+  const inOneHour = new Date(now.getTime() + 60 * 60 * 1000);
   const bookings = await prisma.booking.findMany({
     where: {
-      dateTime: { gt: now, lte: inTwentyEightHours },
+      dateTime: { gt: now, lte: inOneHour },
       status: { in: ["CONFIRMED", "COMPLETED"] },
     },
     select: { id: true },
@@ -187,7 +187,7 @@ export async function sendUpcomingReminders() {
       booking,
       ["REMINDER_CLIENT", "REMINDER_CONSULTANT"],
       `Reminder: ${booking.service.name} appointment`,
-      "This is a reminder that your consultation is coming up within the next 28 hours.",
+      "This is a reminder that your consultation is coming up within the next hour.",
     );
   }
   return { candidates: bookings.length };

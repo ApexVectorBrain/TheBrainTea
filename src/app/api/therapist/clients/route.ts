@@ -25,16 +25,25 @@ export const GET = handleApi(async (request: Request) => {
   const clientIds = clientIdRows.map((r) => r.clientId);
 
   const where = {
-    id: { in: clientIds },
-    ...(q
-      ? {
-          OR: [
-            { name: { contains: q, mode: "insensitive" as const } },
-            { email: { contains: q, mode: "insensitive" as const } },
-            { phone: { contains: q } },
-          ],
-        }
-      : {}),
+    AND: [
+      {
+        OR: [
+          { id: { in: clientIds } },
+          { primaryTherapistId: therapistId },
+        ],
+      },
+      ...(q
+        ? [
+            {
+              OR: [
+                { name: { contains: q, mode: "insensitive" as const } },
+                { email: { contains: q, mode: "insensitive" as const } },
+                { phone: { contains: q } },
+              ],
+            },
+          ]
+        : []),
+    ],
   };
 
   const [clients, total] = await Promise.all([

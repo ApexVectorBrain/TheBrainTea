@@ -31,6 +31,7 @@ export const GET = handleApi(
         age: true,
         emergencyContact: true,
         gdprConsent: true,
+        primaryTherapist: { select: { id: true, name: true } },
         createdAt: true,
         updatedAt: true,
         bookings: {
@@ -93,6 +94,7 @@ const updateSchema = z
     phone: z.string().min(8).max(20).optional(),
     age: z.coerce.number().int().min(1).max(120).optional(),
     emergencyContact: z.string().min(3).max(200).optional(),
+    primaryTherapistId: z.string().uuid().nullable().optional(),
     gdprConsent: z.boolean().optional(),
   })
   .refine((v) => Object.keys(v).length > 0, {
@@ -117,6 +119,24 @@ export const PATCH = handleApi(
       data.emergencyContact = body.emergencyContact;
     }
     if (body.gdprConsent !== undefined) data.gdprConsent = body.gdprConsent;
+    if (body.primaryTherapistId !== undefined) {
+      if (body.primaryTherapistId) {
+        const therapist = await prisma.therapist.findFirst({
+          where: {
+            id: body.primaryTherapistId,
+            isActive: true,
+            status: "APPROVED",
+          },
+          select: { id: true },
+        });
+        if (!therapist) {
+          throw conflict("Selected therapist is not available", "THERAPIST_UNAVAILABLE");
+        }
+      }
+      data.primaryTherapist = body.primaryTherapistId
+        ? { connect: { id: body.primaryTherapistId } }
+        : { disconnect: true };
+    }
 
     if (typeof data.email === "string" && data.email !== existing.email) {
       const clash = await prisma.client.findUnique({

@@ -13,8 +13,9 @@ function calendarConfig() {
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
   const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, "\n");
   const calendarId = process.env.GOOGLE_CALENDAR_ID;
+  const delegatedUser = process.env.GOOGLE_WORKSPACE_IMPERSONATED_USER?.trim() || null;
   if (!email || !privateKey || !calendarId) return null;
-  return { email, privateKey, calendarId };
+  return { email, privateKey, calendarId, delegatedUser };
 }
 
 export function isGoogleCalendarConfigured(): boolean {
@@ -33,6 +34,7 @@ async function accessToken() {
       aud: GOOGLE_TOKEN_URL,
       iat: now,
       exp: now + 3600,
+      ...(config.delegatedUser ? { sub: config.delegatedUser } : {}),
     }),
   );
   const signer = crypto.createSign("RSA-SHA256");
@@ -52,22 +54,32 @@ async function accessToken() {
   if (!response.ok || !result.access_token) {
     throw new Error(`Google authentication failed: ${result.error_description ?? result.error ?? response.status}`);
   }
-  return { token: result.access_token as string, calendarId: config.calendarId };
+  return {
+    token: result.access_token as string,
+    calendarId: config.calendarId,
+    canInviteAttendees: Boolean(config.delegatedUser),
+  };
 }
 
 /** Create and store an appointment-specific Google Meet room exactly once. */
 export async function ensureBookingMeeting(bookingId: string) {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
-    include: { client: true, therapist: true, service: true },
+    include: {
+      client: true,
+      therapist: { include: { user: { select: { email: true } } } },
+      service: true,
+    },
   });
   if (!booking) throw new Error("Booking not found while creating Google Meet link");
   if (booking.meetingUrl) return booking.meetingUrl;
 
-  const { token, calendarId } = await accessToken();
+  const { token, calendarId, canInviteAttendees } = await accessToken();
   const endAt = new Date(booking.dateTime.getTime() + booking.durationMinutes * 60000);
+  const therapistEmail = booking.therapist.user?.email;
+  const sendUpdates = canInviteAttendees && therapistEmail ? "all" : "none";
   const response = await fetch(
-    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?conferenceDataVersion=1&sendUpdates=none`,
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?conferenceDataVersion=1&sendUpdates=${sendUpdates}`,
     {
       method: "POST",
       headers: {
@@ -79,6 +91,18 @@ export async function ensureBookingMeeting(bookingId: string) {
         description: `Private consultation for ${booking.client.name} with ${booking.therapist.name}.`,
         start: { dateTime: booking.dateTime.toISOString(), timeZone: TIME_ZONE },
         end: { dateTime: endAt.toISOString(), timeZone: TIME_ZONE },
+        // Attendee invitations require a Google Workspace account with the
+        // service account configured for domain-wide delegation. The client
+        // receives the branded appointment email through Resend instead.
+        ...(canInviteAttendees && therapistEmail
+          ? {
+              attendees: [{ email: therapistEmail }],
+              guestsCanInviteOthers: false,
+              guestsCanModify: false,
+              guestsCanSeeOtherGuests: false,
+            }
+          : {}),
+        visibility: "private",
         conferenceData: {
           createRequest: { requestId: `booking-${booking.id}` },
         },
