@@ -34,6 +34,11 @@ export const metadata: Metadata = {
   ],
   metadataBase: new URL(SITE_URL),
   alternates: { canonical: "/" },
+  icons: {
+    icon: [{ url: "/tbt-logo.png", type: "image/png" }],
+    shortcut: "/tbt-logo.png",
+    apple: "/tbt-logo.png",
+  },
   openGraph: {
     title: "The Brain Tea | Pune Therapy Clinic",
     description:
