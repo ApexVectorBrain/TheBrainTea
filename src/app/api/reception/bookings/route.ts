@@ -147,6 +147,7 @@ export const GET = handleApi(async (request: Request) => {
         id: true,
         dateTime: true,
         durationMinutes: true,
+        isOvertime: true,
         amountMinor: true,
         discountMinor: true,
         status: true,
@@ -191,6 +192,7 @@ const scheduleSchema = z
     time: z.string().regex(/^\d{2}:\d{2}$/, "Expected HH:MM"),
     feeRupees: z.number().positive(),
     paymentReceived: z.boolean().default(false),
+    isOvertime: z.boolean().default(false),
     paymentRef: z.string().max(64).optional(),
     clientId: z.string().min(1).optional(),
     newClient: newClientSchema.optional(),
@@ -213,6 +215,7 @@ export const POST = handleApi(async (request: Request) => {
     dateTime,
     feeMinor: rupeesToMinor(body.feeRupees),
     paymentReceived: body.paymentReceived,
+    isOvertime: body.isOvertime,
     paymentRef: body.paymentRef,
     client: body.newClient
       ? { new: body.newClient }

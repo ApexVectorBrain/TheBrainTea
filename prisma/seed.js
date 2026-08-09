@@ -162,6 +162,25 @@ async function main() {
       process: null,
     },
     {
+      name: "Individual Counselling",
+      slug: "individual-counselling",
+      durationMinutes: 50,
+      priceMinor: 180000,
+      description:
+        "One-to-one counselling focused on the client's concerns, goals, and ongoing wellbeing.",
+      tagline: "Focused support for where you are now.",
+      image: "/team/office4.jpg",
+      suitableFor: [
+        "Anxiety and stress",
+        "Life transitions",
+        "Relationships",
+        "Self-esteem",
+        "Emotional wellbeing",
+      ],
+      availability: ["Online", "Offline"],
+      process: null,
+    },
+    {
       name: "Couples & Family Therapy",
       slug: "couples-counseling",
       durationMinutes: 50,
@@ -250,11 +269,7 @@ async function main() {
       activeFromDay: -HISTORY_DAYS,
       activeToDay: FUTURE_DAYS,
       schedule: { days: [1, 2, 3, 4, 5], hours: [9, 10, 11, 13, 14, 15, 16] },
-      serviceSlugs: [
-        "individual-therapy",
-        "assessment",
-        "couples-counseling",
-      ],
+      serviceSlugs: ["individual-therapy", "assessment", "couples-counseling"],
     },
     {
       email: "rohan@thebraintea.com",
@@ -772,11 +787,19 @@ async function main() {
 
       const paidUpfront = rand() < 0.65 || status === "REFUNDED";
 
-      // Classify each seeded booking as individual vs couple/family so the
+      // Classify each seeded booking as assessment, individual, or
+      // couple/family so the
       // admin appointment register has representative counselling-type data.
-      const counselingType = service.slug.includes("couple")
-        ? "COUPLE_FAMILY"
-        : "INDIVIDUAL";
+      const counselingType =
+        service.slug === "assessment"
+          ? "ASSESSMENT"
+          : service.slug === "career-academic-counselling"
+            ? "CAREER_ACADEMIC"
+            : service.slug === "couples-counseling"
+              ? "COUPLE_FAMILY"
+              : service.slug === "individual-therapy"
+                ? "INDIVIDUAL_THERAPY"
+                : "INDIVIDUAL";
 
       const booking = await prisma.booking.create({
         data: {

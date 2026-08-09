@@ -15,6 +15,7 @@ const BOOKING_CARD = {
   id: true,
   dateTime: true,
   durationMinutes: true,
+  isOvertime: true,
   amountMinor: true,
   status: true,
   paymentStatus: true,

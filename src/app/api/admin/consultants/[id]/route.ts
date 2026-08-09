@@ -10,6 +10,7 @@ import {
 import { rupeesToMinor } from "@/server/money";
 import { recordAudit } from "@/server/audit";
 import { httpUrl } from "@/server/validation";
+import { workingWindowError } from "@/server/domain/workingHours";
 
 // Consultant detail: profile, schedule, earnings breakdown (from the
 // ledger), payout history and recent appointments.
@@ -115,6 +116,23 @@ const patchSchema = z.object({
         endTime: z.string().regex(/^\d{2}:\d{2}$/),
       }),
     )
+    .superRefine((windows, ctx) => {
+      const seen = new Set<number>();
+      windows.forEach((window, index) => {
+        if (seen.has(window.dayOfWeek)) {
+          ctx.addIssue({
+            code: "custom",
+            message: "Only one working window is allowed per day",
+            path: [index, "dayOfWeek"],
+          });
+        }
+        seen.add(window.dayOfWeek);
+        const message = workingWindowError(window);
+        if (message) {
+          ctx.addIssue({ code: "custom", message, path: [index, "endTime"] });
+        }
+      });
+    })
     .optional(),
 });
 

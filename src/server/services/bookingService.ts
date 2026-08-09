@@ -18,6 +18,10 @@ import {
 } from "./paymentService";
 import { badRequest, conflict, notFound, type Session } from "../http";
 import { recordAudit } from "../audit";
+import {
+  isGeneratedSlotStart,
+  sessionOverlapsWorkingHours,
+} from "../domain/workingHours";
 
 // Booking lifecycle service. All state changes flow through the domain
 // state machine, are journalled to BookingStatusHistory, and slot holds are
@@ -26,6 +30,11 @@ import { recordAudit } from "../audit";
 
 /** Minutes an unpaid AWAITING_PAYMENT reservation holds its slot. */
 export const RESERVATION_TTL_MINUTES = 30;
+
+// Neon's network round trips can exceed Prisma's 5-second interactive
+// transaction default during cold starts. Booking writes remain bounded, but
+// have enough time to finish their validation, audit, and slot-hold queries.
+const BOOKING_TRANSACTION_OPTIONS = { maxWait: 10_000, timeout: 20_000 };
 
 export interface CreateBookingInput {
   therapistSlug: string;
@@ -107,10 +116,11 @@ async function validateSlotWithinSchedule(
   const mm = String(dateTime.getMinutes()).padStart(2, "0");
   const startTime = `${hh}:${mm}`;
 
-  const slot = await tx.therapistAvailability.findFirst({
-    where: { therapistId, dayOfWeek: dateTime.getDay(), startTime },
+  const windows = await tx.therapistAvailability.findMany({
+    where: { therapistId, dayOfWeek: dateTime.getDay() },
+    select: { startTime: true, endTime: true },
   });
-  if (!slot)
+  if (!isGeneratedSlotStart(startTime, windows))
     throw conflict(
       "The selected time is outside the consultant's working hours",
     );
@@ -121,6 +131,44 @@ async function validateSlotWithinSchedule(
   });
   if (block)
     throw conflict("The consultant is unavailable at the selected time");
+}
+
+async function assertNoOverlappingBooking(
+  tx: Prisma.TransactionClient,
+  therapistId: string,
+  dateTime: Date,
+  durationMinutes: number,
+): Promise<void> {
+  // Arbitrary-minute overtime starts cannot rely on the exact-start unique
+  // constraint alone. Serialize overtime checks per consultant, then reject
+  // any live hold whose booked duration intersects the proposed session.
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`overtime:${therapistId}`}))`;
+
+  const end = new Date(dateTime.getTime() + durationMinutes * 60000);
+  const candidates = await tx.bookingSlot.findMany({
+    where: {
+      therapistId,
+      startAt: {
+        gt: new Date(dateTime.getTime() - 24 * 60 * 60000),
+        lt: end,
+      },
+    },
+    select: {
+      startAt: true,
+      booking: { select: { durationMinutes: true } },
+    },
+  });
+  const overlaps = candidates.some(
+    (candidate) =>
+      candidate.startAt.getTime() + candidate.booking.durationMinutes * 60000 >
+      dateTime.getTime(),
+  );
+  if (overlaps) {
+    throw conflict(
+      "The consultant already has an overlapping appointment. Please pick another time.",
+      "SLOT_TAKEN",
+    );
+  }
 }
 
 export async function createBooking(input: CreateBookingInput) {
@@ -231,7 +279,7 @@ export async function createBooking(input: CreateBookingInput) {
     }
 
     return { booking, client, therapist, service };
-  });
+  }, BOOKING_TRANSACTION_OPTIONS);
 
   // PAY_NOW: open a gateway checkout for the reservation. The booking stays
   // AWAITING_PAYMENT until the gateway confirms (webhook or status poll) —
@@ -497,6 +545,7 @@ export interface ScheduleAdminBookingInput {
   dateTime: Date;
   feeMinor: number;
   paymentReceived: boolean;
+  isOvertime?: boolean;
   paymentRef?: string;
   client: ScheduleClientInput;
   session: Session;
@@ -525,12 +574,23 @@ export async function scheduleAdminBooking(input: ScheduleAdminBookingInput) {
 
     const therapist = await tx.therapist.findUnique({
       where: { id: input.therapistId },
+      include: {
+        services: { select: { slug: true } },
+      },
     });
     if (!therapist) throw notFound("Consultant not found");
     if (!therapist.isActive || therapist.status !== "APPROVED") {
       throw conflict("This consultant is not currently accepting appointments");
     }
 
+    const serviceDefinition = COUNSELING_SERVICE_DEFAULTS[input.counselingType];
+    if (
+      !therapist.services.some(
+        (offeredService) => offeredService.slug === serviceDefinition.slug,
+      )
+    ) {
+      throw conflict("This consultant does not offer the selected service");
+    }
     const service = await resolveCounselingService(tx, input.counselingType);
 
     // Resolve the client: an existing record by id, or upsert a new one by
@@ -567,8 +627,48 @@ export async function scheduleAdminBooking(input: ScheduleAdminBookingInput) {
     if (input.dateTime.getTime() <= Date.now()) {
       throw badRequest("Appointments must be scheduled for a future time");
     }
-    // Admin scheduling isn't bound to the weekly availability template, but it
-    // must never land inside a consultant's leave block.
+    const isOvertime = input.isOvertime === true;
+    if (isOvertime && !["RECEPTIONIST", "ADMIN"].includes(input.session.role)) {
+      throw badRequest("Only authorised front-desk staff can book overtime");
+    }
+
+    const hh = String(input.dateTime.getHours()).padStart(2, "0");
+    const mm = String(input.dateTime.getMinutes()).padStart(2, "0");
+    const startTime = `${hh}:${mm}`;
+    const windows = await tx.therapistAvailability.findMany({
+      where: {
+        therapistId: therapist.id,
+        dayOfWeek: input.dateTime.getDay(),
+      },
+      select: { startTime: true, endTime: true },
+    });
+    const isNormalSlot = isGeneratedSlotStart(startTime, windows);
+    if (!isOvertime && !isNormalSlot) {
+      throw conflict(
+        "That time is outside the consultant's working hours. Reception may mark it as overtime.",
+      );
+    }
+    if (isOvertime && isNormalSlot) {
+      throw badRequest("This is a normal working-hours slot, not overtime");
+    }
+    if (
+      isOvertime &&
+      sessionOverlapsWorkingHours(startTime, service.durationMinutes, windows)
+    ) {
+      throw badRequest(
+        "Overtime must be outside the consultant's five-hour working window",
+      );
+    }
+    if (isOvertime) {
+      await assertNoOverlappingBooking(
+        tx,
+        therapist.id,
+        input.dateTime,
+        service.durationMinutes,
+      );
+    }
+
+    // Leave blocks apply to both normal and overtime sessions.
     const end = new Date(
       input.dateTime.getTime() + service.durationMinutes * 60000,
     );
@@ -594,6 +694,7 @@ export async function scheduleAdminBooking(input: ScheduleAdminBookingInput) {
         clientId,
         dateTime: input.dateTime,
         durationMinutes: service.durationMinutes,
+        isOvertime,
         amountMinor: input.feeMinor,
         commissionBps,
         counselingType: input.counselingType,
@@ -614,8 +715,9 @@ export async function scheduleAdminBooking(input: ScheduleAdminBookingInput) {
         toStatus: "CONFIRMED",
         actorType: input.session.role,
         actorId: input.session.userId,
-        reason:
-          input.session.role === "RECEPTIONIST"
+        reason: isOvertime
+          ? "Overtime appointment authorised by the front desk"
+          : input.session.role === "RECEPTIONIST"
             ? "Appointment scheduled at the front desk"
             : "Appointment scheduled by admin",
       },
@@ -652,6 +754,7 @@ export async function scheduleAdminBooking(input: ScheduleAdminBookingInput) {
           dateTime: input.dateTime.toISOString(),
           feeMinor: input.feeMinor,
           paymentReceived: input.paymentReceived,
+          isOvertime,
         },
         ip: input.ip,
       },
@@ -659,7 +762,7 @@ export async function scheduleAdminBooking(input: ScheduleAdminBookingInput) {
     );
 
     return booking;
-  });
+  }, BOOKING_TRANSACTION_OPTIONS);
 
   // Fee already collected out-of-band (cash / UPI at the clinic): record it
   // through the manual provider — pinned explicitly, because the DEFAULT

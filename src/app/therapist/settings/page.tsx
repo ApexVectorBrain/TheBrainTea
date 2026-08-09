@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { formatDateTime } from "@/lib/format";
 import {
   ErrorNote,
@@ -40,12 +40,6 @@ export default function TherapistSettingsPage() {
   const [blocks, setBlocks] = useState<SlotBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  const [newDay, setNewDay] = useState(1);
-  const [newStart, setNewStart] = useState("09:00");
-  const [newEnd, setNewEnd] = useState("10:00");
 
   const [blockStart, setBlockStart] = useState("");
   const [blockEnd, setBlockEnd] = useState("");
@@ -74,51 +68,6 @@ export default function TherapistSettingsPage() {
     };
     load();
   }, []);
-
-  const addRow = () => {
-    if (newStart >= newEnd) {
-      setError("Start time must be before end time");
-      return;
-    }
-    setError("");
-    setWeekly((rows) => [
-      ...rows,
-      { dayOfWeek: newDay, startTime: newStart, endTime: newEnd },
-    ]);
-  };
-
-  const removeRow = (idx: number) => {
-    setWeekly((rows) => rows.filter((_, i) => i !== idx));
-  };
-
-  const saveWeekly = async () => {
-    setBusy(true);
-    setError("");
-    setNotice("");
-    try {
-      const res = await fetch("/api/therapist/availability", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          weekly: weekly.map(({ dayOfWeek, startTime, endTime }) => ({
-            dayOfWeek,
-            startTime,
-            endTime,
-          })),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to save availability");
-      setNotice("Weekly schedule saved.");
-      setWeekly(data.weekly);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to save availability",
-      );
-    } finally {
-      setBusy(false);
-    }
-  };
 
   const addBlock = async () => {
     if (!blockStart || !blockEnd) {
@@ -183,20 +132,14 @@ export default function TherapistSettingsPage() {
           Availability Settings
         </h1>
         <p className="font-dmsans text-sm text-ink-muted">
-          Manage your weekly working hours and block off one-off unavailability.
+          View admin-set working hours and block off one-off unavailability.
         </p>
       </div>
 
       <ErrorNote message={error} />
-      {notice && (
-        <div className="rounded-soft border border-emerald-200 bg-emerald-50 px-4 py-3 font-dmsans text-sm font-medium text-emerald-800">
-          {notice}
-        </div>
-      )}
-
       <Panel
         title="Weekly Schedule"
-        subtitle="Clients can only book slots that fall within these hours."
+        subtitle="Your administrator manages these working hours. Contact them to request a change."
       >
         {loading ? (
           <LoadingRow label="Loading schedule..." />
@@ -215,18 +158,11 @@ export default function TherapistSettingsPage() {
                     {groupedByDay[dayIdx].map((slot) => (
                       <div
                         key={slot.idx}
-                        className="flex items-center justify-between gap-1 rounded-full bg-surface px-2 py-1 text-[11px]"
+                        className="rounded-full bg-surface px-2 py-1 text-[11px]"
                       >
                         <span className="text-ink">
                           {slot.startTime}–{slot.endTime}
                         </span>
-                        <button
-                          type="button"
-                          onClick={() => removeRow(slot.idx)}
-                          className="text-ink-muted hover:text-red-700"
-                        >
-                          <Trash2 size={11} />
-                        </button>
                       </div>
                     ))}
                   </div>
@@ -234,52 +170,6 @@ export default function TherapistSettingsPage() {
               ))}
             </div>
 
-            <div className="flex flex-wrap items-end gap-3 border-t border-ocean/10 pt-4">
-              <Field label="Day">
-                <select
-                  value={newDay}
-                  onChange={(e) => setNewDay(Number(e.target.value))}
-                  className={inputClass}
-                >
-                  {DAYS.map((d, i) => (
-                    <option key={d} value={i}>
-                      {d}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Start">
-                <input
-                  type="time"
-                  value={newStart}
-                  onChange={(e) => setNewStart(e.target.value)}
-                  className={inputClass}
-                />
-              </Field>
-              <Field label="End">
-                <input
-                  type="time"
-                  value={newEnd}
-                  onChange={(e) => setNewEnd(e.target.value)}
-                  className={inputClass}
-                />
-              </Field>
-              <button
-                type="button"
-                onClick={addRow}
-                className="inline-flex items-center gap-1.5 rounded-full border border-ocean/25 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-ocean-deep hover:bg-surface-sunken"
-              >
-                <Plus size={13} /> Add slot
-              </button>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={saveWeekly}
-                className="ml-auto rounded-full bg-ocean px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-surface-raised-sm transition-all hover:-translate-y-0.5 disabled:opacity-40"
-              >
-                {busy ? "Saving..." : "Save weekly schedule"}
-              </button>
-            </div>
           </div>
         )}
       </Panel>
