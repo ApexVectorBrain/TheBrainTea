@@ -130,6 +130,38 @@ suite("booking & finance integration", () => {
       },
     });
     serviceId = service.id;
+    const [individualService, couplesService] = await Promise.all([
+      prisma.service.upsert({
+        where: { slug: "individual-counselling" },
+        update: {},
+        create: {
+          name: "Individual Counselling",
+          slug: "individual-counselling",
+          description: "Test individual counselling service",
+          durationMinutes: 50,
+          priceMinor: 180000,
+        },
+      }),
+      prisma.service.upsert({
+        where: { slug: "couples-counseling" },
+        update: {},
+        create: {
+          name: "Couples & Family Therapy",
+          slug: "couples-counseling",
+          description: "Test couples and family service",
+          durationMinutes: 50,
+          priceMinor: 220000,
+        },
+      }),
+    ]);
+    await prisma.therapist.update({
+      where: { id: therapist.id },
+      data: {
+        services: {
+          connect: [{ id: individualService.id }, { id: couplesService.id }],
+        },
+      },
+    });
   });
 
   afterAll(async () => {
@@ -141,14 +173,6 @@ suite("booking & finance integration", () => {
     await prisma.booking.deleteMany({ where: { therapistId } });
     await prisma.therapist.delete({ where: { id: therapistId } });
     await prisma.service.delete({ where: { id: serviceId } });
-    // Canonical services upserted by scheduleAdminBooking — but only when no
-    // other bookings reference them (a shared dev database may have some).
-    await prisma.service.deleteMany({
-      where: {
-        slug: { in: ["assessment", "individual-counselling", "couple-family-counselling"] },
-        bookings: { none: {} },
-      },
-    });
     await prisma.client.deleteMany({
       where: { email: { contains: `${STAMP}` } },
     });
@@ -314,7 +338,7 @@ suite("booking & finance integration", () => {
   });
 
   it("frees the slot on cancellation and allows rebooking", async () => {
-    const slot = futureSlot(11, 14);
+    const slot = futureSlot(11, 13);
     const { booking } = await createBooking({
       therapistSlug: SLUG,
       serviceSlug: SERVICE_SLUG,
@@ -374,7 +398,7 @@ suite("booking & finance integration", () => {
   });
 
   it("schedules an admin appointment: confirmed, typed, slot-held, and prepaid revenue posted", async () => {
-    const slot = futureSlot(20, 16);
+    const slot = futureSlot(20, 13);
     const booking = await scheduleAdminBooking({
       therapistId,
       counselingType: "COUPLE_FAMILY",

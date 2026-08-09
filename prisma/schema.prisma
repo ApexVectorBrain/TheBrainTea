@@ -143,9 +143,13 @@ model Booking {
   client          Client    @relation(fields: [clientId], references: [id])
   dateTime        DateTime // session start
   durationMinutes Int
+  // True only for a receptionist-authorised session outside the consultant's
+  // admin-set working window. It remains a normal booking for counts/ledger.
+  isOvertime      Boolean   @default(false)
 
   // High-level counselling category captured for admin-scheduled sessions:
-  // "INDIVIDUAL" | "COUPLE_FAMILY". Null for legacy/self-service bookings that
+  // One of the five canonical service types in counselingType.ts. Null for
+  // legacy/self-service bookings that
   // predate the field. Constrained by src/server/domain/counselingType.ts.
   counselingType String?
 

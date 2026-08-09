@@ -19,6 +19,14 @@ export const GET = handleApi(async (request: Request) => {
       status: true,
       isActive: true,
       feeMinor: true,
+      services: {
+        select: { id: true, name: true, slug: true },
+        orderBy: { name: "asc" },
+      },
+      availability: {
+        select: { dayOfWeek: true, startTime: true, endTime: true },
+        orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
+      },
     },
     orderBy: { name: "asc" },
   });
