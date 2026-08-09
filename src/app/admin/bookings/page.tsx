@@ -20,9 +20,9 @@ import {
   StatusPill,
 } from "@/components/admin/ui";
 import {
-  COUNSELING_TYPES,
   COUNSELING_TYPE_LABELS,
   counselingTypeLabel,
+  counselingTypesForServiceSlugs,
 } from "@/server/domain/counselingType";
 
 // Client-side mirror of the booking state machine for action menus; the
@@ -76,6 +76,7 @@ interface BookingRow {
   id: string;
   dateTime: string;
   durationMinutes: number;
+  isOvertime: boolean;
   amountMinor: number;
   discountMinor: number;
   status: string;
@@ -126,6 +127,7 @@ interface Consultant {
   status?: string;
   isActive?: boolean;
   feeMinor?: number;
+  services?: { id: string; name: string; slug: string }[];
 }
 
 export default function AdminBookingsPage() {
@@ -346,6 +348,11 @@ export default function AdminBookingsPage() {
                           {counselingTypeLabel(row.counselingType)}
                         </div>
                       )}
+                      {row.isOvertime && (
+                        <div className="mt-1 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                          Overtime
+                        </div>
+                      )}
                     </td>
                     <td className="px-3 py-3.5">
                       <div className="font-medium text-ink">
@@ -434,9 +441,7 @@ function ScheduleModal({
   );
 
   const [therapistId, setTherapistId] = useState("");
-  const [counselingType, setCounselingType] = useState<string>(
-    COUNSELING_TYPES[0],
-  );
+  const [counselingType, setCounselingType] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [feeRupees, setFeeRupees] = useState("");
@@ -460,10 +465,21 @@ function ScheduleModal({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
+  const offeredCounselingTypes = useMemo(() => {
+    const consultant = bookable.find((item) => item.id === therapistId);
+    return counselingTypesForServiceSlugs(
+      (consultant?.services ?? []).map((service) => service.slug),
+    );
+  }, [bookable, therapistId]);
+
   // Prefill the fee from the chosen consultant's default rate.
   const onConsultantChange = (id: string) => {
     setTherapistId(id);
     const c = bookable.find((x) => x.id === id);
+    const types = counselingTypesForServiceSlugs(
+      (c?.services ?? []).map((service) => service.slug),
+    );
+    setCounselingType(types[0] ?? "");
     if (c?.feeMinor != null) setFeeRupees(String(c.feeMinor / 100));
   };
 
@@ -495,6 +511,8 @@ function ScheduleModal({
   const submit = async () => {
     setError("");
     if (!therapistId) return setError("Select a consultant");
+    if (!counselingType)
+      return setError("This consultant has no assigned services");
     if (!date || !time) return setError("Select a date and time");
     const fee = Number(feeRupees);
     if (!fee || fee <= 0) return setError("Enter a valid fee amount");
@@ -562,13 +580,21 @@ function ScheduleModal({
               ))}
             </select>
           </Field>
-          <Field label="Counselling type">
+          <Field label="Service">
             <select
               value={counselingType}
               onChange={(e) => setCounselingType(e.target.value)}
               className={inputClass}
+              disabled={!therapistId || offeredCounselingTypes.length === 0}
             >
-              {COUNSELING_TYPES.map((t) => (
+              <option value="">
+                {!therapistId
+                  ? "Select a consultant first"
+                  : offeredCounselingTypes.length === 0
+                    ? "No services assigned"
+                    : "Select a service"}
+              </option>
+              {offeredCounselingTypes.map((t) => (
                 <option key={t} value={t}>
                   {COUNSELING_TYPE_LABELS[t]}
                 </option>
@@ -885,6 +911,11 @@ function BookingDetailModal({
               {detail.counselingType && (
                 <div className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-ocean/70">
                   {counselingTypeLabel(detail.counselingType)}
+                </div>
+              )}
+              {detail.isOvertime && (
+                <div className="mt-1 text-[11px] font-bold uppercase tracking-wide text-amber-700">
+                  Reception overtime
                 </div>
               )}
             </div>

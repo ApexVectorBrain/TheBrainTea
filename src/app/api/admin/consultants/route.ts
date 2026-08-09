@@ -20,7 +20,7 @@ export const GET = handleApi(async (request: Request) => {
       include: {
         user: { select: { email: true } },
         services: {
-          select: { id: true, name: true },
+          select: { id: true, name: true, slug: true },
           orderBy: { name: "asc" },
         },
       },

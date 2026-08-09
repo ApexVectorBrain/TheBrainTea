@@ -3,24 +3,46 @@ import {
   COUNSELING_SERVICE_DEFAULTS,
   COUNSELING_TYPES,
   counselingTypeLabel,
+  counselingTypesForServiceSlugs,
   isCounselingType,
 } from "../counselingType";
 
 describe("counselingType domain", () => {
-  it("recognises the two supported types", () => {
+  it("recognises the five supported types", () => {
+    expect(isCounselingType("ASSESSMENT")).toBe(true);
+    expect(isCounselingType("CAREER_ACADEMIC")).toBe(true);
     expect(isCounselingType("INDIVIDUAL")).toBe(true);
+    expect(isCounselingType("INDIVIDUAL_THERAPY")).toBe(true);
     expect(isCounselingType("COUPLE_FAMILY")).toBe(true);
     expect(isCounselingType("GROUP")).toBe(false);
     expect(isCounselingType("")).toBe(false);
   });
 
   it("labels known types and falls back for unknown/null", () => {
-    expect(counselingTypeLabel("INDIVIDUAL")).toBe("Assessment");
+    expect(counselingTypeLabel("ASSESSMENT")).toBe("Assessment");
+    expect(counselingTypeLabel("CAREER_ACADEMIC")).toBe(
+      "Career & Academic Counselling",
+    );
+    expect(counselingTypeLabel("INDIVIDUAL")).toBe("Individual Counselling");
+    expect(counselingTypeLabel("INDIVIDUAL_THERAPY")).toBe(
+      "Individual Therapy",
+    );
     expect(counselingTypeLabel("COUPLE_FAMILY")).toBe(
-      "Couple / Family Counselling",
+      "Couples & Family Therapy",
     );
     expect(counselingTypeLabel(null)).toBe("—");
     expect(counselingTypeLabel("NONSENSE")).toBe("—");
+  });
+
+  it("maps a consultant's assigned service slugs to scheduling choices", () => {
+    expect(
+      counselingTypesForServiceSlugs([
+        "assessment",
+        "individual-therapy",
+        "unrelated-service",
+      ]),
+    ).toEqual(["ASSESSMENT", "INDIVIDUAL_THERAPY"]);
+    expect(counselingTypesForServiceSlugs([])).toEqual([]);
   });
 
   it("defines a canonical, well-formed service for every type", () => {
@@ -41,7 +63,8 @@ describe("counselingType domain", () => {
     expect(new Set(slugs).size).toBe(slugs.length);
   });
 
-  it("keeps the individual assessment fee at ₹1,800", () => {
+  it("keeps assessment and individual fees at ₹1,800", () => {
+    expect(COUNSELING_SERVICE_DEFAULTS.ASSESSMENT.priceMinor).toBe(180000);
     expect(COUNSELING_SERVICE_DEFAULTS.INDIVIDUAL.priceMinor).toBe(180000);
   });
 });

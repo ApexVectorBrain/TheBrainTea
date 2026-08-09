@@ -37,11 +37,11 @@ let receptionCookie: string;
 let therapistCookie: string;
 
 /** A weekday slot in the future, aligned to the availability template below. */
-function futureSlot(daysAhead: number, hour = 11): Date {
+function futureSlot(daysAhead: number, hour = 11, minute = 0): Date {
   const d = new Date();
   d.setDate(d.getDate() + daysAhead);
   while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
-  d.setHours(hour, 0, 0, 0);
+  d.setHours(hour, minute, 0, 0);
   return d;
 }
 
@@ -114,15 +114,28 @@ suite("reception desk", () => {
       },
     });
     therapistId = therapist.id;
+    const individualService = await prisma.service.upsert({
+      where: { slug: "individual-counselling" },
+      update: {},
+      create: {
+        name: "Individual Counselling",
+        slug: "individual-counselling",
+        description: "Test individual counselling service",
+        durationMinutes: 50,
+        priceMinor: FEE_MINOR,
+      },
+    });
+    await prisma.therapist.update({
+      where: { id: therapist.id },
+      data: { services: { connect: { id: individualService.id } } },
+    });
     await prisma.therapistAvailability.createMany({
-      data: [1, 2, 3, 4, 5].flatMap((day) =>
-        [9, 10, 11, 12, 13, 14, 15, 16].map((h) => ({
-          therapistId: therapist.id,
-          dayOfWeek: day,
-          startTime: `${String(h).padStart(2, "0")}:00`,
-          endTime: `${String(h + 1).padStart(2, "0")}:00`,
-        })),
-      ),
+      data: [1, 2, 3, 4, 5].map((dayOfWeek) => ({
+        therapistId: therapist.id,
+        dayOfWeek,
+        startTime: "09:00",
+        endTime: "14:00",
+      })),
     });
   });
 
@@ -130,12 +143,6 @@ suite("reception desk", () => {
     await prisma.ledgerEntry.deleteMany({ where: { therapistId } });
     await prisma.booking.deleteMany({ where: { therapistId } });
     await prisma.therapist.delete({ where: { id: therapistId } });
-    await prisma.service.deleteMany({
-      where: {
-        slug: { in: ["assessment", "individual-counselling", "couple-family-counselling"] },
-        bookings: { none: {} },
-      },
-    });
     await prisma.client.deleteMany({
       where: { email: { contains: `${STAMP}` } },
     });
@@ -151,9 +158,16 @@ suite("reception desk", () => {
   /** Schedule an appointment through the reception endpoint. */
   async function schedule(
     slot: Date,
-    { paymentReceived = false, clientId }: {
+    {
+      paymentReceived = false,
+      clientId,
+      isOvertime = slot.getHours() >= 14,
+      counselingType = "INDIVIDUAL",
+    }: {
       paymentReceived?: boolean;
       clientId?: string;
+      isOvertime?: boolean;
+      counselingType?: "ASSESSMENT" | "INDIVIDUAL";
     } = {},
   ) {
     const res = await bookingsPost(
@@ -161,11 +175,12 @@ suite("reception desk", () => {
         method: "POST",
         body: {
           therapistId,
-          counselingType: "INDIVIDUAL",
+          counselingType,
           date: ymd(slot),
           time: hm(slot),
           feeRupees: FEE_MINOR / 100,
           paymentReceived,
+          isOvertime,
           ...(paymentReceived ? { paymentRef: `UTR${STAMP}` } : {}),
           ...(clientId
             ? { clientId }
@@ -219,6 +234,7 @@ suite("reception desk", () => {
     expect(booking.paymentStatus).toBe("PAID");
     expect(booking.invoiceNumber).toBeTruthy();
     expect(booking.amountMinor).toBe(FEE_MINOR);
+    expect(booking.isOvertime).toBe(false);
     // Commission is snapshotted from the consultant's override, not recomputed
     expect(booking.commissionBps).toBe(3000);
 
@@ -254,6 +270,42 @@ suite("reception desk", () => {
     expect((await schedule(slot)).status).toBe(201);
     const second = await schedule(slot);
     expect(second.status).toBe(409);
+  });
+
+  it("persists and counts a receptionist-authorised overtime session", async () => {
+    const slot = futureSlot(6, 19, 17);
+    const { status, body } = await schedule(slot, { isOvertime: true });
+    expect(status).toBe(201);
+    const bookingId = (body as unknown as { booking: { id: string } }).booking
+      .id;
+    const booking = await prisma.booking.findUniqueOrThrow({
+      where: { id: bookingId },
+    });
+    expect(booking.isOvertime).toBe(true);
+    expect(await prisma.booking.count({ where: { id: bookingId } })).toBe(1);
+    expect(
+      (await schedule(futureSlot(6, 19, 30), { isOvertime: true })).status,
+    ).toBe(409);
+  });
+
+  it("requires an explicit, accurate overtime classification", async () => {
+    expect(
+      (await schedule(futureSlot(10, 16), { isOvertime: false })).status,
+    ).toBe(409);
+    expect(
+      (await schedule(futureSlot(10, 11), { isOvertime: true })).status,
+    ).toBe(400);
+    expect(
+      (await schedule(futureSlot(11, 13, 30), { isOvertime: true })).status,
+    ).toBe(400);
+    expect(
+      (
+        await schedule(futureSlot(12, 11), {
+          isOvertime: false,
+          counselingType: "ASSESSMENT",
+        })
+      ).status,
+    ).toBe(409);
   });
 
   // ── Desk payment collection ───────────────────────────────
@@ -373,7 +425,7 @@ suite("reception desk", () => {
     const bookingId = (created.body as unknown as { booking: { id: string } })
       .booking.id;
 
-    const target = futureSlot(12, 14);
+    const target = futureSlot(12, 12);
     const moved = await bookingPatch(
       req(`/api/reception/bookings/${bookingId}`, {
         method: "PATCH",

@@ -11,6 +11,11 @@ import {
   Panel,
   StatusPill,
 } from "@/components/admin/ui";
+import {
+  minutesToTime,
+  timeToMinutes,
+  workingWindowError,
+} from "@/server/domain/workingHours";
 
 interface ConsultantRow {
   id: string;
@@ -82,6 +87,45 @@ interface ConsultantDetail {
 }
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+interface AvailabilityDraft {
+  dayOfWeek: number;
+  enabled: boolean;
+  startTime: string;
+  endTime: string;
+}
+
+function availabilityDrafts(
+  rows: ConsultantDetail["consultant"]["availability"],
+): AvailabilityDraft[] {
+  return DAYS.map((_, dayOfWeek) => {
+    const dayRows = rows.filter((row) => row.dayOfWeek === dayOfWeek);
+    const first = dayRows[0];
+    if (!first) {
+      return {
+        dayOfWeek,
+        enabled: false,
+        startTime: "11:00",
+        endTime: "16:00",
+      };
+    }
+    const validSingleWindow =
+      dayRows.length === 1 && !workingWindowError(first);
+    const parsedStart = timeToMinutes(first.startTime);
+    const startMinutes =
+      parsedStart !== null && parsedStart <= 18 * 60 + 59
+        ? parsedStart
+        : 11 * 60;
+    return {
+      dayOfWeek,
+      enabled: true,
+      startTime: minutesToTime(startMinutes),
+      endTime: validSingleWindow
+        ? first.endTime
+        : minutesToTime(startMinutes + 5 * 60),
+    };
+  });
+}
 
 export default function AdminConsultantsPage() {
   const [rows, setRows] = useState<ConsultantRow[]>([]);
@@ -237,6 +281,7 @@ function ConsultantDetailModal({
   const [feeRupees, setFeeRupees] = useState("");
   const [commissionPct, setCommissionPct] = useState("");
   const [serviceIds, setServiceIds] = useState<string[]>([]);
+  const [availability, setAvailability] = useState<AvailabilityDraft[]>([]);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/admin/consultants/${consultantId}`);
@@ -255,6 +300,7 @@ function ConsultantDetailModal({
     setServiceIds(
       (data.consultant.services ?? []).map((s: { id: string }) => s.id),
     );
+    setAvailability(availabilityDrafts(data.consultant.availability ?? []));
   }, [consultantId]);
 
   useEffect(() => {
@@ -453,41 +499,103 @@ function ConsultantDetailModal({
           {/* Availability */}
           <div>
             <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-ink-muted">
-              Weekly availability
+              Weekly working hours
             </h4>
-            {c.availability.length === 0 ? (
-              <p className="text-xs italic text-ink-muted">
-                No availability configured.
-              </p>
-            ) : (
-              <div className="flex flex-wrap gap-1.5 text-xs">
-                {Object.entries(
-                  c.availability.reduce<Record<number, string[]>>(
-                    (acc, slot) => {
-                      (acc[slot.dayOfWeek] ??= []).push(slot.startTime);
-                      return acc;
-                    },
-                    {},
-                  ),
-                ).map(([day, times]) => (
-                  <span
-                    key={day}
-                    className="surface-inset rounded-full px-3 py-1.5 text-ink-muted"
-                  >
-                    <strong className="text-ocean-deep">
-                      {DAYS[Number(day)]}
-                    </strong>{" "}
-                    {times[0]}–
-                    {
-                      c.availability
-                        .filter((s) => s.dayOfWeek === Number(day))
-                        .slice(-1)[0].endTime
-                    }{" "}
-                    ({times.length} slots)
-                  </span>
-                ))}
-              </div>
-            )}
+            <p className="mb-3 text-[11px] italic text-ink-muted">
+              Enable each working day and enter one 5-hour window. The booking
+              page creates five 50-minute sessions from the exact start time,
+              with 10-minute breaks.
+            </p>
+            <div className="space-y-2">
+              {availability.map((row, index) => (
+                <div
+                  key={row.dayOfWeek}
+                  className="surface-inset grid grid-cols-[72px_1fr_1fr] items-end gap-3 rounded-soft p-3"
+                >
+                  <label className="flex items-center gap-2 pb-2 text-sm font-semibold text-ocean-deep">
+                    <input
+                      type="checkbox"
+                      checked={row.enabled}
+                      onChange={(e) =>
+                        setAvailability((current) =>
+                          current.map((item, i) =>
+                            i === index
+                              ? { ...item, enabled: e.target.checked }
+                              : item,
+                          ),
+                        )
+                      }
+                      className="h-4 w-4 accent-ocean"
+                    />
+                    {DAYS[row.dayOfWeek]}
+                  </label>
+                  <Field label="Start">
+                    <input
+                      type="time"
+                      step={60}
+                      value={row.startTime}
+                      disabled={!row.enabled}
+                      onChange={(e) => {
+                        const startTime = e.target.value;
+                        const startMinutes = timeToMinutes(startTime);
+                        setAvailability((current) =>
+                          current.map((item, i) =>
+                            i === index
+                              ? {
+                                  ...item,
+                                  startTime,
+                                  endTime:
+                                    startMinutes !== null &&
+                                    startMinutes + 5 * 60 < 24 * 60
+                                      ? minutesToTime(startMinutes + 5 * 60)
+                                      : item.endTime,
+                                }
+                              : item,
+                          ),
+                        );
+                      }}
+                      className={inputClass}
+                    />
+                  </Field>
+                  <Field label="End">
+                    <input
+                      type="time"
+                      step={60}
+                      value={row.endTime}
+                      disabled={!row.enabled}
+                      onChange={(e) =>
+                        setAvailability((current) =>
+                          current.map((item, i) =>
+                            i === index
+                              ? { ...item, endTime: e.target.value }
+                              : item,
+                          ),
+                        )
+                      }
+                      className={inputClass}
+                    />
+                  </Field>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() =>
+                patch({
+                  availability: availability
+                    .filter((row) => row.enabled)
+                    .map(({ dayOfWeek, startTime, endTime }) => ({
+                      dayOfWeek,
+                      startTime,
+                      endTime,
+                    })),
+                })
+              }
+              className="mt-3 rounded-full bg-ocean px-5 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-surface-raised-sm disabled:opacity-40"
+            >
+              Save working hours
+            </button>
           </div>
 
           {/* Payout history */}

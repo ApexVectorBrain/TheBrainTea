@@ -17,11 +17,12 @@ import {
   StatusPill,
 } from "@/components/admin/ui";
 import {
-  COUNSELING_TYPES,
   COUNSELING_TYPE_LABELS,
   counselingTypeLabel,
+  counselingTypesForServiceSlugs,
 } from "@/server/domain/counselingType";
 import { RECEPTION_TRANSITIONS } from "@/server/domain/receptionScope";
+import { generateSlotsForWindows } from "@/server/domain/workingHours";
 
 // Shared front-desk booking pieces: the appointment table, the detail modal
 // with the desk's action set, and the scheduling modal. Built entirely from
@@ -32,6 +33,7 @@ export interface BookingRow {
   id: string;
   dateTime: string;
   durationMinutes: number;
+  isOvertime: boolean;
   amountMinor: number;
   discountMinor: number;
   status: string;
@@ -83,6 +85,12 @@ export interface Consultant {
   status?: string;
   isActive?: boolean;
   feeMinor?: number;
+  services?: { id: string; name: string; slug: string }[];
+  availability?: {
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+  }[];
 }
 
 // Client-side mirror of src/server/domain/receptionScope.ts — labels for the
@@ -96,7 +104,10 @@ const ACTION_LABELS: Record<
   COMPLETED: { label: "Mark completed", primary: true },
   NO_SHOW: { label: "Mark no-show" },
   CANCELLED: { label: "Cancel", needsReason: true },
-  REFUND_PENDING: { label: "Request refund (admin approves)", needsReason: true },
+  REFUND_PENDING: {
+    label: "Request refund (admin approves)",
+    needsReason: true,
+  },
 };
 
 export function actionsFor(status: string) {
@@ -164,6 +175,11 @@ export function BookingTable({
                     {counselingTypeLabel(row.counselingType)}
                   </div>
                 )}
+                {row.isOvertime && (
+                  <div className="mt-1 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                    Overtime
+                  </div>
+                )}
               </td>
               <td className="px-3 py-3.5">
                 <div className="font-medium text-ink">{row.client.name}</div>
@@ -199,6 +215,7 @@ export function BookingDetailModal({
 }) {
   const [detail, setDetail] = useState<BookingDetail | null>(null);
   const [error, setError] = useState("");
+
   const [busy, setBusy] = useState(false);
   const [reasonFor, setReasonFor] = useState<string | null>(null);
   const [reason, setReason] = useState("");
@@ -305,8 +322,12 @@ export function BookingDetailModal({
               <div className="font-semibold text-ocean-deep">
                 {detail.client.name}
               </div>
-              <div className="text-xs text-ink-muted">{detail.client.email}</div>
-              <div className="text-xs text-ink-muted">{detail.client.phone}</div>
+              <div className="text-xs text-ink-muted">
+                {detail.client.email}
+              </div>
+              <div className="text-xs text-ink-muted">
+                {detail.client.phone}
+              </div>
               <div className="mt-2 text-xs text-ink-muted">
                 <span className="font-semibold">Emergency:</span>{" "}
                 {detail.client.emergencyContact}
@@ -503,7 +524,8 @@ export function BookingDetailModal({
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="font-semibold text-ocean-deep">
-                        {p.kind === "CHARGE" ? "Charge" : "Refund"} · {p.provider}
+                        {p.kind === "CHARGE" ? "Charge" : "Refund"} ·{" "}
+                        {p.provider}
                       </span>
                       <span className="font-mono text-ink-muted">
                         {p.providerRef || p.providerPaymentId || "—"}
@@ -586,14 +608,16 @@ export function ScheduleModal({
   );
 
   const [therapistId, setTherapistId] = useState("");
-  const [counselingType, setCounselingType] = useState<string>(
-    COUNSELING_TYPES[0],
-  );
+  const [counselingType, setCounselingType] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [feeRupees, setFeeRupees] = useState("");
   const [paymentReceived, setPaymentReceived] = useState(false);
+  const [bookingMode, setBookingMode] = useState<"normal" | "overtime">(
+    "normal",
+  );
   const [paymentRef, setPaymentRef] = useState("");
+  const isOvertime = bookingMode === "overtime";
 
   const [clientMode, setClientMode] = useState<"existing" | "new">("existing");
   const [clientQuery, setClientQuery] = useState("");
@@ -612,9 +636,31 @@ export function ScheduleModal({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
+  const offeredCounselingTypes = useMemo(() => {
+    const consultant = bookable.find((item) => item.id === therapistId);
+    return counselingTypesForServiceSlugs(
+      (consultant?.services ?? []).map((service) => service.slug),
+    );
+  }, [bookable, therapistId]);
+
+  const normalSlots = useMemo(() => {
+    if (!therapistId || !date) return [];
+    const consultant = bookable.find((item) => item.id === therapistId);
+    const dayOfWeek = new Date(`${date}T00:00:00`).getDay();
+    return generateSlotsForWindows(
+      (consultant?.availability ?? []).filter(
+        (window) => window.dayOfWeek === dayOfWeek,
+      ),
+    ).sort((a, b) => a.startTime.localeCompare(b.startTime));
+  }, [bookable, date, therapistId]);
+
   const onConsultantChange = (id: string) => {
     setTherapistId(id);
     const c = bookable.find((x) => x.id === id);
+    const types = counselingTypesForServiceSlugs(
+      (c?.services ?? []).map((service) => service.slug),
+    );
+    setCounselingType(types[0] ?? "");
     if (c?.feeMinor != null) setFeeRupees(String(c.feeMinor / 100));
   };
 
@@ -644,6 +690,8 @@ export function ScheduleModal({
   const submit = async () => {
     setError("");
     if (!therapistId) return setError("Select a consultant");
+    if (!counselingType)
+      return setError("This consultant has no assigned services");
     if (!date || !time) return setError("Select a date and time");
     const fee = Number(feeRupees);
     if (!fee || fee <= 0) return setError("Enter a valid fee amount");
@@ -668,6 +716,7 @@ export function ScheduleModal({
         time,
         feeRupees: fee,
         paymentReceived,
+        isOvertime,
       };
       if (paymentReceived && paymentRef.trim())
         body.paymentRef = paymentRef.trim();
@@ -696,6 +745,49 @@ export function ScheduleModal({
       <div className="space-y-5 font-dmsans">
         <ErrorNote message={error} />
 
+        <div className="rounded-soft border border-ocean/15 bg-surface-sunken/60 p-3">
+          <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-ink-muted">
+            Booking type
+          </div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {(
+              [
+                [
+                  "normal",
+                  "Regular working hours",
+                  "Choose an admin-set session.",
+                ],
+                [
+                  "overtime",
+                  "Extra hours / overtime",
+                  "Book any free time outside the five-hour shift.",
+                ],
+              ] as const
+            ).map(([mode, label, help]) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => {
+                  setBookingMode(mode);
+                  setTime("");
+                }}
+                className={`rounded-soft border px-4 py-3 text-left transition-colors ${
+                  bookingMode === mode
+                    ? mode === "overtime"
+                      ? "border-amber-400 bg-amber-50 text-amber-950"
+                      : "border-ocean bg-white text-ocean-deep"
+                    : "border-transparent bg-white/60 text-ink-muted hover:border-ocean/20"
+                }`}
+              >
+                <span className="block text-sm font-bold">{label}</span>
+                <span className="mt-0.5 block text-[11px] font-normal">
+                  {help}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field label="Consultant">
             <select
@@ -711,13 +803,21 @@ export function ScheduleModal({
               ))}
             </select>
           </Field>
-          <Field label="Counselling type">
+          <Field label="Service">
             <select
               value={counselingType}
               onChange={(e) => setCounselingType(e.target.value)}
               className={inputClass}
+              disabled={!therapistId || offeredCounselingTypes.length === 0}
             >
-              {COUNSELING_TYPES.map((t) => (
+              <option value="">
+                {!therapistId
+                  ? "Select a consultant first"
+                  : offeredCounselingTypes.length === 0
+                    ? "No services assigned"
+                    : "Select a service"}
+              </option>
+              {offeredCounselingTypes.map((t) => (
                 <option key={t} value={t}>
                   {COUNSELING_TYPE_LABELS[t]}
                 </option>
@@ -734,13 +834,35 @@ export function ScheduleModal({
             />
           </Field>
           <Field label="Time">
-            <input
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className={inputClass}
-              step={900}
-            />
+            {isOvertime ? (
+              <input
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className={inputClass}
+                step={60}
+              />
+            ) : (
+              <select
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className={inputClass}
+                disabled={!therapistId || !date}
+              >
+                <option value="">
+                  {!therapistId || !date
+                    ? "Select consultant and date first"
+                    : normalSlots.length === 0
+                      ? "No working hours on this day"
+                      : "Select a session"}
+                </option>
+                {normalSlots.map((slot) => (
+                  <option key={slot.startTime} value={slot.startTime}>
+                    {slot.startTime}–{slot.endTime}
+                  </option>
+                ))}
+              </select>
+            )}
           </Field>
           <Field label="Session fee (₹)">
             <input

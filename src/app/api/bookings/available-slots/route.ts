@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { releaseExpiredReservations } from "@/server/services/bookingService";
 import { badRequest, handleApi, notFound } from "@/server/http";
+import { generateSlotsForWindows } from "@/server/domain/workingHours";
 
 export const GET = handleApi(async (request: Request) => {
   const { searchParams } = new URL(request.url);
@@ -56,7 +57,11 @@ export const GET = handleApi(async (request: Request) => {
     ),
   );
 
-  const availableSlots = weeklySlots
+  const availableSlots = generateSlotsForWindows(weeklySlots)
+    .map((slot) => ({
+      ...slot,
+      id: `${weeklySlots[0].id}:${slot.startTime}`,
+    }))
     .map((slot) => {
       const slotStart = new Date(`${dateStr}T${slot.startTime}:00`);
       const slotEnd = new Date(`${dateStr}T${slot.endTime}:00`);

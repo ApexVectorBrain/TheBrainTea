@@ -42,6 +42,7 @@ export const GET = handleApi(
         id: true,
         dateTime: true,
         durationMinutes: true,
+        isOvertime: true,
         amountMinor: true,
         discountMinor: true,
         taxMinor: true,
