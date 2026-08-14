@@ -14,6 +14,7 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [lastPath, setLastPath] = useState(pathname);
+  const [isTeamSectionActive, setIsTeamSectionActive] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -27,6 +28,35 @@ export default function Header() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Keep the team link visibly active both after following its deep link and
+  // while the visitor is reading that section on the About page.
+  useEffect(() => {
+    const updateTeamSectionState = () => {
+      const teamSection = document.getElementById("meet-the-team");
+      if (!teamSection || pathname !== "/about") {
+        setIsTeamSectionActive(false);
+        return;
+      }
+
+      const bounds = teamSection.getBoundingClientRect();
+      const beneathHeader = bounds.top <= 120;
+      const hasNotPassed = bounds.bottom > 120;
+      setIsTeamSectionActive(
+        window.location.hash === "#meet-the-team" ||
+          (beneathHeader && hasNotPassed),
+      );
+    };
+
+    updateTeamSectionState();
+    window.addEventListener("scroll", updateTeamSectionState, { passive: true });
+    window.addEventListener("hashchange", updateTeamSectionState);
+
+    return () => {
+      window.removeEventListener("scroll", updateTeamSectionState);
+      window.removeEventListener("hashchange", updateTeamSectionState);
+    };
+  }, [pathname]);
 
   // Close the mobile menu on route change — handled during render (React's
   // "reset state on change" pattern) so it doesn't require a setState-in-effect.
@@ -77,11 +107,17 @@ export default function Header() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             {navLinks.map((link) => {
-              const isActive = pathname === link.href;
+              const isTeamLink = link.href === "/about#meet-the-team";
+              const isActive = isTeamLink
+                ? isTeamSectionActive
+                : pathname === link.href;
               return (
                 <NavLink
                   key={link.name}
                   href={link.href}
+                  onClick={() => {
+                    if (isTeamLink) setIsTeamSectionActive(true);
+                  }}
                   className={`font-dmsans text-sm font-medium tracking-wide transition-colors relative py-1 ${
                     isActive
                       ? "text-teal-sage font-semibold"
@@ -148,7 +184,12 @@ export default function Header() {
                 >
                   <NavLink
                     href={link.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={() => {
+                      if (link.href === "/about#meet-the-team") {
+                        setIsTeamSectionActive(true);
+                      }
+                      setIsMobileMenuOpen(false);
+                    }}
                     className="font-cormorant text-3xl font-semibold hover:text-mist transition-colors"
                   >
                     {link.name}
