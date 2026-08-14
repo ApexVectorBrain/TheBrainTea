@@ -2,7 +2,8 @@
  * Bring a live database's service catalogue in line with what the clinic
  * actually offers:
  *
- *   - Individual Therapy
+ *   - Assessment
+ *   - Individual Counselling
  *   - Couples & Family Therapy
  *   - Career & Academic Counselling
  *
@@ -39,14 +40,39 @@ const SESSION_MINUTES = 50;
  * real bookings.
  */
 const KEEP_SLUGS = [
-  "individual-therapy",
   "assessment",
+  "individual-counselling",
   "couples-counseling",
   "career-academic-counselling",
   "couple-family-counselling",
 ];
 
+const INDIVIDUAL_COUNSELLING = {
+  name: "Individual Counselling",
+  slug: "individual-counselling",
+  durationMinutes: SESSION_MINUTES,
+  priceMinor: 150000,
+  description:
+    "One-to-one counselling focused on your concerns, goals, and ongoing wellbeing.",
+  tagline: "A private space to understand yourself.",
+  image: "/team/office.jpg",
+  suitableFor: [
+    "Stress and overwhelm",
+    "Emotional wellbeing",
+    "Life transitions",
+    "Self-understanding",
+    "Ongoing support",
+  ],
+  availability: ["Online", "Offline"],
+};
+
 async function main() {
+  await prisma.service.upsert({
+    where: { slug: INDIVIDUAL_COUNSELLING.slug },
+    create: INDIVIDUAL_COUNSELLING,
+    update: { isActive: true },
+  });
+
   const services = await prisma.service.findMany({
     include: { _count: { select: { bookings: true } } },
     orderBy: { slug: "asc" },

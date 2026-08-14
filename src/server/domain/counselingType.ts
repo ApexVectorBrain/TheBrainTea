@@ -9,7 +9,6 @@ export const COUNSELING_TYPES = [
   "CAREER_ACADEMIC",
   "COUPLE_FAMILY",
   "INDIVIDUAL",
-  "INDIVIDUAL_THERAPY",
 ] as const;
 
 export type CounselingType = (typeof COUNSELING_TYPES)[number];
@@ -20,7 +19,6 @@ export const COUNSELING_TYPE_LABELS: Record<CounselingType, string> = {
   CAREER_ACADEMIC: "Career & Academic Counselling",
   COUPLE_FAMILY: "Couples & Family Therapy",
   INDIVIDUAL: "Individual Counselling",
-  INDIVIDUAL_THERAPY: "Individual Therapy",
 };
 
 export interface CounselingServiceDefault {
@@ -67,14 +65,6 @@ export const COUNSELING_SERVICE_DEFAULTS: Record<
     name: "Individual Counselling",
     description:
       "One-to-one counselling focused on the client's concerns, goals and ongoing wellbeing.",
-    durationMinutes: 50,
-    priceMinor: 180000,
-  },
-  INDIVIDUAL_THERAPY: {
-    slug: "individual-therapy",
-    name: "Individual Therapy",
-    description:
-      "A focused one-to-one therapy session for personal concerns and ongoing wellbeing.",
     durationMinutes: 50,
     priceMinor: 180000,
   },

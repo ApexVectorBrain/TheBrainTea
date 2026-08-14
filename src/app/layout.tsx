@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   keywords: [
     "therapy clinic Pune",
     "mental health clinic Pune",
-    "individual therapy Pune",
+    "assessment consultation Pune",
     "couples therapy Pune",
     "family therapy Pune",
     "psychotherapy Pune",

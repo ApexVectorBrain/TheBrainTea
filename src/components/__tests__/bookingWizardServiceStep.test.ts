@@ -15,8 +15,8 @@ const { default: BookingWizard } = await import("../BookingWizard.js");
 
 const service = {
   id: "svc-1",
-  name: "Individual Therapy",
-  slug: "individual-therapy",
+  name: "Individual Counselling",
+  slug: "individual-counselling",
   priceMinor: 150000,
   durationMinutes: 50,
   description: "A focused, one-on-one session.",
@@ -33,7 +33,7 @@ const continueIsDisabled = (html: string) =>
 describe("BookingWizard step 1 — service selection", () => {
   it("lists the services and leaves Continue enabled when any are bookable", () => {
     const html = render({ services: [service] });
-    expect(html).toContain("Individual Therapy");
+    expect(html).toContain("Individual Counselling");
     expect(html).not.toContain("No services are open for booking");
     expect(continueIsDisabled(html)).toBe(false);
   });
@@ -47,13 +47,13 @@ describe("BookingWizard step 1 — service selection", () => {
   it("says so when the preselected service is not bookable", () => {
     const html = render({ services: [service], initialService: "no-such-svc" });
     expect(html).toContain("isn&#x27;t open for booking right now");
-    expect(html).toContain("Individual Therapy");
+    expect(html).toContain("Individual Counselling");
   });
 
   it("skips step 1 entirely when the preselected service is bookable", () => {
     const html = render({
       services: [service],
-      initialService: "individual-therapy",
+      initialService: "individual-counselling",
     });
     expect(html).toContain("Choose Your Consultant");
     expect(html).not.toContain("No services are open for booking");

@@ -38,7 +38,7 @@ const fullRow = {
     isActive: true,
     bio: "…",
   },
-  service: { id: "s1", name: "Individual Therapy", slug: "individual-therapy" },
+  service: { id: "s1", name: "Individual Counselling", slug: "individual-counselling" },
 };
 
 describe("publicBookingView", () => {
@@ -74,8 +74,8 @@ describe("publicBookingView", () => {
       photo: null,
     });
     expect(view.service).toEqual({
-      name: "Individual Therapy",
-      slug: "individual-therapy",
+      name: "Individual Counselling",
+      slug: "individual-counselling",
     });
   });
 

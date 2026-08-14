@@ -123,26 +123,6 @@ async function main() {
     `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=800&q=80`;
   const serviceRows = [
     {
-      name: "Individual Therapy",
-      slug: "individual-therapy",
-      durationMinutes: 50,
-      priceMinor: 180000,
-      description:
-        "A focused, one-on-one session designed to explore personal narratives, address psychological blocks, and cultivate self-awareness.",
-      tagline: "A steady space to understand yourself.",
-      image: "/team/office1.jpg",
-      suitableFor: [
-        "Anxiety",
-        "Depression",
-        "Stress & burnout",
-        "Self-esteem",
-        "Grief & loss",
-        "Emotional regulation",
-      ],
-      availability: ["Online", "Offline"],
-      process: null,
-    },
-    {
       name: "Assessment",
       slug: "assessment",
       durationMinutes: 50,
@@ -255,7 +235,7 @@ async function main() {
   // suspended partway through, and a pending applicant not yet bookable.
   const consultantSpecs = [
     {
-      email: "madhumatidhumak@thebraintea.co.in",
+      email: "psychologist.madhumati@gmail.com",
       password: "DrMadhumati123!",
       name: "Madhumati Dhumak",
       slug: "dr-madhumati-dhumak",
@@ -269,7 +249,7 @@ async function main() {
       activeFromDay: -HISTORY_DAYS,
       activeToDay: FUTURE_DAYS,
       schedule: { days: [1, 2, 3, 4, 5], hours: [9, 10, 11, 13, 14, 15, 16] },
-      serviceSlugs: ["individual-therapy", "assessment", "couples-counseling"],
+      serviceSlugs: ["individual-counselling", "assessment", "couples-counseling"],
     },
     {
       email: "rohan@thebraintea.com",
@@ -285,7 +265,7 @@ async function main() {
       activeFromDay: -HISTORY_DAYS,
       activeToDay: FUTURE_DAYS,
       schedule: { days: [1, 2, 3, 4, 5, 6], hours: [9, 10, 11] },
-      serviceSlugs: ["individual-therapy"],
+      serviceSlugs: ["individual-counselling"],
     },
     {
       email: "kavita@thebraintea.com",
@@ -301,7 +281,7 @@ async function main() {
       activeFromDay: -Math.round(HISTORY_DAYS * 0.7),
       activeToDay: FUTURE_DAYS,
       schedule: { days: [1, 2, 3, 4], hours: [10, 11, 13, 14, 15] },
-      serviceSlugs: ["couples-counseling", "individual-therapy"],
+      serviceSlugs: ["couples-counseling", "individual-counselling"],
     },
     {
       email: "vikram@thebraintea.com",
@@ -317,7 +297,7 @@ async function main() {
       activeFromDay: -Math.round(HISTORY_DAYS * 0.35),
       activeToDay: FUTURE_DAYS,
       schedule: { days: [2, 3, 4, 5], hours: [14, 15, 16] },
-      serviceSlugs: ["career-academic-counselling", "individual-therapy"],
+      serviceSlugs: ["career-academic-counselling", "individual-counselling"],
     },
     {
       email: "meera@thebraintea.com",
@@ -333,7 +313,7 @@ async function main() {
       activeFromDay: -HISTORY_DAYS,
       activeToDay: -50, // stopped taking sessions 50 days ago
       schedule: { days: [1, 2, 3, 4, 5], hours: [9, 10, 11, 13, 14] },
-      serviceSlugs: ["individual-therapy"],
+      serviceSlugs: ["individual-counselling"],
     },
     {
       email: null,
@@ -349,7 +329,7 @@ async function main() {
       activeFromDay: 0,
       activeToDay: 0,
       schedule: { days: [], hours: [] },
-      serviceSlugs: ["individual-therapy"],
+      serviceSlugs: ["individual-counselling"],
     },
   ];
 
@@ -797,9 +777,7 @@ async function main() {
             ? "CAREER_ACADEMIC"
             : service.slug === "couples-counseling"
               ? "COUPLE_FAMILY"
-              : service.slug === "individual-therapy"
-                ? "INDIVIDUAL_THERAPY"
-                : "INDIVIDUAL";
+              : "INDIVIDUAL";
 
       const booking = await prisma.booking.create({
         data: {

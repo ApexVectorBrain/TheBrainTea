@@ -14,7 +14,7 @@ import InternshipApplicationForm from "../../components/InternshipApplicationFor
 export const metadata = {
   title: "Internship Program | The Brain Tea",
   description:
-    "Graduate and postgraduate psychology internships with mentorship and clinical exposure.",
+    "Psychology and social media marketing internships with mentorship and practical experience.",
 };
 
 const PROGRAMS = [
@@ -65,6 +65,28 @@ const PROGRAMS = [
       "Interest in psychotherapy",
     ],
   },
+  {
+    title: "Social Media Marketing -- Instagram Focus",
+    audience: "Marketing Internship",
+    duration: "4 weeks, extendable",
+    commitment: "Flexible, agreed during selection",
+    supervisionFee: "No internship fee",
+    learning: [
+      "Instagram content strategy",
+      "Reel concepts and production",
+      "Trend research and adaptation",
+      "Content calendar planning",
+      "Profile and page improvements",
+      "Community engagement ideas",
+      "Brand storytelling",
+      "Performance review and iteration",
+    ],
+    eligibility: [
+      "Interest in social media marketing and content creation",
+      "Comfortable creating or editing short-form video",
+      "Awareness of current Instagram trends",
+    ],
+  },
 ];
 
 const BENEFITS = [
@@ -105,7 +127,7 @@ export default function InternshipPage() {
           </h1>
           <p className="text-charcoal/80 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed text-pretty">
             Learning opportunities, mentorship, and professional development for
-            psychology students entering clinical or administrative practice.
+            psychology students and emerging social media marketers.
           </p>
           <a
             href="#apply"
@@ -117,7 +139,7 @@ export default function InternshipPage() {
       </section>
 
       <section className="pb-24">
-        <Container className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Container className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {PROGRAMS.map((p) => (
             <Surface
               key={p.title}
@@ -152,7 +174,7 @@ export default function InternshipPage() {
                 )}
                 <div>
                   <dt className="uppercase tracking-wide text-charcoal/80">
-                    Supervision Fee
+                    Fee
                   </dt>
                   <dd className="text-forest-slate font-medium">
                     {p.supervisionFee}
@@ -185,6 +207,28 @@ export default function InternshipPage() {
               </ul>
             </Surface>
           ))}
+        </Container>
+      </section>
+
+      <section className="pb-24">
+        <Container>
+          <Surface
+            variant="raised"
+            radius="surface"
+            className="mx-auto max-w-4xl border border-teal-sage/25 bg-teal-sage/10 p-6 text-center"
+          >
+            <h2 className="font-cormorant text-2xl font-semibold text-forest-slate">
+              Social Media Marketing Internship
+            </h2>
+            <p className="mx-auto mt-2 max-w-3xl text-sm leading-relaxed text-charcoal/80">
+              Have full creative ownership of The Brain Tea&apos;s Instagram: make reels,
+              bring trend-led ideas, and help improve the page. You&apos;ll work within
+              agreed brand, confidentiality, and approval guidelines.
+            </p>
+            <p className="mt-3 text-sm font-semibold text-forest-slate">
+              There is no application fee or internship fee for this track.
+            </p>
+          </Surface>
         </Container>
       </section>
 

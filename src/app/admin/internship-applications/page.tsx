@@ -20,7 +20,7 @@ interface ApplicationRow {
   college: string;
   course: string;
   yearOrSemester: string;
-  internshipType: "graduate" | "postgraduate";
+  internshipType: "graduate" | "postgraduate" | "social_media_marketing";
   preferredStart: string;
   statementOfPurpose: string;
   resumeFileName: string;
@@ -29,6 +29,19 @@ interface ApplicationRow {
 }
 
 const STATUSES = ["SUBMITTED", "REVIEWED", "ACCEPTED", "REJECTED"] as const;
+
+function programLabel(
+  internshipType: ApplicationRow["internshipType"],
+  detailed = false,
+) {
+  if (internshipType === "graduate")
+    return detailed ? "Graduate — Administrative Focus" : "Graduate";
+  if (internshipType === "postgraduate")
+    return detailed ? "Postgraduate — Clinical Focus" : "Postgraduate";
+  return detailed
+    ? "Social Media Marketing — Instagram Focus (No Fee)"
+    : "Social Media Marketing";
+}
 
 export default function AdminInternshipApplicationsPage() {
   const [rows, setRows] = useState<ApplicationRow[]>([]);
@@ -140,9 +153,7 @@ export default function AdminInternshipApplicationsPage() {
                       <div className="text-xs text-ink-muted">{row.email}</div>
                     </td>
                     <td className="px-3 py-3.5 text-xs text-ink-muted">
-                      {row.internshipType === "graduate"
-                        ? "Graduate"
-                        : "Postgraduate"}
+                      {programLabel(row.internshipType)}
                     </td>
                     <td className="px-3 py-3.5 text-xs text-ink-muted">
                       {row.college}
@@ -202,9 +213,7 @@ export default function AdminInternshipApplicationsPage() {
                   Program
                 </span>
                 <span className="text-ocean-deep">
-                  {viewing.internshipType === "graduate"
-                    ? "Graduate — Administrative Focus"
-                    : "Postgraduate — Clinical Focus"}
+                  {programLabel(viewing.internshipType, true)}
                 </span>
               </div>
               <div>

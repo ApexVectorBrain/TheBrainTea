@@ -117,7 +117,13 @@ export default function InternshipApplicationForm() {
               <option value="postgraduate">
                 Postgraduate -- Clinical Focus
               </option>
+              <option value="social_media_marketing">
+                Social Media Marketing -- Instagram Focus (No Fee)
+              </option>
             </select>
+            <p className="mt-2 text-xs text-charcoal/65">
+              The Social Media Marketing internship has no application or internship fee.
+            </p>
           </div>
           <Input
             label="Preferred Start Date"
