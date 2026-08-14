@@ -45,6 +45,51 @@ export default function About() {
       ],
       image: "/team/madhumati-dhumak.jpg",
     },
+    {
+      name: "Ananya Sunil Nair",
+      role: "Psychologist",
+      credentials: "MSc Clinical Psychology · BA Psychology, Sociology & Economics",
+      specialisations: [
+        "Client-Centred Care",
+        "Art Therapy",
+        "Crisis Counselling",
+      ],
+      bio: [
+        "Ananya takes a client-centred, integrative approach, adapting her work to each client’s story, needs, and goals.",
+        "She is committed to creating a safe, inclusive, and non-judgmental space where people can express themselves with comfort and confidence.",
+      ],
+      image: "/team/ananya-sunil-nair.jpg",
+    },
+    {
+      name: "Ananya Saxena",
+      role: "Counselling Psychologist",
+      credentials: "MSc Counselling Psychology · BA Psychology, Sociology & English",
+      specialisations: [
+        "Individual Counselling",
+        "Expressive Arts Therapy",
+        "Rehabilitation Support",
+      ],
+      bio: [
+        "Ananya sees therapy as a collaborative process built on trust, openness, and safety.",
+        "She offers a warm, inclusive, and non-judgmental space for clients to explore and understand their experiences through approaches tailored to their needs.",
+      ],
+      image: "/team/ananya-saxena.jpg",
+    },
+    {
+      name: "Sharayu Harpale",
+      role: "Clinical Psychologist",
+      credentials: "Clinical Psychologist",
+      specialisations: [
+        "Anxiety & Stress",
+        "CBT",
+        "Life Transitions",
+      ],
+      bio: [
+        "Sharayu combines clinical expertise with genuine human connection so clients can feel heard, understood, and accepted without judgment.",
+        "Her empathetic, collaborative, and evidence-based practice draws on CBT, supportive psychotherapy, and solution-focused techniques.",
+      ],
+      image: "/team/sharayu-harpale.jpg",
+    },
   ];
 
   const values = [
@@ -194,7 +239,7 @@ export default function About() {
       </section>
 
       {/* SECTION 4: THE TEAM */}
-      <section className="py-24 bg-ivory">
+      <section id="meet-the-team" className="scroll-mt-24 py-24 bg-ivory">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           {/* Section Header */}
           <div className="text-center max-w-2xl mx-auto mb-16">
@@ -221,7 +266,9 @@ export default function About() {
                 ? "grid-cols-1 max-w-sm mx-auto"
                 : team.length === 2
                   ? "grid-cols-1 md:grid-cols-2 max-w-3xl mx-auto"
-                  : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                : team.length === 3
+                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                  : "grid-cols-1 md:grid-cols-2 xl:grid-cols-4"
             }`}
           >
             {team.map((t) => (
