@@ -397,6 +397,26 @@ suite("booking & finance integration", () => {
     expect(moved.dateTime.getTime()).toBe(slotC.getTime());
   });
 
+  it("allows staff to reschedule a booking outside published working hours", async () => {
+    const original = futureSlot(14, 9);
+    const { booking } = await createBooking({
+      therapistSlug: SLUG,
+      serviceSlug: SERVICE_SLUG,
+      dateTime: original,
+      client: clientInput(14),
+      paymentOption: "PAY_LATER",
+    });
+
+    const outsideWorkingHours = futureSlot(14, 19);
+    const moved = await rescheduleBooking({
+      bookingId: booking.id,
+      newDateTime: outsideWorkingHours,
+      session: adminSession,
+    });
+
+    expect(moved.dateTime.getTime()).toBe(outsideWorkingHours.getTime());
+  });
+
   it("schedules an admin appointment: confirmed, typed, slot-held, and prepaid revenue posted", async () => {
     const slot = futureSlot(20, 13);
     const booking = await scheduleAdminBooking({
