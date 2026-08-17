@@ -54,13 +54,22 @@ export default function TeamPage() {
                   {/* Seated portraits put the face around the middle of the
                       frame, so centring keeps it in the visible band — with
                       object-top the card fills with wall above the head. */}
-                  <Image
-                    src={member.photo}
-                    alt={`${member.name} - ${member.role}`}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="object-cover object-center"
-                  />
+                  {member.photo ? (
+                    <Image
+                      src={member.photo}
+                      alt={`${member.name} - ${member.role}`}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover object-center"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center font-cormorant text-7xl text-forest-slate/60">
+                      {member.name
+                        .split(" ")
+                        .map((part) => part[0])
+                        .join("")}
+                    </div>
+                  )}
                 </div>
 
                 <div className="p-8 flex flex-col flex-grow">
@@ -70,48 +79,78 @@ export default function TeamPage() {
                   <p className="font-dmsans text-xs text-teal-sage font-medium mb-3">
                     {member.role}
                   </p>
-                  <p className="font-dmsans text-xs text-forest-slate bg-muted-sage/15 border border-teal-sage/10 px-2.5 py-1 rounded-full mb-1 inline-block self-start">
-                    {member.qualification}
-                  </p>
-                  <p className="text-xs text-charcoal/70 mb-4">
-                    {member.experience}
-                  </p>
+                  {member.qualification && (
+                    <p className="font-dmsans text-xs text-forest-slate bg-muted-sage/15 border border-teal-sage/10 px-2.5 py-1 rounded-full mb-1 inline-block self-start">
+                      {member.qualification}
+                    </p>
+                  )}
+                  {member.experience && (
+                    <p className="text-xs text-charcoal/70 mb-4">
+                      {member.experience}
+                    </p>
+                  )}
 
-                  <p className="text-sm text-forest-slate/85 leading-relaxed mb-6 font-dmsans">
-                    {member.intro}
-                  </p>
+                  <div className="space-y-3 text-sm text-forest-slate/85 leading-relaxed mb-6 font-dmsans">
+                    {member.intro.map((paragraph) => (
+                      <p key={paragraph}>{paragraph}</p>
+                    ))}
+                  </div>
 
                   <div className="mt-auto space-y-4">
-                    <div>
-                      <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-charcoal/70 mb-2">
-                        <Sparkles className="w-3 h-3" /> Specialises In
+                    {member.specialisations.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-charcoal/70 mb-2">
+                          <Sparkles className="w-3 h-3" /> Specialises In
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {member.specialisations.map((tag) => (
+                            <span
+                              key={tag}
+                              className="text-[11px] font-medium text-forest-slate bg-warm-tan/40 border border-muted-sage/20 px-2 py-0.5 rounded-full font-dmsans"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {member.specialisations.map((tag) => (
-                          <span
-                            key={tag}
-                            className="text-[11px] font-medium text-forest-slate bg-warm-tan/40 border border-muted-sage/20 px-2 py-0.5 rounded-full font-dmsans"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
+                    )}
 
-                    <div>
-                      <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-charcoal/70 mb-2">
-                        <Languages className="w-3 h-3" /> Speaks
+                    {member.approaches.length > 0 && (
+                      <div>
+                        <div className="text-[11px] font-bold uppercase tracking-wide text-charcoal/70 mb-2">
+                          Therapeutic Approach
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {member.approaches.map((approach) => (
+                            <span
+                              key={approach}
+                              className="text-[11px] font-medium text-forest-slate bg-warm-tan/40 border border-muted-sage/20 px-2 py-0.5 rounded-full font-dmsans"
+                            >
+                              {approach}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                      <p className="text-xs text-forest-slate/85">
-                        {member.languages.join(", ")}
-                      </p>
-                    </div>
+                    )}
 
-                    <div className="border-t border-muted-sage/20 pt-4 text-xs text-forest-slate/85">
-                      <span className="font-semibold text-forest-slate">
-                        {member.fee}
-                      </span>
-                    </div>
+                    {member.languages && member.languages.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-charcoal/70 mb-2">
+                          <Languages className="w-3 h-3" /> Speaks
+                        </div>
+                        <p className="text-xs text-forest-slate/85">
+                          {member.languages.join(", ")}
+                        </p>
+                      </div>
+                    )}
+
+                    {member.fee && (
+                      <div className="border-t border-muted-sage/20 pt-4 text-xs text-forest-slate/85">
+                        <span className="font-semibold text-forest-slate">
+                          {member.fee}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </Surface>
