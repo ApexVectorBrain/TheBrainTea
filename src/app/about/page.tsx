@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, Variants } from "framer-motion";
 import { ShieldCheck, HeartHandshake, Award } from "lucide-react";
+import { TEAM } from "@/lib/team-data";
 
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 20 },
@@ -26,72 +27,6 @@ const staggerContainer = {
 };
 
 export default function About() {
-  const team = [
-    {
-      name: "Madhumati Dhumak",
-      role: "Lead Counseling Psychologist",
-      credentials:
-        "PGDP Counseling Psychology · MSc Clinical Psychology · BSc Clinical Psychology",
-      specialisations: [
-        "Anxiety & Stress",
-        "Trauma & PTSD",
-        "Life Transitions",
-      ],
-      bio: [
-        "As a therapist, I believe that meaningful healing begins when people feel genuinely seen, heard, and understood. My approach is warm, collaborative, and deeply individualized because no two people experience life in the same way. Rather than following a one-size-fits-all model, I integrate evidence-based therapeutic approaches to create a space that adapts to each client's unique needs, pace, and goals.",
-        "I specialize in “adults, adolescents, anxiety, depression, relationship challenges, trauma, emotional regulation, life transition, self-esteem, grief, burnout, attachment concerns, interpersonal difficulties”",
-        "I also have experience working with neurodivergent individuals and tailor therapy to ensure it remains accessible, practical, and empowering.",
-        "My work combines insight with action, helping clients not only understand the patterns that keep them stuck but also develop healthier ways of relating to themselves and the people around them. Above all, I strive to create a therapeutic relationship built on trust, authenticity, and compassion- where clients can safely explore, heal, and grow.",
-      ],
-      image: "/team/madhumati-dhumak.jpg",
-    },
-    {
-      name: "Ananya Sunil Nair",
-      role: "Psychologist",
-      credentials: "MSc Clinical Psychology · BA Psychology, Sociology & Economics",
-      specialisations: [
-        "Client-Centred Care",
-        "Art Therapy",
-        "Crisis Counselling",
-      ],
-      bio: [
-        "Ananya takes a client-centred, integrative approach, adapting her work to each client’s story, needs, and goals.",
-        "She is committed to creating a safe, inclusive, and non-judgmental space where people can express themselves with comfort and confidence.",
-      ],
-      image: "/team/ananya-sunil-nair.jpg",
-    },
-    {
-      name: "Ananya Saxena",
-      role: "Counselling Psychologist",
-      credentials: "MSc Counselling Psychology · BA Psychology, Sociology & English",
-      specialisations: [
-        "Individual Counselling",
-        "Expressive Arts Therapy",
-        "Rehabilitation Support",
-      ],
-      bio: [
-        "Ananya sees therapy as a collaborative process built on trust, openness, and safety.",
-        "She offers a warm, inclusive, and non-judgmental space for clients to explore and understand their experiences through approaches tailored to their needs.",
-      ],
-      image: "/team/ananya-saxena.jpg",
-    },
-    {
-      name: "Sharayu Harpale",
-      role: "Clinical Psychologist",
-      credentials: "Clinical Psychologist",
-      specialisations: [
-        "Anxiety & Stress",
-        "CBT",
-        "Life Transitions",
-      ],
-      bio: [
-        "Sharayu combines clinical expertise with genuine human connection so clients can feel heard, understood, and accepted without judgment.",
-        "Her empathetic, collaborative, and evidence-based practice draws on CBT, supportive psychotherapy, and solution-focused techniques.",
-      ],
-      image: "/team/sharayu-harpale.jpg",
-    },
-  ];
-
   const values = [
     {
       icon: <ShieldCheck className="w-8 h-8 text-forest" />,
@@ -262,16 +197,16 @@ export default function About() {
             viewport={{ once: true, margin: "-100px" }}
             variants={staggerContainer}
             className={`grid gap-8 justify-center ${
-              team.length === 1
+              TEAM.length === 1
                 ? "grid-cols-1 max-w-sm mx-auto"
-                : team.length === 2
+                : TEAM.length === 2
                   ? "grid-cols-1 md:grid-cols-2 max-w-3xl mx-auto"
-                : team.length === 3
+                : TEAM.length === 3
                   ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
                   : "grid-cols-1 md:grid-cols-2 xl:grid-cols-4"
             }`}
           >
-            {team.map((t) => (
+            {TEAM.map((t) => (
               <motion.div
                 key={t.name}
                 variants={fadeInUp}
@@ -284,13 +219,22 @@ export default function About() {
                 <div className="relative h-72 w-full bg-warm-tan">
                   {/* Centred rather than top-aligned so a seated portrait's
                       face lands in the visible band of this short card. */}
-                  <Image
-                    src={t.image}
-                    alt={`${t.name} - ${t.role}`}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 30vw"
-                    className="object-cover object-center"
-                  />
+                  {t.photo ? (
+                    <Image
+                      src={t.photo}
+                      alt={`${t.name} - ${t.role}`}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 30vw"
+                      className="object-cover object-center"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center font-cormorant text-7xl text-forest-slate/60">
+                      {t.name
+                        .split(" ")
+                        .map((part) => part[0])
+                        .join("")}
+                    </div>
+                  )}
                 </div>
 
                 {/* Info Content */}
@@ -302,29 +246,54 @@ export default function About() {
                     <p className="font-dmsans text-xs text-teal-sage font-medium mb-3">
                       {t.role}
                     </p>
-                    <p className="font-dmsans text-xs text-forest-slate bg-muted-sage/15 border border-teal-sage/10 px-2.5 py-1 rounded-full mb-4 inline-block">
-                      {t.credentials}
-                    </p>
+                    {t.qualification && (
+                      <p className="font-dmsans text-xs text-forest-slate bg-muted-sage/15 border border-teal-sage/10 px-2.5 py-1 rounded-full mb-4 inline-block">
+                        {t.qualification}
+                      </p>
+                    )}
                     <div className="space-y-4 text-sm text-forest-slate/85 leading-relaxed mb-6 font-dmsans">
-                      {t.bio.map((paragraph) => (
+                      {t.intro.map((paragraph) => (
                         <p key={paragraph}>{paragraph}</p>
                       ))}
                     </div>
                   </div>
 
                   {/* Specialisation tags */}
-                  <div>
-                    <div className="border-t border-muted-sage/20 pt-4 flex flex-wrap gap-1.5">
-                      {t.specialisations.map((tag) => (
-                        <span
-                          key={tag}
-                          className="text-[11px] font-medium text-forest-slate bg-warm-tan/40 border border-muted-sage/20 px-2 py-0.5 rounded-full font-dmsans"
-                        >
-                          {tag}
-                        </span>
-                      ))}
+                  {t.specialisations.length > 0 && (
+                    <div>
+                      <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-charcoal/70">
+                        Specialises In
+                      </p>
+                      <div className="border-t border-muted-sage/20 pt-4 flex flex-wrap gap-1.5">
+                        {t.specialisations.map((tag) => (
+                          <span
+                            key={tag}
+                            className="text-[11px] font-medium text-forest-slate bg-warm-tan/40 border border-muted-sage/20 px-2 py-0.5 rounded-full font-dmsans"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {t.approaches.length > 0 && (
+                    <div className="mt-4">
+                      <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-charcoal/70">
+                        Therapeutic Approach
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {t.approaches.map((approach) => (
+                          <span
+                            key={approach}
+                            className="text-[11px] font-medium text-forest-slate bg-muted-sage/15 border border-teal-sage/10 px-2 py-0.5 rounded-full font-dmsans"
+                          >
+                            {approach}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ))}

@@ -3,13 +3,13 @@ export interface TeamMember {
   name: string;
   role: string;
   photo: string;
-  qualification: string;
-  experience: string;
+  qualification?: string;
+  experience?: string;
   approaches: string[];
   specialisations: string[];
   languages?: string[];
-  fee: string;
-  intro: string;
+  fee?: string;
+  intro: string[];
 }
 
 export const TEAM: TeamMember[] = [
@@ -26,16 +26,33 @@ export const TEAM: TeamMember[] = [
       "Trauma-Informed Care",
       "Personalised Treatment Planning",
     ],
-    specialisations: ["Anxiety & Stress", "Trauma & PTSD", "Life Transitions"],
+    specialisations: [
+      "Adults",
+      "Adolescents",
+      "Anxiety",
+      "Depression",
+      "Relationship Challenges",
+      "Trauma",
+      "Emotional Regulation",
+      "Life Transition",
+      "Self-Esteem",
+      "Grief",
+      "Burnout",
+      "Attachment Concerns",
+      "Interpersonal Difficulties",
+      "Neurodivergent Individual",
+    ],
     languages: ["English", "Hindi", "Marathi"],
     fee: "₹1,800 / session · Sliding scale available",
-    intro:
-      "Meaningful healing begins when people feel genuinely seen, heard, and understood. Madhumati’s approach is warm, collaborative, and deeply individualised, integrating evidence-based therapeutic approaches around each client’s needs, pace, and goals. Her work combines insight with action, helping clients understand the patterns that keep them stuck and develop healthier ways of relating to themselves and the people around them.",
+    intro: [
+      "She believes that meaningful healing begins when people feel genuinely seen, heard, and understood. Her approach is deeply individualized because no two people experience life in the same way. She integrates evidence-based therapeutic approaches to create a space that adapts to each client's unique needs, pace, and goals.",
+      "Her work combines insight with action, helping clients not only understand the patterns that keep them stuck but also develop healthier ways of relating to themselves and the people around them. Above all, she strives to create a therapeutic relationship built on trust, authenticity, and compassion- where clients can safely explore, heal, and grow.",
+    ],
   },
   {
     slug: "ananya-sunil-nair",
     name: "Ananya Sunil Nair",
-    role: "Psychologist",
+    role: "Counseling Psychologist",
     photo: "/team/ananya-sunil-nair.jpg",
     qualification:
       "MSc Clinical Psychology · BA Psychology, Sociology & Economics",
@@ -51,8 +68,10 @@ export const TEAM: TeamMember[] = [
       "Crisis Counselling",
     ],
     fee: "₹1,500 / session",
-    intro:
-      "Every client has a unique story, so Ananya takes a client-centred and integrative approach that adapts to each person’s needs. With training in art therapy and victim and emergency psychological counselling, she is committed to creating a safe, inclusive, and non-judgmental space where clients can express themselves comfortably.",
+    intro: [
+      "Ananya takes a client-centered, integrative approach, adapting her work to each client’s story, needs, and goals. She believes that every client has an innate ability to heal and it's her duty to create a safe space to enable the client's healing and subsequent growth!",
+      "She employs a client-paced, trauma informed, activity based, exploratory approach using multiple modalities as her foundation; aka, an eclectic approach. Her goal as a therapist is to help her clients' experience everything their life has to offer, to the fullest!",
+    ],
   },
   {
     slug: "ananya-saxena",
@@ -61,7 +80,8 @@ export const TEAM: TeamMember[] = [
     photo: "/team/ananya-saxena.jpg",
     qualification:
       "MSc Counselling Psychology · BA Psychology, Sociology & English",
-    experience: "Experience across counselling, rehabilitation and clinical settings",
+    experience:
+      "Experience across counselling, rehabilitation and clinical settings",
     approaches: [
       "Collaborative Therapy",
       "Tailored Interventions",
@@ -73,8 +93,9 @@ export const TEAM: TeamMember[] = [
       "Expressive Arts Therapy",
     ],
     fee: "₹1,500 / session",
-    intro:
+    intro: [
       "Ananya believes therapy works best as a collaborative process, built on trust, openness, and safety. Her warm, inclusive, and non-judgmental practice gives clients room to explore and understand their experiences through approaches tailored to their needs.",
+    ],
   },
   {
     slug: "sharayu-harpale",
@@ -82,7 +103,8 @@ export const TEAM: TeamMember[] = [
     role: "Clinical Psychologist",
     photo: "/team/sharayu-harpale.jpg",
     qualification: "Clinical Psychologist",
-    experience: "Experience in assessment, counselling, formulation and intervention",
+    experience:
+      "Experience in assessment, counselling, formulation and intervention",
     approaches: [
       "Cognitive Behaviour Therapy",
       "Supportive Psychotherapy",
@@ -94,8 +116,33 @@ export const TEAM: TeamMember[] = [
       "Life Transitions",
     ],
     fee: "₹1,500 / session",
-    intro:
+    intro: [
       "Sharayu brings clinical expertise and genuine human connection together, creating a space where clients can feel heard, understood, and accepted without judgment. Her empathetic, collaborative, evidence-based approach helps people recognise unhelpful patterns, build healthier coping skills, and make meaningful, sustainable change.",
+    ],
+  },
+  {
+    slug: "gauri-ghorpade",
+    name: "Gauri Ghorpade",
+    role: "Psychologist",
+    photo: "/team/gauri-ghorpade.png",
+    approaches: [
+      "Integrative & Evidence-Based",
+      "Person-Centred",
+      "Trauma-Informed",
+      "LGBTQ+ Affirmative",
+      "CBT & REBT-Informed",
+      "Strengths-Based",
+    ],
+    specialisations: [
+      "Anxiety, Stress & Emotional Wellbeing",
+      "Relationships, Self-Worth & Personal Challenges",
+      "Life Transitions, Trauma & Growth",
+    ],
+    intro: [
+      "Therapy is a space to pause, understand, grow, and find your way forward.",
+      "Gauri believes there is no one-size-fits-all approach to therapy, and draws from different evidence-based approaches to meet each person where they are.",
+      "Her work centres around helping individuals understand themselves better, build healthier relationships, navigate challenges, and create meaningful change in their lives.",
+    ],
   },
 ];
 

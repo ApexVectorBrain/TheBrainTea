@@ -76,45 +76,57 @@ export default function TeamPage() {
                       </p>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 text-xs">
-                      <span className="rounded-full border border-teal-sage/10 bg-muted-sage/20 px-4 py-2 font-medium text-forest-slate">
-                        {member.qualification}
-                      </span>
-                      <span className="rounded-full border border-muted-sage/20 bg-warm-tan/40 px-4 py-2 text-charcoal/75">
-                        {member.experience}
-                      </span>
+                    {member.qualification || member.experience ? (
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        {member.qualification ? (
+                          <span className="rounded-full border border-teal-sage/10 bg-muted-sage/20 px-4 py-2 font-medium text-forest-slate">
+                            {member.qualification}
+                          </span>
+                        ) : null}
+                        {member.experience ? (
+                          <span className="rounded-full border border-muted-sage/20 bg-warm-tan/40 px-4 py-2 text-charcoal/75">
+                            {member.experience}
+                          </span>
+                        ) : null}
+                      </div>
+                    ) : null}
+
+                    <div className="max-w-2xl space-y-3 text-base leading-relaxed text-forest-slate/90 md:text-lg">
+                      {member.intro.map((paragraph) => (
+                        <p key={paragraph}>{paragraph}</p>
+                      ))}
                     </div>
 
-                    <p className="max-w-2xl text-base leading-relaxed text-forest-slate/90 md:text-lg">
-                      {member.intro}
-                    </p>
-
                     <div className="grid gap-5 border-t border-muted-sage/20 pt-5 sm:grid-cols-2">
-                      <div>
-                        <div className="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-charcoal/70">
-                          <Sparkles className="h-3 w-3" /> Areas of focus
+                      {member.specialisations.length > 0 ? (
+                        <div>
+                          <div className="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-charcoal/70">
+                            <Sparkles className="h-3 w-3" /> Areas of focus
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {member.specialisations.map((tag) => (
+                              <span
+                                key={tag}
+                                className="rounded-full border border-muted-sage/20 bg-warm-tan/40 px-2.5 py-1 text-[11px] font-medium text-forest-slate"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
                         </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {member.specialisations.map((tag) => (
-                            <span
-                              key={tag}
-                              className="rounded-full border border-muted-sage/20 bg-warm-tan/40 px-2.5 py-1 text-[11px] font-medium text-forest-slate"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
+                      ) : null}
 
                       <div className="space-y-3">
-                        <div>
-                          <p className="text-[11px] font-bold uppercase tracking-wide text-charcoal/70">
-                            Therapeutic approach
-                          </p>
-                          <p className="mt-1 text-sm leading-relaxed text-forest-slate/85">
-                            {member.approaches.join(" · ")}
-                          </p>
-                        </div>
+                        {member.approaches.length > 0 ? (
+                          <div>
+                            <p className="text-[11px] font-bold uppercase tracking-wide text-charcoal/70">
+                              Therapeutic approach
+                            </p>
+                            <p className="mt-1 text-sm leading-relaxed text-forest-slate/85">
+                              {member.approaches.join(" · ")}
+                            </p>
+                          </div>
+                        ) : null}
                         {member.languages?.length ? (
                           <div>
                             <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-charcoal/70">
@@ -128,9 +140,11 @@ export default function TeamPage() {
                       </div>
                     </div>
 
-                    <p className="text-sm font-semibold text-forest-slate">
-                      {member.fee}
-                    </p>
+                    {member.fee ? (
+                      <p className="text-sm font-semibold text-forest-slate">
+                        {member.fee}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
               </Container>
