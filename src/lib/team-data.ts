@@ -144,6 +144,30 @@ export const TEAM: TeamMember[] = [
       "Her work centres around helping individuals understand themselves better, build healthier relationships, navigate challenges, and create meaningful change in their lives.",
     ],
   },
+  {
+    slug: "krutika-a-sonigra",
+    name: "Krutika A. Sonigra",
+    role: "Psychologist, Counselor & Art Therapy Practitioner",
+    photo: "/team/krutika-a-sonigra.png",
+    approaches: [
+      "Holistic Practice",
+      "Evidence-Based Traditional Therapy",
+      "Expressive Arts",
+      "Relational Frameworks",
+    ],
+    specialisations: [
+      "Anxiety",
+      "Stress Management",
+      "Self-Esteem",
+      "Interpersonal Dynamics",
+      "Personal Growth",
+    ],
+    intro: [
+      "Krutika A. Sonigra is a psychologist, counselor, and art therapy practitioner dedicated to creating a safe, non-judgmental space where clients feel truly heard, understood, and supported. Rejecting a rigid, one-size-fits-all model, Krutika tailors each session to the individual’s unique personality, challenges, and goals.",
+      "Her holistic practice integrates evidence-based traditional therapy with expressive arts and relational frameworks. This creative, multi-modal approach enables clients, both individuals and couples to process complex emotions, strengthen relationship bonds, and access deeper self-awareness beyond verbal expression. Krutika collaborates with clients across a range of focus areas, including anxiety, stress management, self-esteem, interpersonal dynamics, and personal growth.",
+      "Ultimately, her mission is to equip clients with effective coping strategies and tools for sustainable emotional well-being.",
+    ],
+  },
 ];
 
 export function getTeamMemberBySlug(slug: string) {

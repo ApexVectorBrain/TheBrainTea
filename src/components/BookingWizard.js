@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CONTACT_PHONE } from "@/lib/site";
+import { bookingPortraitStyle } from "@/lib/booking-consultants";
 
 // Service-first booking flow:
 //   1. Service   → what kind of session
@@ -393,12 +394,15 @@ export default function BookingWizard({ services = [], initialService = "" }) {
                     }`}
                   >
                     {c.photo && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={c.photo}
-                        alt={c.name}
-                        className="h-16 w-16 rounded-full object-cover object-top shrink-0 border border-mist/30"
-                      />
+                      <span className="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-mist/30">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={c.photo}
+                          alt={c.name}
+                          style={bookingPortraitStyle(c)}
+                          className="h-full w-full object-cover"
+                        />
+                      </span>
                     )}
                     <div className="min-w-0">
                       <h4 className="font-cormorant text-lg font-bold text-charcoal leading-tight">
