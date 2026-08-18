@@ -10,6 +10,7 @@
  */
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
+const { newPublicConsultants } = require("./public-roster.json");
 
 const prisma = new PrismaClient();
 
@@ -229,24 +230,28 @@ Her clinical experience includes psychological assessment, counselling, case for
 
 She believes therapy is not about “fixing” a person, but about creating the space and support needed for growth. Her aim is to build a therapeutic relationship grounded in trust, authenticity, and compassion, while helping individuals reconnect with their strengths and move towards a life that feels more meaningful and aligned with who they are.`,
     },
+    ...newPublicConsultants,
   ];
 
   for (const consultant of newConsultants) {
-    const user = await prisma.user.create({
-      data: {
-        email: consultant.email,
-        passwordHash: await bcrypt.hash(consultant.password, 10),
-        role: "THERAPIST",
-      },
-    });
+    const user =
+      consultant.email && consultant.password
+        ? await prisma.user.create({
+            data: {
+              email: consultant.email,
+              passwordHash: await bcrypt.hash(consultant.password, 10),
+              role: "THERAPIST",
+            },
+          })
+        : null;
     const therapist = await prisma.therapist.create({
       data: {
-        userId: user.id,
+        userId: user?.id ?? null,
         name: consultant.name,
         slug: consultant.slug,
         bio: consultant.bio,
         photo: consultant.photo,
-        feeMinor: 150000,
+        feeMinor: consultant.feeMinor ?? 150000,
         status: "APPROVED",
         isActive: true,
         services: { connect: [{ id: individualCounselling.id }] },
@@ -265,7 +270,7 @@ She believes therapy is not about “fixing” a person, but about creating the 
   }
 
   console.log("Fresh launch seed complete.");
-  console.log("Consultants: 4 (Madhumati Dhumak, two Ananyas, and Sharayu Harpale)");
+  console.log("Consultants: 6 (the complete public practitioner roster)");
   console.log("Services: 4");
   console.log("Clients, bookings, payments, and payouts: 0");
 }

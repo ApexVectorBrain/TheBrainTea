@@ -223,6 +223,7 @@ export default function About() {
                       fill
                       sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                       className="object-cover object-center"
+                      style={{ objectPosition: t.photoPosition ?? "50% 50%" }}
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center font-cormorant text-7xl text-forest-slate/60">
