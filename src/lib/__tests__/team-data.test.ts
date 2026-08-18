@@ -62,4 +62,38 @@ describe("public practitioner roster", () => {
       ],
     });
   });
+
+  it("includes Krutika's supplied profile without unsupported metadata", () => {
+    const krutika = TEAM.find(
+      (member) => member.slug === "krutika-a-sonigra",
+    );
+
+    expect(krutika).toMatchObject({
+      name: "Krutika A. Sonigra",
+      role: "Psychologist, Counselor & Art Therapy Practitioner",
+      photo: "/team/krutika-a-sonigra.png",
+      specialisations: [
+        "Anxiety",
+        "Stress Management",
+        "Self-Esteem",
+        "Interpersonal Dynamics",
+        "Personal Growth",
+      ],
+      approaches: [
+        "Holistic Practice",
+        "Evidence-Based Traditional Therapy",
+        "Expressive Arts",
+        "Relational Frameworks",
+      ],
+      intro: [
+        "Krutika A. Sonigra is a psychologist, counselor, and art therapy practitioner dedicated to creating a safe, non-judgmental space where clients feel truly heard, understood, and supported. Rejecting a rigid, one-size-fits-all model, Krutika tailors each session to the individual’s unique personality, challenges, and goals.",
+        "Her holistic practice integrates evidence-based traditional therapy with expressive arts and relational frameworks. This creative, multi-modal approach enables clients, both individuals and couples to process complex emotions, strengthen relationship bonds, and access deeper self-awareness beyond verbal expression. Krutika collaborates with clients across a range of focus areas, including anxiety, stress management, self-esteem, interpersonal dynamics, and personal growth.",
+        "Ultimately, her mission is to equip clients with effective coping strategies and tools for sustainable emotional well-being.",
+      ],
+    });
+    expect(krutika).not.toHaveProperty("qualification");
+    expect(krutika).not.toHaveProperty("experience");
+    expect(krutika).not.toHaveProperty("languages");
+    expect(krutika).not.toHaveProperty("fee");
+  });
 });

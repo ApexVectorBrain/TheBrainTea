@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { badRequest, handleApi, notFound } from "@/server/http";
+import { orderBookingConsultants } from "@/lib/booking-consultants";
 
 // Public consultant directory for the booking flow. Given a service slug,
 // returns the APPROVED, active consultants who offer that service, with the
@@ -18,22 +19,24 @@ export const GET = handleApi(async (request: Request) => {
   });
   if (!service || !service.isActive) throw notFound("Service not found");
 
-  const consultants = await prisma.therapist.findMany({
-    where: {
-      status: "APPROVED",
-      isActive: true,
-      services: { some: { id: service.id } },
-    },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      photo: true,
-      bio: true,
-      feeMinor: true,
-    },
-    orderBy: { name: "asc" },
-  });
+  const consultants = orderBookingConsultants(
+    await prisma.therapist.findMany({
+      where: {
+        status: "APPROVED",
+        isActive: true,
+        services: { some: { id: service.id } },
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        photo: true,
+        bio: true,
+        feeMinor: true,
+      },
+      orderBy: { name: "asc" },
+    }),
+  );
 
   return NextResponse.json({
     service: { name: service.name, slug: service.slug },

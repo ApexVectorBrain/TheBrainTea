@@ -190,41 +190,38 @@ export default function About() {
             </p>
           </div>
 
-          {/* Team Grid — centered when the roster is smaller than a full row */}
+          {/* Compact, top-aligned cards keep profiles readable without making
+              every card match the height of the longest biography. */}
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
             variants={staggerContainer}
-            className={`grid gap-8 justify-center ${
+            className={`grid items-start gap-8 justify-center ${
               TEAM.length === 1
-                ? "grid-cols-1 max-w-sm mx-auto"
+                ? "grid-cols-1 max-w-md mx-auto"
                 : TEAM.length === 2
-                  ? "grid-cols-1 md:grid-cols-2 max-w-3xl mx-auto"
-                : TEAM.length === 3
-                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-                  : "grid-cols-1 md:grid-cols-2 xl:grid-cols-4"
+                  ? "grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto"
+                  : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
             }`}
           >
             {TEAM.map((t) => (
               <motion.div
                 key={t.name}
                 variants={fadeInUp}
-                className="glass-card rounded-2xl overflow-hidden shadow-warm-soft border border-muted-sage/20 flex flex-col h-full hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative group"
+                className="glass-card rounded-2xl overflow-hidden shadow-warm-soft border border-muted-sage/20 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative group"
               >
                 {/* Visual hover border highlighter */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-transparent group-hover:bg-teal-sage transition-colors duration-300 z-10" />
 
                 {/* Photo */}
-                <div className="relative h-72 w-full bg-warm-tan">
-                  {/* Centred rather than top-aligned so a seated portrait's
-                      face lands in the visible band of this short card. */}
+                <div className="relative aspect-[4/3] w-full bg-warm-tan">
                   {t.photo ? (
                     <Image
                       src={t.photo}
                       alt={`${t.name} - ${t.role}`}
                       fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 30vw"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                       className="object-cover object-center"
                     />
                   ) : (
@@ -238,62 +235,75 @@ export default function About() {
                 </div>
 
                 {/* Info Content */}
-                <div className="p-8 flex flex-col justify-between flex-grow">
-                  <div>
-                    <h3 className="font-cormorant text-2xl font-semibold text-forest-slate mb-1">
-                      {t.name}
-                    </h3>
-                    <p className="font-dmsans text-xs text-teal-sage font-medium mb-3">
-                      {t.role}
+                <div className="p-6 md:p-7">
+                  <h3 className="font-cormorant text-2xl font-semibold text-forest-slate mb-1">
+                    {t.name}
+                  </h3>
+                  <p className="font-dmsans text-xs text-teal-sage font-medium mb-3">
+                    {t.role}
+                  </p>
+                  {t.qualification && (
+                    <p className="font-dmsans text-xs text-forest-slate bg-muted-sage/15 border border-teal-sage/10 px-2.5 py-1 rounded-full inline-block">
+                      {t.qualification}
                     </p>
-                    {t.qualification && (
-                      <p className="font-dmsans text-xs text-forest-slate bg-muted-sage/15 border border-teal-sage/10 px-2.5 py-1 rounded-full mb-4 inline-block">
-                        {t.qualification}
-                      </p>
-                    )}
-                    <div className="space-y-4 text-sm text-forest-slate/85 leading-relaxed mb-6 font-dmsans">
-                      {t.intro.map((paragraph) => (
-                        <p key={paragraph}>{paragraph}</p>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Specialisation tags */}
-                  {t.specialisations.length > 0 && (
-                    <div>
-                      <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-charcoal/70">
-                        Specialises In
-                      </p>
-                      <div className="border-t border-muted-sage/20 pt-4 flex flex-wrap gap-1.5">
-                        {t.specialisations.map((tag) => (
-                          <span
-                            key={tag}
-                            className="text-[11px] font-medium text-forest-slate bg-warm-tan/40 border border-muted-sage/20 px-2 py-0.5 rounded-full font-dmsans"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
                   )}
 
-                  {t.approaches.length > 0 && (
-                    <div className="mt-4">
-                      <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-charcoal/70">
-                        Therapeutic Approach
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {t.approaches.map((approach) => (
-                          <span
-                            key={approach}
-                            className="text-[11px] font-medium text-forest-slate bg-muted-sage/15 border border-teal-sage/10 px-2 py-0.5 rounded-full font-dmsans"
-                          >
-                            {approach}
-                          </span>
+                  <details className="mt-5 border-t border-muted-sage/25 pt-4 group/profile">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg py-1 text-sm font-semibold text-forest-slate transition-colors hover:text-teal-sage focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-sage/50 [&::-webkit-details-marker]:hidden">
+                      <span>View full profile</span>
+                      <span
+                        aria-hidden="true"
+                        className="text-xl font-light leading-none transition-transform duration-200 group-open/profile:rotate-45"
+                      >
+                        +
+                      </span>
+                    </summary>
+
+                    <div className="pt-5">
+                      <div className="space-y-4 text-sm text-forest-slate/85 leading-relaxed mb-6 font-dmsans">
+                        {t.intro.map((paragraph) => (
+                          <p key={paragraph}>{paragraph}</p>
                         ))}
                       </div>
+
+                      {/* Specialisation tags */}
+                      {t.specialisations.length > 0 && (
+                        <div>
+                          <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-charcoal/70">
+                            Specialises In
+                          </p>
+                          <div className="border-t border-muted-sage/20 pt-4 flex flex-wrap gap-1.5">
+                            {t.specialisations.map((tag) => (
+                              <span
+                                key={tag}
+                                className="text-[11px] font-medium text-forest-slate bg-warm-tan/40 border border-muted-sage/20 px-2 py-0.5 rounded-full font-dmsans"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {t.approaches.length > 0 && (
+                        <div className="mt-4">
+                          <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-charcoal/70">
+                            Therapeutic Approach
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {t.approaches.map((approach) => (
+                              <span
+                                key={approach}
+                                className="text-[11px] font-medium text-forest-slate bg-muted-sage/15 border border-teal-sage/10 px-2 py-0.5 rounded-full font-dmsans"
+                              >
+                                {approach}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </details>
                 </div>
               </motion.div>
             ))}
