@@ -25,12 +25,10 @@ const CONSULTANT_PHOTOS = {
 /**
  * Service slug -> the room that service actually happens in, so the picture
  * carries meaning instead of being decoration:
- *   individual  -> the single-armchair corner
  *   couples     -> the sofa-and-armchair room that seats several people
  *   career      -> the study wall of psychology books
  */
 const SERVICE_IMAGES = {
-  "individual-therapy": "/team/office1.jpg",
   assessment: "/team/office3.jpg",
   "couples-counseling": "/team/office2.jpg",
   "couple-family-counselling": "/team/office2.jpg",

@@ -202,7 +202,7 @@ There is no separate reception login page. Sign in at `/admin/login` with the re
 ### Therapist Portal
 
 - **URL**: `/therapist/login`
-- **Email**: `madhumatidhumak@thebraintea.co.in` (Dr. Madhumati Dhumak) OR `rohan@thebraintea.com` (Dr. Rohan Gupta)
+- **Email**: `psychologist.madhumati@gmail.com` (Madhumati Dhumak) OR `rohan@thebraintea.com` (Dr. Rohan Gupta)
 - **Password**: `DrMadhumati123!` OR `DrRohan123!`
 
 ---

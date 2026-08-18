@@ -2,7 +2,7 @@ export interface TeamMember {
   slug: string;
   name: string;
   role: string;
-  photo?: string;
+  photo: string;
   qualification?: string;
   experience?: string;
   approaches: string[];
@@ -16,15 +16,15 @@ export const TEAM: TeamMember[] = [
   {
     slug: "madhumati-dhumak",
     name: "Madhumati Dhumak",
-    role: "Lead Counseling Psychologist",
+    role: "Founder & Lead Counselling Psychologist",
     photo: "/team/madhumati-dhumak.jpg",
     qualification:
-      "PGDP Counseling Psychology · MSc Clinical Psychology · BSc Clinical Psychology",
+      "PGDP Counselling Psychology · MSc Clinical Psychology · BSc Clinical Psychology",
     experience: "3+ years in clinical practice",
     approaches: [
       "Integrative & Evidence-Based Therapy",
       "Trauma-Informed Care",
-      "Personalized Treatment Planning",
+      "Personalised Treatment Planning",
     ],
     specialisations: [
       "Adults",
@@ -53,11 +53,71 @@ export const TEAM: TeamMember[] = [
     slug: "ananya-sunil-nair",
     name: "Ananya Sunil Nair",
     role: "Counseling Psychologist",
-    approaches: [],
-    specialisations: [],
+    photo: "/team/ananya-sunil-nair.jpg",
+    qualification:
+      "MSc Clinical Psychology · BA Psychology, Sociology & Economics",
+    experience: "Psychologist · Art therapy and crisis counselling trained",
+    approaches: [
+      "Client-Centred Therapy",
+      "Integrative Care",
+      "Trauma-Informed Support",
+    ],
+    specialisations: [
+      "Individual Counselling",
+      "Art Therapy",
+      "Crisis Counselling",
+    ],
+    fee: "₹1,500 / session",
     intro: [
       "Ananya takes a client-centered, integrative approach, adapting her work to each client’s story, needs, and goals. She believes that every client has an innate ability to heal and it's her duty to create a safe space to enable the client's healing and subsequent growth!",
       "She employs a client-paced, trauma informed, activity based, exploratory approach using multiple modalities as her foundation; aka, an eclectic approach. Her goal as a therapist is to help her clients' experience everything their life has to offer, to the fullest!",
+    ],
+  },
+  {
+    slug: "ananya-saxena",
+    name: "Ananya Saxena",
+    role: "Counselling Psychologist",
+    photo: "/team/ananya-saxena.jpg",
+    qualification:
+      "MSc Counselling Psychology · BA Psychology, Sociology & English",
+    experience:
+      "Experience across counselling, rehabilitation and clinical settings",
+    approaches: [
+      "Collaborative Therapy",
+      "Tailored Interventions",
+      "Expressive Arts Therapy",
+    ],
+    specialisations: [
+      "Individual Counselling",
+      "Rehabilitation Support",
+      "Expressive Arts Therapy",
+    ],
+    fee: "₹1,500 / session",
+    intro: [
+      "Ananya believes therapy works best as a collaborative process, built on trust, openness, and safety. Her warm, inclusive, and non-judgmental practice gives clients room to explore and understand their experiences through approaches tailored to their needs.",
+    ],
+  },
+  {
+    slug: "sharayu-harpale",
+    name: "Sharayu Harpale",
+    role: "Clinical Psychologist",
+    photo: "/team/sharayu-harpale.jpg",
+    qualification: "Clinical Psychologist",
+    experience:
+      "Experience in assessment, counselling, formulation and intervention",
+    approaches: [
+      "Cognitive Behaviour Therapy",
+      "Supportive Psychotherapy",
+      "Solution-Focused Techniques",
+    ],
+    specialisations: [
+      "Anxiety & Stress",
+      "Relationship Difficulties",
+      "Life Transitions",
+    ],
+    fee: "₹1,500 / session",
+    intro: [
+      "Sharayu brings clinical expertise and genuine human connection together, creating a space where clients can feel heard, understood, and accepted without judgment. Her empathetic, collaborative, evidence-based approach helps people recognise unhelpful patterns, build healthier coping skills, and make meaningful, sustainable change.",
     ],
   },
   {

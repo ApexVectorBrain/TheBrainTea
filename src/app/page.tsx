@@ -247,14 +247,14 @@ export default function Home() {
 
         <div className="max-w-7xl mx-auto px-6 md:px-12 relative">
           {/* Arch-topped Cards Grid with negative top margin to overlap the transition */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto -mt-24 md:-mt-36 lg:-mt-44 relative z-30">
-            {/* Card 1: Individual Therapy */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto -mt-24 md:-mt-36 lg:-mt-44 relative z-30">
+            {/* Card 1: Assessment */}
             <div className="flex flex-col items-center">
               {/* Bare arched image — no white wrapper */}
               <div className="relative aspect-[3/4] w-full rounded-t-full overflow-hidden shadow-lg">
                 <Image
-                  src="/team/office1.jpg"
-                  alt="The individual therapy room at The Brain Tea — a single armchair beside a warm lamp"
+                  src="/team/office3.jpg"
+                  alt="A calm consultation space at The Brain Tea"
                   fill
                   sizes="(max-width: 768px) 100vw, 30vw"
                   className="object-cover"
@@ -263,12 +263,11 @@ export default function Home() {
               {/* White text box at bottom */}
               <div className="bg-warm-white rounded-b-[24px] w-full px-5 py-6 text-center shadow-warm-soft -mt-1 border border-t-0 border-warm-sand/15">
                 <h3 className="font-cormorant text-xl md:text-2xl font-semibold text-forest-slate mb-2 uppercase tracking-wide">
-                  Individual Therapy
+                  Assessment
                 </h3>
                 <p className="text-xs md:text-sm text-forest-slate/80 leading-relaxed mb-5 font-dmsans">
-                  One-on-one sessions tailored specifically to you. Process
-                  emotional pain, challenge deep-seated patterns, and build
-                  genuine coping skills.
+                  A structured first consultation to understand your concerns,
+                  clarify your goals, and decide on the most helpful next step.
                 </p>
                 <Link
                   href="/book"
@@ -279,7 +278,35 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Card 2: Couples & Family Therapy */}
+            {/* Card 2: Individual Counselling */}
+            <div className="flex flex-col items-center">
+              <div className="relative aspect-[3/4] w-full rounded-t-full overflow-hidden shadow-lg">
+                <Image
+                  src="/team/office.jpg"
+                  alt="A private counselling space at The Brain Tea"
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 45vw, 30vw"
+                  className="object-cover"
+                />
+              </div>
+              <div className="bg-warm-white rounded-b-[24px] w-full px-5 py-6 text-center shadow-warm-soft -mt-1 border border-t-0 border-warm-sand/15">
+                <h3 className="font-cormorant text-xl md:text-2xl font-semibold text-forest-slate mb-2 uppercase tracking-wide">
+                  Individual Counselling
+                </h3>
+                <p className="text-xs md:text-sm text-forest-slate/80 leading-relaxed mb-5 font-dmsans">
+                  A one-to-one space to explore what you&apos;re carrying, clarify
+                  your goals, and receive support that meets you where you are.
+                </p>
+                <Link
+                  href="/book"
+                  className="font-dmsans text-[10px] font-bold tracking-[0.2em] text-teal-sage hover:text-forest-slate uppercase underline underline-offset-4"
+                >
+                  Book Now
+                </Link>
+              </div>
+            </div>
+
+            {/* Card 3: Couples & Family Therapy */}
             <div className="flex flex-col items-center">
               <div className="relative aspect-[3/4] w-full rounded-t-full overflow-hidden shadow-lg">
                 <Image
@@ -424,7 +451,7 @@ export default function Home() {
                   As a therapy clinic in Pune, our vision is to build a space
                   where people don&apos;t have to perform, explain away their
                   emotions, or fear being judged. Every conversation, whether
-                  in individual therapy or couples therapy, is held with
+                  in assessment or couples therapy, is held with
                   curiosity, compassion, and genuine presence.
                 </p>
                 <p>

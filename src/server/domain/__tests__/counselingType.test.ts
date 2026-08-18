@@ -8,11 +8,10 @@ import {
 } from "../counselingType";
 
 describe("counselingType domain", () => {
-  it("recognises the five supported types", () => {
+  it("recognises the supported types", () => {
     expect(isCounselingType("ASSESSMENT")).toBe(true);
     expect(isCounselingType("CAREER_ACADEMIC")).toBe(true);
     expect(isCounselingType("INDIVIDUAL")).toBe(true);
-    expect(isCounselingType("INDIVIDUAL_THERAPY")).toBe(true);
     expect(isCounselingType("COUPLE_FAMILY")).toBe(true);
     expect(isCounselingType("GROUP")).toBe(false);
     expect(isCounselingType("")).toBe(false);
@@ -24,9 +23,6 @@ describe("counselingType domain", () => {
       "Career & Academic Counselling",
     );
     expect(counselingTypeLabel("INDIVIDUAL")).toBe("Individual Counselling");
-    expect(counselingTypeLabel("INDIVIDUAL_THERAPY")).toBe(
-      "Individual Therapy",
-    );
     expect(counselingTypeLabel("COUPLE_FAMILY")).toBe(
       "Couples & Family Therapy",
     );
@@ -38,10 +34,10 @@ describe("counselingType domain", () => {
     expect(
       counselingTypesForServiceSlugs([
         "assessment",
-        "individual-therapy",
+        "individual-counselling",
         "unrelated-service",
       ]),
-    ).toEqual(["ASSESSMENT", "INDIVIDUAL_THERAPY"]);
+    ).toEqual(["ASSESSMENT", "INDIVIDUAL"]);
     expect(counselingTypesForServiceSlugs([])).toEqual([]);
   });
 

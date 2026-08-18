@@ -108,22 +108,26 @@ async function validateSlotWithinSchedule(
   therapistId: string,
   dateTime: Date,
   durationMinutes: number,
+  requireWorkingHours = true,
 ): Promise<void> {
   if (dateTime.getTime() <= Date.now()) {
     throw badRequest("Sessions must be booked for a future time");
   }
-  const hh = String(dateTime.getHours()).padStart(2, "0");
-  const mm = String(dateTime.getMinutes()).padStart(2, "0");
-  const startTime = `${hh}:${mm}`;
 
-  const windows = await tx.therapistAvailability.findMany({
-    where: { therapistId, dayOfWeek: dateTime.getDay() },
-    select: { startTime: true, endTime: true },
-  });
-  if (!isGeneratedSlotStart(startTime, windows))
-    throw conflict(
-      "The selected time is outside the consultant's working hours",
-    );
+  if (requireWorkingHours) {
+    const hh = String(dateTime.getHours()).padStart(2, "0");
+    const mm = String(dateTime.getMinutes()).padStart(2, "0");
+    const startTime = `${hh}:${mm}`;
+
+    const windows = await tx.therapistAvailability.findMany({
+      where: { therapistId, dayOfWeek: dateTime.getDay() },
+      select: { startTime: true, endTime: true },
+    });
+    if (!isGeneratedSlotStart(startTime, windows))
+      throw conflict(
+        "The selected time is outside the consultant's working hours",
+      );
+  }
 
   const end = new Date(dateTime.getTime() + durationMinutes * 60000);
   const block = await tx.slotBlock.findFirst({
@@ -416,7 +420,11 @@ export async function transitionBooking(input: {
   });
 }
 
-/** Move a booking to a new slot, revalidating availability atomically. */
+/**
+ * Move a booking to a new slot. Staff may deliberately choose a time outside
+ * the published working hours, but future-time, leave-block, and overlap
+ * safeguards remain enforced atomically.
+ */
 export async function rescheduleBooking(input: {
   bookingId: string;
   newDateTime: Date;
@@ -445,12 +453,21 @@ export async function rescheduleBooking(input: {
       booking.therapistId,
       input.newDateTime,
       booking.durationMinutes,
+      false,
     );
 
     if (booking.slot) {
       await tx.bookingSlot.delete({ where: { id: booking.slot.id } });
     }
     try {
+      // Normal booking slots are keyed by their exact start time. Reschedules
+      // can use any staff-approved time, so also guard their full duration.
+      await assertNoOverlappingBooking(
+        tx,
+        booking.therapistId,
+        input.newDateTime,
+        booking.durationMinutes,
+      );
       await tx.bookingSlot.create({
         data: {
           therapistId: booking.therapistId,

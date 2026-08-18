@@ -14,7 +14,11 @@ const fieldsSchema = z.object({
   college: z.string().trim().min(2).max(200),
   course: z.string().trim().min(2).max(200),
   yearOrSemester: z.string().trim().min(1).max(50),
-  internshipType: z.enum(["graduate", "postgraduate"]),
+  internshipType: z.enum([
+    "graduate",
+    "postgraduate",
+    "social_media_marketing",
+  ]),
   preferredStart: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Expected YYYY-MM-DD"),

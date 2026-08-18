@@ -18,7 +18,7 @@ async function main() {
     if (!madhumati?.userId) throw new Error("Madhumati's linked login was not found");
     await tx.user.update({
       where: { id: madhumati.userId },
-      data: { email: "madhumatidhumak@thebraintea.co.in" },
+      data: { email: "psychologist.madhumati@gmail.com" },
     });
   });
   console.log("Updated the admin and Madhumati login email addresses.");

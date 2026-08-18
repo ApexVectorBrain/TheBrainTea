@@ -174,7 +174,7 @@ export default function About() {
       </section>
 
       {/* SECTION 4: THE TEAM */}
-      <section className="py-24 bg-ivory">
+      <section id="meet-the-team" className="scroll-mt-24 py-24 bg-ivory">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           {/* Section Header */}
           <div className="text-center max-w-2xl mx-auto mb-16">
@@ -201,7 +201,9 @@ export default function About() {
                 ? "grid-cols-1 max-w-sm mx-auto"
                 : TEAM.length === 2
                   ? "grid-cols-1 md:grid-cols-2 max-w-3xl mx-auto"
-                  : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                : TEAM.length === 3
+                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                  : "grid-cols-1 md:grid-cols-2 xl:grid-cols-4"
             }`}
           >
             {TEAM.map((t) => (
