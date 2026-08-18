@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { TEAM } from "../team-data";
+import publicRoster from "../../../prisma/public-roster.json";
 
 describe("public practitioner roster", () => {
   it("includes Ananya as a counseling psychologist with her updated bio", () => {
@@ -47,6 +48,7 @@ describe("public practitioner roster", () => {
       name: "Gauri Ghorpade",
       role: "Psychologist",
       photo: "/team/gauri-ghorpade.png",
+      photoPosition: "50% 28%",
       specialisations: [
         "Anxiety, Stress & Emotional Wellbeing",
         "Relationships, Self-Worth & Personal Challenges",
@@ -95,5 +97,11 @@ describe("public practitioner roster", () => {
     expect(krutika).not.toHaveProperty("experience");
     expect(krutika).not.toHaveProperty("languages");
     expect(krutika).not.toHaveProperty("fee");
+  });
+
+  it("provisions every public team member in the database roster", () => {
+    expect(publicRoster.databaseRosterSlugs).toEqual(
+      TEAM.map(({ slug }) => slug),
+    );
   });
 });

@@ -3,6 +3,7 @@ export interface TeamMember {
   name: string;
   role: string;
   photo: string;
+  photoPosition?: string;
   qualification?: string;
   experience?: string;
   approaches: string[];
@@ -125,6 +126,7 @@ export const TEAM: TeamMember[] = [
     name: "Gauri Ghorpade",
     role: "Psychologist",
     photo: "/team/gauri-ghorpade.png",
+    photoPosition: "50% 28%",
     approaches: [
       "Integrative & Evidence-Based",
       "Person-Centred",

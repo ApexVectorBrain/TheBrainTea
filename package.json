@@ -13,7 +13,8 @@
     "db:seed:small": "node prisma/seed-small.js",
     "db:seed:90-days": "node prisma/seed-90-days.js",
     "db:seed:fresh": "node prisma/seed-fresh.js",
-    "db:add-launch-consultants": "node prisma/add-launch-consultants.js"
+    "db:add-launch-consultants": "node prisma/add-launch-consultants.js",
+    "db:add-public-consultants": "node prisma/add-public-consultants.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
