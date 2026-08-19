@@ -17,7 +17,7 @@ import {
 // approves or rejects it.
 
 export const RECEPTION_TRANSITIONS: Record<BookingStatus, BookingStatus[]> = {
-  PENDING: ["CONFIRMED", "CANCELLED"],
+  PENDING: ["CANCELLED"],
   AWAITING_PAYMENT: ["CONFIRMED", "CANCELLED"],
   CONFIRMED: ["COMPLETED", "NO_SHOW", "CANCELLED", "REFUND_PENDING"],
   COMPLETED: ["REFUND_PENDING"],

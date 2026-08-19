@@ -114,7 +114,6 @@ async function bookPayNow(n: number, _daysAhead?: number, _hour?: number) {
     serviceSlug: SERVICE_SLUG,
     dateTime: futureSlot(7 * (n + 1), 10),
     client: clientInput(n),
-    paymentOption: "PAY_NOW",
   });
   const charge = await prisma.paymentRecord.findFirstOrThrow({
     where: { bookingId: booking.id, kind: "CHARGE" },

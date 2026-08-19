@@ -3,6 +3,12 @@ import { prisma } from "@/lib/db";
 import { releaseExpiredReservations } from "@/server/services/bookingService";
 import { badRequest, handleApi, notFound } from "@/server/http";
 import { generateSlotsForWindows } from "@/server/domain/workingHours";
+import {
+  clinicDayBounds,
+  clinicDayOfWeek,
+  formatClinicTime,
+  parseClinicDateTime,
+} from "@/server/clinicTime";
 
 export const GET = handleApi(async (request: Request) => {
   const { searchParams } = new URL(request.url);
@@ -20,18 +26,18 @@ export const GET = handleApi(async (request: Request) => {
     throw notFound("Therapist not found");
   }
 
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) throw badRequest("Invalid date format");
+  const dayOfWeek = clinicDayOfWeek(dateStr);
+  const bounds = clinicDayBounds(dateStr);
+  if (dayOfWeek === null || !bounds) throw badRequest("Invalid date format");
 
   // Free any lapsed payment holds before reporting availability.
   await releaseExpiredReservations();
 
-  const startOfDay = new Date(`${dateStr}T00:00:00`);
-  const endOfDay = new Date(`${dateStr}T23:59:59.999`);
+  const { start: startOfDay, end: endOfDay } = bounds;
 
   const [weeklySlots, heldSlots, blocks] = await Promise.all([
     prisma.therapistAvailability.findMany({
-      where: { therapistId: therapist.id, dayOfWeek: date.getDay() },
+      where: { therapistId: therapist.id, dayOfWeek },
     }),
     // BookingSlot rows are the single source of truth for live holds.
     prisma.bookingSlot.findMany({
@@ -51,10 +57,7 @@ export const GET = handleApi(async (request: Request) => {
   ]);
 
   const heldTimes = new Set(
-    heldSlots.map(
-      (s) =>
-        `${String(s.startAt.getHours()).padStart(2, "0")}:${String(s.startAt.getMinutes()).padStart(2, "0")}`,
-    ),
+    heldSlots.map((s) => formatClinicTime(s.startAt)),
   );
 
   const availableSlots = generateSlotsForWindows(weeklySlots)
@@ -63,8 +66,8 @@ export const GET = handleApi(async (request: Request) => {
       id: `${weeklySlots[0].id}:${slot.startTime}`,
     }))
     .map((slot) => {
-      const slotStart = new Date(`${dateStr}T${slot.startTime}:00`);
-      const slotEnd = new Date(`${dateStr}T${slot.endTime}:00`);
+      const slotStart = parseClinicDateTime(dateStr, slot.startTime)!;
+      const slotEnd = parseClinicDateTime(dateStr, slot.endTime)!;
       const isBlocked = blocks.some(
         (b) => b.startAt < slotEnd && b.endAt > slotStart,
       );

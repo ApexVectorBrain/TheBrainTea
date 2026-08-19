@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CONTACT_PHONE } from "@/lib/site";
 import { bookingPortraitStyle } from "@/lib/booking-consultants";
 
 // Service-first booking flow:
@@ -14,17 +13,6 @@ import { bookingPortraitStyle } from "@/lib/booking-consultants";
 //   5. Confirm   → summary + how the fee is settled
 //
 // The client is charged the chosen consultant's own rate.
-
-// Online payment is not live yet. The PhonePe gateway integration is fully
-// built and kept intact server-side (createBooking still honours PAY_NOW,
-// mints a checkout and holds the slot as AWAITING_PAYMENT) — it is simply
-// not offered to clients from this wizard for now. Every booking is taken
-// as PAY_LATER and the fee is settled with the clinic directly.
-//
-// To re-enable online payments: restore the PAY_NOW / PAY_LATER radio group
-// on the Confirm step and let the user drive this value again. Nothing on
-// the server needs to change.
-const PAYMENT_OPTION = "PAY_LATER";
 
 const STEPS = [
   { stepNum: 1, label: "Service" },
@@ -205,7 +193,6 @@ export default function BookingWizard({ services = [], initialService = "" }) {
           date: selectedDate,
           time: selectedSlot.startTime,
           ...clientDetails,
-          paymentOption: PAYMENT_OPTION,
         }),
       });
       const data = await res.json();
@@ -215,18 +202,6 @@ export default function BookingWizard({ services = [], initialService = "" }) {
         return;
       }
       const booking = data.booking;
-      // Dormant gateway path, kept wired for when online payments go live:
-      // PAY_NOW hands off to the gateway's secure checkout and confirmation
-      // happens server-side (webhook / status poll), never in this client.
-      // Unreachable while PAYMENT_OPTION is pinned to PAY_LATER.
-      if (data.payment?.checkoutUrl) {
-        window.location.assign(data.payment.checkoutUrl);
-        return;
-      }
-      if (PAYMENT_OPTION === "PAY_NOW") {
-        router.push(`/booking/payment-status?bookingId=${booking.id}`);
-        return;
-      }
       router.push(`/booking-confirmed?id=${booking.id}`);
     } catch (err) {
       console.error(err);
@@ -697,30 +672,15 @@ export default function BookingWizard({ services = [], initialService = "" }) {
               </div>
             </div>
 
-            {/* Settling the fee — online payments are not live yet, so the
-                desk takes it from here. */}
             <div className="mb-8 p-7 rounded-xl border border-mist/40 bg-warm-white/50">
               <h4 className="font-cormorant text-2xl font-semibold text-charcoal mb-2">
                 Completing your booking
               </h4>
               <p className="text-sm text-sage leading-relaxed mb-5">
-                To confirm this booking, please pay the admin before your
-                session. Payment before the session is required for
-                confirmation, as per clinic policy.
+                Send your preferred session request, then contact the Admin to
+                arrange payment. The time is confirmed only after the Admin or
+                Reception records the payment.
               </p>
-
-              <a
-                href={`tel:${CONTACT_PHONE.replace(/\s/g, "")}`}
-                className="inline-flex flex-col items-start gap-1 text-forest hover:text-terracotta transition-colors group"
-              >
-                <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-sage group-hover:text-terracotta transition-colors">
-                  Contact our admin
-                </span>
-                <span className="font-cormorant text-xl sm:text-2xl font-semibold tracking-wide whitespace-nowrap tabular-nums">
-                  {CONTACT_PHONE}
-                </span>
-              </a>
-
             </div>
 
             <div className="flex flex-col sm:flex-row justify-between gap-4 pt-6 border-t border-mist/20">
@@ -734,7 +694,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
                 disabled={isSubmitting}
                 className="bg-forest hover:bg-terracotta text-warm-white font-medium px-8 py-4 rounded-full transition-colors disabled:opacity-50 min-w-[200px] shadow-sm hover:shadow-md"
               >
-                {isSubmitting ? "Processing..." : "Complete Booking"}
+                {isSubmitting ? "Sending..." : "Send Session Request"}
               </button>
             </div>
           </div>

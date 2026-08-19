@@ -18,11 +18,7 @@ import {
   scheduleAdminBooking,
 } from "@/server/services/bookingService";
 import { rupeesToMinor } from "@/server/money";
-import {
-  notifyBookingCreated,
-  notifyPaymentApproved,
-} from "@/server/services/emailNotificationService";
-import { ensureBookingMeeting } from "@/server/services/googleCalendarService";
+import { parseClinicDateTime } from "@/server/clinicTime";
 
 // Front-desk appointment register. Same filtering surface as the admin
 // booking list, plus the desk-specific `queue` presets that drive the
@@ -206,8 +202,8 @@ export const POST = handleApi(async (request: Request) => {
   const session = await requireReception(request);
   const body = parseBody(scheduleSchema, await request.json());
 
-  const dateTime = new Date(`${body.date}T${body.time}:00`);
-  if (isNaN(dateTime.getTime())) throw badRequest("Invalid date or time");
+  const dateTime = parseClinicDateTime(body.date, body.time);
+  if (!dateTime) throw badRequest("Invalid date or time");
 
   const booking = await scheduleAdminBooking({
     therapistId: body.therapistId,
@@ -223,16 +219,6 @@ export const POST = handleApi(async (request: Request) => {
     session,
     ip: clientIp(request),
   });
-
-  try {
-    await ensureBookingMeeting(booking.id);
-  } catch (error) {
-    // Scheduling remains successful if Google is temporarily unavailable.
-    // The email service will not substitute a shared Meet link.
-    console.error("Unable to create Google Meet link for booking", booking.id, error);
-  }
-  await notifyBookingCreated(booking.id);
-  if (booking.paymentStatus === "PAID") await notifyPaymentApproved(booking.id);
 
   return NextResponse.json({ booking }, { status: 201 });
 });

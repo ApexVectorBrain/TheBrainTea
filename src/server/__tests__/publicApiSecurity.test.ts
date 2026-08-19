@@ -138,7 +138,7 @@ suite("public API data minimisation", () => {
           age: 35,
           emergencyContact: "EC (+919812345679)",
           gdprConsent: true,
-          paymentOption: "PAY_LATER",
+          paymentOption: "PAY_NOW",
         },
       }),
     );
@@ -168,7 +168,7 @@ suite("public API data minimisation", () => {
 
     // But the fields the client needs are present.
     expect(typeof booking.id).toBe("string");
-    expect(booking.status).toBe("CONFIRMED");
+    expect(booking.status).toBe("AWAITING_PAYMENT");
   });
 
   it("POST /api/bookings/cancel returns state only, not the internal row", async () => {

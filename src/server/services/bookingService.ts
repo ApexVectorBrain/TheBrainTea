@@ -14,7 +14,6 @@ import {
   chargeIdempotencyKey,
   createCharge,
   recordChargeSuccess,
-  invoiceNumberFor,
 } from "./paymentService";
 import { badRequest, conflict, notFound, type Session } from "../http";
 import { recordAudit } from "../audit";
@@ -22,11 +21,11 @@ import {
   isGeneratedSlotStart,
   sessionOverlapsWorkingHours,
 } from "../domain/workingHours";
+import { clinicDayOfWeekForDate, formatClinicTime } from "../clinicTime";
 
-// Booking lifecycle service. All state changes flow through the domain
-// state machine, are journalled to BookingStatusHistory, and slot holds are
-// enforced by the BookingSlot unique constraint inside the same transaction
-// — the database, not application code, is the final double-booking arbiter.
+// Booking lifecycle service. All state changes flow through the domain state
+// machine and are journalled to BookingStatusHistory. A public submission is
+// a request, not a calendar hold; only recorded payment creates BookingSlot.
 
 /** Minutes an unpaid AWAITING_PAYMENT reservation holds its slot. */
 export const RESERVATION_TTL_MINUTES = 30;
@@ -48,7 +47,6 @@ export interface CreateBookingInput {
     emergencyContact: string;
     gdprConsent: boolean;
   };
-  paymentOption: "PAY_NOW" | "PAY_LATER";
 }
 
 /**
@@ -115,12 +113,10 @@ async function validateSlotWithinSchedule(
   }
 
   if (requireWorkingHours) {
-    const hh = String(dateTime.getHours()).padStart(2, "0");
-    const mm = String(dateTime.getMinutes()).padStart(2, "0");
-    const startTime = `${hh}:${mm}`;
+    const startTime = formatClinicTime(dateTime);
 
     const windows = await tx.therapistAvailability.findMany({
-      where: { therapistId, dayOfWeek: dateTime.getDay() },
+      where: { therapistId, dayOfWeek: clinicDayOfWeekForDate(dateTime) },
       select: { startTime: true, endTime: true },
     });
     if (!isGeneratedSlotStart(startTime, windows))
@@ -220,10 +216,7 @@ export async function createBooking(input: CreateBookingInput) {
     });
 
     const commissionBps = await resolveBookingCommissionBps(therapist, tx);
-    const payNow = input.paymentOption === "PAY_NOW";
-    const initialStatus: BookingStatus = payNow
-      ? "AWAITING_PAYMENT"
-      : "CONFIRMED";
+    const initialStatus: BookingStatus = "PENDING";
 
     const booking = await tx.booking.create({
       data: {
@@ -238,92 +231,29 @@ export async function createBooking(input: CreateBookingInput) {
         commissionBps,
         status: initialStatus,
         paymentStatus: "UNPAID",
-        expiresAt: payNow
-          ? new Date(Date.now() + RESERVATION_TTL_MINUTES * 60000)
-          : null,
-        invoiceNumber: payNow ? null : undefined,
+        expiresAt: null,
+        invoiceNumber: null,
       },
     });
-    if (!payNow) {
-      await tx.booking.update({
-        where: { id: booking.id },
-        data: { invoiceNumber: invoiceNumberFor(booking.id) },
-      });
-    }
-
     await tx.bookingStatusHistory.create({
       data: {
         bookingId: booking.id,
         fromStatus: null,
         toStatus: initialStatus,
         actorType: "CLIENT",
-        reason: payNow
-          ? "Reservation created, awaiting payment"
-          : "Booked with pay-at-clinic",
+        reason: "Booking request submitted; client must contact admin",
       },
     });
 
-    // DB-level double-booking guard: unique(therapistId, startAt).
-    try {
-      await tx.bookingSlot.create({
-        data: {
-          therapistId: therapist.id,
-          startAt: input.dateTime,
-          bookingId: booking.id,
-        },
-      });
-    } catch (err) {
-      if (isUniqueViolation(err)) {
-        throw conflict(
-          "The selected time slot is no longer available. Please pick another slot.",
-          "SLOT_TAKEN",
-        );
-      }
-      throw err;
-    }
-
     return { booking, client, therapist, service };
   }, BOOKING_TRANSACTION_OPTIONS);
-
-  // PAY_NOW: open a gateway checkout for the reservation. The booking stays
-  // AWAITING_PAYMENT until the gateway confirms (webhook or status poll) —
-  // the client redirect is never trusted. If checkout creation fails, the
-  // reservation survives; the payment-status page's retry recovers it and
-  // the TTL cleans up abandoned holds.
-  let payment: { checkoutUrl: string } | null = null;
-  if (input.paymentOption === "PAY_NOW") {
-    const { clientAction } = await createCharge({
-      bookingId: result.booking.id,
-      idempotencyKey: chargeIdempotencyKey(result.booking.id, 1),
-    });
-    if (
-      clientAction.type === "checkout" &&
-      typeof clientAction.payload.checkoutUrl === "string"
-    ) {
-      payment = { checkoutUrl: clientAction.payload.checkoutUrl };
-    } else {
-      // The configured provider cannot take online payments (e.g. the
-      // manual/offline provider) — never leave a client on an unpayable
-      // reservation. The transaction already committed, so cancel the hold
-      // explicitly before reporting the misconfiguration.
-      await transitionBooking({
-        bookingId: result.booking.id,
-        toStatus: "CANCELLED",
-        actorType: "SYSTEM",
-        reason: "Online payment unavailable (no checkout-capable provider)",
-      });
-      throw conflict(
-        "Online payment is temporarily unavailable. Please choose pay at clinic, or try again later.",
-        "ONLINE_PAYMENT_UNAVAILABLE",
-      );
-    }
-  }
 
   const booking = await prisma.booking.findUniqueOrThrow({
     where: { id: result.booking.id },
     include: { client: true, therapist: true, service: true },
   });
-  return { booking, payment };
+  // Kept for API compatibility while the online gateway is dormant.
+  return { booking, payment: null };
 }
 
 /**
@@ -344,6 +274,16 @@ export async function transitionBooking(input: {
       include: { slot: true },
     });
     if (!booking) throw notFound("Booking not found");
+
+    if (
+      booking.status === "PENDING" &&
+      input.toStatus === "CONFIRMED" &&
+      booking.paymentStatus !== "PAID"
+    ) {
+      throw conflict(
+        "Record payment before confirming a session request. Payment confirmation is what reserves the time.",
+      );
+    }
 
     assertTransition(booking.status, input.toStatus);
 
@@ -456,25 +396,29 @@ export async function rescheduleBooking(input: {
       false,
     );
 
+    const isUnpaidRequest =
+      booking.status === "PENDING" && booking.paymentStatus !== "PAID";
     if (booking.slot) {
       await tx.bookingSlot.delete({ where: { id: booking.slot.id } });
     }
     try {
       // Normal booking slots are keyed by their exact start time. Reschedules
       // can use any staff-approved time, so also guard their full duration.
-      await assertNoOverlappingBooking(
-        tx,
-        booking.therapistId,
-        input.newDateTime,
-        booking.durationMinutes,
-      );
-      await tx.bookingSlot.create({
-        data: {
-          therapistId: booking.therapistId,
-          startAt: input.newDateTime,
-          bookingId: booking.id,
-        },
-      });
+      if (!isUnpaidRequest) {
+        await assertNoOverlappingBooking(
+          tx,
+          booking.therapistId,
+          input.newDateTime,
+          booking.durationMinutes,
+        );
+        await tx.bookingSlot.create({
+          data: {
+            therapistId: booking.therapistId,
+            startAt: input.newDateTime,
+            bookingId: booking.id,
+          },
+        });
+      }
     } catch (err) {
       if (isUniqueViolation(err)) {
         throw conflict(
@@ -649,20 +593,18 @@ export async function scheduleAdminBooking(input: ScheduleAdminBookingInput) {
       throw badRequest("Only authorised front-desk staff can book overtime");
     }
 
-    const hh = String(input.dateTime.getHours()).padStart(2, "0");
-    const mm = String(input.dateTime.getMinutes()).padStart(2, "0");
-    const startTime = `${hh}:${mm}`;
+    const startTime = formatClinicTime(input.dateTime);
     const windows = await tx.therapistAvailability.findMany({
       where: {
         therapistId: therapist.id,
-        dayOfWeek: input.dateTime.getDay(),
+        dayOfWeek: clinicDayOfWeekForDate(input.dateTime),
       },
       select: { startTime: true, endTime: true },
     });
     const isNormalSlot = isGeneratedSlotStart(startTime, windows);
     if (!isOvertime && !isNormalSlot) {
       throw conflict(
-        "That time is outside the consultant's working hours. Reception may mark it as overtime.",
+        "That time is outside the consultant's working hours. Reception or admin may mark it as overtime.",
       );
     }
     if (isOvertime && isNormalSlot) {
@@ -704,6 +646,7 @@ export async function scheduleAdminBooking(input: ScheduleAdminBookingInput) {
 
     const commissionBps = await resolveBookingCommissionBps(therapist, tx);
 
+    const initialStatus: BookingStatus = "PENDING";
     const booking = await tx.booking.create({
       data: {
         therapistId: therapist.id,
@@ -715,49 +658,36 @@ export async function scheduleAdminBooking(input: ScheduleAdminBookingInput) {
         amountMinor: input.feeMinor,
         commissionBps,
         counselingType: input.counselingType,
-        status: "CONFIRMED",
+        status: initialStatus,
         paymentStatus: "UNPAID",
         expiresAt: null,
       },
     });
     await tx.booking.update({
       where: { id: booking.id },
-      data: { invoiceNumber: invoiceNumberFor(booking.id) },
+      data: { invoiceNumber: null },
     });
 
     await tx.bookingStatusHistory.create({
       data: {
         bookingId: booking.id,
         fromStatus: null,
-        toStatus: "CONFIRMED",
+        toStatus: initialStatus,
         actorType: input.session.role,
         actorId: input.session.userId,
         reason: isOvertime
-          ? "Overtime appointment authorised by the front desk"
+          ? input.paymentReceived
+            ? "Paid overtime appointment authorised by the front desk"
+            : "Overtime appointment request awaiting payment"
           : input.session.role === "RECEPTIONIST"
-            ? "Appointment scheduled at the front desk"
-            : "Appointment scheduled by admin",
+            ? input.paymentReceived
+              ? "Paid appointment scheduled at the front desk"
+              : "Appointment request scheduled at the front desk"
+            : input.paymentReceived
+              ? "Paid appointment scheduled by admin"
+              : "Appointment request scheduled by admin",
       },
     });
-
-    // DB-level double-booking guard: unique(therapistId, startAt).
-    try {
-      await tx.bookingSlot.create({
-        data: {
-          therapistId: therapist.id,
-          startAt: input.dateTime,
-          bookingId: booking.id,
-        },
-      });
-    } catch (err) {
-      if (isUniqueViolation(err)) {
-        throw conflict(
-          "The consultant already has an appointment at this time. Please pick another slot.",
-          "SLOT_TAKEN",
-        );
-      }
-      throw err;
-    }
 
     await recordAudit(
       {

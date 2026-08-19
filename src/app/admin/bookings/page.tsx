@@ -32,7 +32,6 @@ const ACTIONS: Record<
   { toStatus: string; label: string; needsReason?: boolean }[]
 > = {
   PENDING: [
-    { toStatus: "CONFIRMED", label: "Confirm" },
     { toStatus: "CANCELLED", label: "Cancel", needsReason: true },
   ],
   AWAITING_PAYMENT: [
@@ -446,6 +445,7 @@ function ScheduleModal({
   const [time, setTime] = useState("");
   const [feeRupees, setFeeRupees] = useState("");
   const [paymentReceived, setPaymentReceived] = useState(false);
+  const [isOvertime, setIsOvertime] = useState(false);
   const [paymentRef, setPaymentRef] = useState("");
 
   const [clientMode, setClientMode] = useState<"existing" | "new">("existing");
@@ -537,6 +537,7 @@ function ScheduleModal({
         time,
         feeRupees: fee,
         paymentReceived,
+        isOvertime,
       };
       if (paymentReceived && paymentRef.trim())
         body.paymentRef = paymentRef.trim();
@@ -619,6 +620,20 @@ function ScheduleModal({
               step={900}
             />
           </Field>
+          <div className="flex flex-col justify-end gap-1.5">
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-ink">
+              <input
+                type="checkbox"
+                checked={isOvertime}
+                onChange={(e) => setIsOvertime(e.target.checked)}
+                className="h-4 w-4 accent-ocean"
+              />
+              Flexible / overtime time
+            </label>
+            <p className="text-xs text-ink-muted">
+              Only use this for a free time outside the normal five-hour shift.
+            </p>
+          </div>
           <Field label="Session fee (₹)">
             <input
               type="number"
@@ -831,6 +846,8 @@ function BookingDetailModal({
   const [newTime, setNewTime] = useState("");
   const [notes, setNotes] = useState("");
   const [notesDirty, setNotesDirty] = useState(false);
+  const [collecting, setCollecting] = useState(false);
+  const [paymentRef, setPaymentRef] = useState("");
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/admin/bookings/${bookingId}`);
@@ -867,6 +884,8 @@ function BookingDetailModal({
       setReasonFor(null);
       setReason("");
       setRescheduling(false);
+      setCollecting(false);
+      setPaymentRef("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Action failed");
     } finally {
@@ -970,6 +989,19 @@ function BookingDetailModal({
 
           {/* Actions */}
           <div className="flex flex-wrap items-center gap-2">
+            {detail.paymentStatus === "UNPAID" &&
+              ["PENDING", "CONFIRMED", "COMPLETED", "NO_SHOW"].includes(
+                detail.status,
+              ) && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => setCollecting((open) => !open)}
+                  className="rounded-full bg-ocean-deep px-4 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-surface-raised-sm transition-all hover:-translate-y-0.5 disabled:opacity-40"
+                >
+                  Record payment
+                </button>
+              )}
             {actions.map((action) =>
               action.needsReason ? (
                 <button
@@ -1032,6 +1064,36 @@ function BookingDetailModal({
               </button>
             )}
           </div>
+
+          {collecting && (
+            <div className="surface-inset flex flex-wrap items-end gap-3 rounded-soft p-4">
+              <div className="min-w-[240px] flex-1">
+                <Field label="Payment reference (UPI UTR, receipt no.) — optional">
+                  <input
+                    value={paymentRef}
+                    onChange={(e) => setPaymentRef(e.target.value)}
+                    className={inputClass}
+                    placeholder="e.g. 402311223344"
+                  />
+                </Field>
+              </div>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() =>
+                  patch({
+                    action: "record-payment",
+                    ...(paymentRef.trim()
+                      ? { reference: paymentRef.trim() }
+                      : {}),
+                  })
+                }
+                className="rounded-full bg-ocean px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white disabled:opacity-40"
+              >
+                {busy ? "Recording…" : "Mark fee collected and reserve time"}
+              </button>
+            </div>
+          )}
 
           {reasonFor && (
             <div className="flex flex-wrap items-end gap-3">

@@ -30,7 +30,9 @@ describe("reception scope", () => {
   });
 
   it("lets the desk run the day-to-day appointment lifecycle", () => {
-    expect(receptionCanTransition("PENDING", "CONFIRMED")).toBe(true);
+    // A pending website request is confirmed only by the payment-recording
+    // path, which claims its calendar slot atomically.
+    expect(receptionCanTransition("PENDING", "CONFIRMED")).toBe(false);
     expect(receptionCanTransition("AWAITING_PAYMENT", "CONFIRMED")).toBe(true);
     expect(receptionCanTransition("CONFIRMED", "COMPLETED")).toBe(true);
     expect(receptionCanTransition("CONFIRMED", "NO_SHOW")).toBe(true);
@@ -52,7 +54,7 @@ describe("reception scope", () => {
     expect(receptionCanTransition("REFUNDED", "CONFIRMED")).toBe(false);
   });
 
-  it("only reschedules bookings that still hold a live slot", () => {
+  it("only reschedules requests or bookings that are still live", () => {
     for (const status of RECEPTION_RESCHEDULABLE) {
       expect(receptionCanReschedule(status)).toBe(true);
     }
