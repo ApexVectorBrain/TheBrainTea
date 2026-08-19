@@ -8,8 +8,7 @@ import {
   parseBody,
 } from "@/server/http";
 import { publicBookingView } from "@/server/serializers/publicBooking";
-import { notifyBookingCreated } from "@/server/services/emailNotificationService";
-import { ensureBookingMeeting } from "@/server/services/googleCalendarService";
+import { parseClinicDateTime } from "@/server/clinicTime";
 
 const bookingSchema = z.object({
   therapistSlug: z.string().min(1),
@@ -24,8 +23,7 @@ const bookingSchema = z.object({
   gdprConsent: z.literal(true, {
     message: "Consent is mandatory to book a session",
   }),
-  paymentOption: z.enum(["PAY_NOW", "PAY_LATER"]),
-});
+}).strict();
 
 export const POST = handleApi(async (request: Request) => {
   // Namespaced bucket: previously this used a bare IP key, which meant
@@ -40,10 +38,10 @@ export const POST = handleApi(async (request: Request) => {
 
   const body = parseBody(bookingSchema, await request.json());
 
-  const dateTime = new Date(`${body.date}T${body.time}:00`);
-  if (isNaN(dateTime.getTime())) throw badRequest("Invalid date or time");
+  const dateTime = parseClinicDateTime(body.date, body.time);
+  if (!dateTime) throw badRequest("Invalid date or time");
 
-  const { booking, payment } = await createBooking({
+  const { booking } = await createBooking({
     therapistSlug: body.therapistSlug,
     serviceSlug: body.serviceSlug,
     dateTime,
@@ -55,27 +53,11 @@ export const POST = handleApi(async (request: Request) => {
       emergencyContact: body.emergencyContact,
       gdprConsent: body.gdprConsent,
     },
-    paymentOption: body.paymentOption,
   });
-  try {
-    await ensureBookingMeeting(booking.id);
-  } catch (error) {
-    // The booking is already committed. Never report it as failed merely
-    // because Google is temporarily unavailable; emails will wait for a
-    // stored per-appointment link instead of using a shared fallback.
-    console.error("Unable to create Google Meet link for booking", booking.id, error);
-  }
-  // Delivery is intentionally outside the booking transaction: an email
-  // provider outage must never make a booked slot disappear.
-  await notifyBookingCreated(booking.id);
-
   return NextResponse.json({
     // Whitelisted view — never the raw row. Keeps commissionBps, the
     // encrypted notes blob and internal ids out of an anonymous response.
     booking: publicBookingView(booking),
-    // PAY_NOW: the client must complete checkout at this URL; confirmation
-    // arrives server-side (webhook / status poll), never from the client.
-    payment,
     client: {
       name: booking.client.name,
       email: booking.client.email,

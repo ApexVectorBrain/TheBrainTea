@@ -235,6 +235,64 @@ export async function recordChargeSuccess(input: {
     const invoiceNumber = booking.invoiceNumber ?? invoiceNumberFor(booking.id);
     const actorType = input.actor ? input.actor.role : "SYSTEM";
 
+    // Public requests deliberately have no BookingSlot. The first recorded
+    // payment atomically claims it; a collision rolls back the payment
+    // finalisation so staff never mark a request paid without a session.
+    const existingSlot = await tx.bookingSlot.findUnique({
+      where: { bookingId: booking.id },
+      select: { id: true },
+    });
+    if (!existingSlot && ["PENDING", "AWAITING_PAYMENT"].includes(booking.status)) {
+      // The unique key covers ordinary generated slots. This lock plus the
+      // overlap check also protects staff-approved flexible times.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`payment-slot:${booking.therapistId}`}))`;
+      const endAt = new Date(
+        booking.dateTime.getTime() + booking.durationMinutes * 60_000,
+      );
+      const occupied = await tx.bookingSlot.findMany({
+        where: {
+          therapistId: booking.therapistId,
+          startAt: {
+            gt: new Date(booking.dateTime.getTime() - 24 * 60 * 60_000),
+            lt: endAt,
+          },
+        },
+        select: {
+          startAt: true,
+          booking: { select: { durationMinutes: true } },
+        },
+      });
+      const overlaps = occupied.some(
+        (candidate) =>
+          candidate.startAt.getTime() +
+            candidate.booking.durationMinutes * 60_000 >
+          booking.dateTime.getTime(),
+      );
+      if (overlaps) {
+        throw conflict(
+          "This session time was just confirmed for another client. Do not record payment; choose a different time.",
+          "SLOT_TAKEN",
+        );
+      }
+      try {
+        await tx.bookingSlot.create({
+          data: {
+            therapistId: booking.therapistId,
+            startAt: booking.dateTime,
+            bookingId: booking.id,
+          },
+        });
+      } catch (error) {
+        if (isUniqueViolation(error)) {
+          throw conflict(
+            "This session time was just confirmed for another client. Do not record payment; choose a different time.",
+            "SLOT_TAKEN",
+          );
+        }
+        throw error;
+      }
+    }
+
     const postSuccessLedger = () =>
       insertPostings(
         tx,

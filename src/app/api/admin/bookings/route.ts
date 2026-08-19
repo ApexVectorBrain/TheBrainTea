@@ -19,8 +19,7 @@ import {
 } from "@/server/services/bookingService";
 import { stripNotes } from "@/server/serializers/publicBooking";
 import { rupeesToMinor } from "@/server/money";
-import { notifyBookingCreated, notifyPaymentApproved } from "@/server/services/emailNotificationService";
-import { ensureBookingMeeting } from "@/server/services/googleCalendarService";
+import { parseClinicDateTime } from "@/server/clinicTime";
 
 // Admin booking list: pagination + status/payment/consultant filters,
 // free-text search over client and invoice fields, date windowing, sorting.
@@ -131,6 +130,7 @@ const scheduleSchema = z
     time: z.string().regex(/^\d{2}:\d{2}$/, "Expected HH:MM"),
     feeRupees: z.number().positive(),
     paymentReceived: z.boolean().default(false),
+    isOvertime: z.boolean().default(false),
     paymentRef: z.string().max(64).optional(),
     clientId: z.string().min(1).optional(),
     newClient: newClientSchema.optional(),
@@ -144,8 +144,8 @@ export const POST = handleApi(async (request: Request) => {
   const session = await requireAdmin(request);
   const body = parseBody(scheduleSchema, await request.json());
 
-  const dateTime = new Date(`${body.date}T${body.time}:00`);
-  if (isNaN(dateTime.getTime())) throw badRequest("Invalid date or time");
+  const dateTime = parseClinicDateTime(body.date, body.time);
+  if (!dateTime) throw badRequest("Invalid date or time");
 
   const booking = await scheduleAdminBooking({
     therapistId: body.therapistId,
@@ -153,6 +153,7 @@ export const POST = handleApi(async (request: Request) => {
     dateTime,
     feeMinor: rupeesToMinor(body.feeRupees),
     paymentReceived: body.paymentReceived,
+    isOvertime: body.isOvertime,
     paymentRef: body.paymentRef,
     client: body.newClient
       ? { new: body.newClient }
@@ -160,13 +161,5 @@ export const POST = handleApi(async (request: Request) => {
     session,
     ip: clientIp(request),
   });
-  try {
-    await ensureBookingMeeting(booking.id);
-  } catch (error) {
-    console.error("Unable to create Google Meet link for booking", booking.id, error);
-  }
-  await notifyBookingCreated(booking.id);
-  if (booking.paymentStatus === "PAID") await notifyPaymentApproved(booking.id);
-
   return NextResponse.json({ booking }, { status: 201 });
 });

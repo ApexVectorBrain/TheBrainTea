@@ -1,6 +1,9 @@
 import { Resend } from "resend";
 import { prisma } from "@/lib/db";
-import { isGoogleCalendarConfigured } from "./googleCalendarService";
+import {
+  ensureBookingMeeting,
+  isGoogleCalendarConfigured,
+} from "./googleCalendarService";
 
 const ADMIN_EMAIL = "admin@thebraintea.co.in";
 const TIME_ZONE = "Asia/Kolkata";
@@ -149,6 +152,13 @@ export async function notifyBookingCreated(bookingId: string) {
 }
 
 export async function notifyPaymentApproved(bookingId: string) {
+  // Session details are only sent after staff has recorded payment, so a
+  // no-contact public request never creates or exposes a meeting link.
+  try {
+    await ensureBookingMeeting(bookingId);
+  } catch (error) {
+    console.error("Unable to create Google Meet link after payment", bookingId, error);
+  }
   const booking = await getBooking(bookingId);
   if (!booking || booking.paymentStatus !== "PAID") return;
   await sendAppointmentPair(

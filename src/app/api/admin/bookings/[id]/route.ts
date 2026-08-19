@@ -15,12 +15,16 @@ import {
   rescheduleBooking,
   transitionBooking,
 } from "@/server/services/bookingService";
-import { executeRefund } from "@/server/services/paymentService";
+import {
+  executeRefund,
+  recordManualPayment,
+} from "@/server/services/paymentService";
 import { recordAudit } from "@/server/audit";
 
 // Booking detail + admin actions. PATCH carries a discriminated action:
 //   { action: "transition", toStatus, reason? }
 //   { action: "reschedule", dateTime }
+//   { action: "record-payment", reference? }
 //   { action: "refund", amountMinor?, reason? }   (executes a REFUND_PENDING refund)
 //   { action: "notes", notes }
 
@@ -69,6 +73,10 @@ const patchSchema = z.discriminatedUnion("action", [
     amountMinor: z.number().int().positive().optional(),
     reason: z.string().max(500).optional(),
   }),
+  z.object({
+    action: z.literal("record-payment"),
+    reference: z.string().max(64).optional(),
+  }),
   z.object({ action: z.literal("notes"), notes: z.string().max(10000) }),
 ]);
 
@@ -113,6 +121,17 @@ export const PATCH = handleApi(
           amountMinor: body.amountMinor,
           reason: body.reason,
           session,
+        });
+        const booking = await prisma.booking.findUnique({ where: { id } });
+        return NextResponse.json({ booking });
+      }
+      case "record-payment": {
+        const session = await requireAdmin(request);
+        await recordManualPayment({
+          bookingId: id,
+          reference: body.reference,
+          session,
+          ip,
         });
         const booking = await prisma.booking.findUnique({ where: { id } });
         return NextResponse.json({ booking });

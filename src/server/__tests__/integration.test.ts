@@ -190,14 +190,12 @@ suite("booking & finance integration", () => {
         serviceSlug: SERVICE_SLUG,
         dateTime: slot,
         client: clientInput(1),
-        paymentOption: "PAY_LATER",
       }),
       createBooking({
         therapistSlug: SLUG,
         serviceSlug: SERVICE_SLUG,
         dateTime: slot,
         client: clientInput(2),
-        paymentOption: "PAY_LATER",
       }),
     ]);
 
@@ -221,7 +219,6 @@ suite("booking & finance integration", () => {
         serviceSlug: SERVICE_SLUG,
         dateTime: slot,
         client: clientInput(3),
-        paymentOption: "PAY_LATER",
       }),
     ).rejects.toThrow(/working hours/);
   });
@@ -232,7 +229,6 @@ suite("booking & finance integration", () => {
       serviceSlug: SERVICE_SLUG,
       dateTime: futureSlot(9, 11),
       client: clientInput(4),
-      paymentOption: "PAY_NOW",
     });
     // Booking must NOT confirm before the gateway does.
     expect(booking.status).toBe("AWAITING_PAYMENT");
@@ -281,7 +277,6 @@ suite("booking & finance integration", () => {
       serviceSlug: SERVICE_SLUG,
       dateTime: futureSlot(10, 13),
       client: clientInput(5),
-      paymentOption: "PAY_NOW",
     });
     const paidCharge = await prisma.paymentRecord.findFirstOrThrow({
       where: { bookingId: booking.id, kind: "CHARGE" },
@@ -344,7 +339,6 @@ suite("booking & finance integration", () => {
       serviceSlug: SERVICE_SLUG,
       dateTime: slot,
       client: clientInput(6),
-      paymentOption: "PAY_LATER",
     });
     await transitionBooking({
       bookingId: booking.id,
@@ -357,7 +351,6 @@ suite("booking & finance integration", () => {
       serviceSlug: SERVICE_SLUG,
       dateTime: slot,
       client: clientInput(7),
-      paymentOption: "PAY_LATER",
     });
     expect(rebooked.dateTime.getTime()).toBe(slot.getTime());
   });
@@ -370,14 +363,12 @@ suite("booking & finance integration", () => {
       serviceSlug: SERVICE_SLUG,
       dateTime: slotA,
       client: clientInput(8),
-      paymentOption: "PAY_LATER",
     });
     const { booking: b } = await createBooking({
       therapistSlug: SLUG,
       serviceSlug: SERVICE_SLUG,
       dateTime: slotB,
       client: clientInput(9),
-      paymentOption: "PAY_LATER",
     });
     // Moving A onto B's slot must fail
     await expect(
@@ -404,7 +395,6 @@ suite("booking & finance integration", () => {
       serviceSlug: SERVICE_SLUG,
       dateTime: original,
       client: clientInput(14),
-      paymentOption: "PAY_LATER",
     });
 
     const outsideWorkingHours = futureSlot(14, 19);

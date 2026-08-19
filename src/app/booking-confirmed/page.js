@@ -28,11 +28,6 @@ export default async function BookingConfirmedPage({ searchParams }) {
     notFound();
   }
 
-  // An unpaid hold is not a confirmation — a stale/shared link must land on
-  // the live payment-status page, never a "reserved" screen.
-  if (booking.status === "AWAITING_PAYMENT") {
-    redirect(`/booking/payment-status?bookingId=${booking.id}`);
-  }
   if (["CANCELLED", "REFUND_PENDING", "REFUNDED"].includes(booking.status)) {
     redirect(`/booking/payment-status?bookingId=${booking.id}`);
   }
@@ -42,11 +37,13 @@ export default async function BookingConfirmedPage({ searchParams }) {
     year: "numeric",
     month: "long",
     day: "numeric",
+    timeZone: "Asia/Kolkata",
   });
 
   const formattedTime = new Date(booking.dateTime).toLocaleTimeString("en-IN", {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Asia/Kolkata",
   });
   const practitionerName = booking.therapist.name.replace(
     /^Dr\.\s+(?=Madhumati Dhumak$)/,
@@ -75,15 +72,15 @@ export default async function BookingConfirmedPage({ searchParams }) {
         </div>
 
         <span className="font-dmsans text-xs font-bold tracking-widest text-terracotta uppercase block mb-2">
-          Reservation Completed
+          Session Request Sent
         </span>
         <h1 className="font-cormorant text-4xl font-semibold text-charcoal mb-4">
-          Your Slot is Reserved
+          Contact Admin to Confirm
         </h1>
         <p className="font-dmsans text-sm text-sage mb-8 max-w-md">
-          A confirmation receipt has been sent to{" "}
+          Your request has been saved for{" "}
           <strong>{booking.client.email}</strong>. Please review the details
-          below.
+          and contact Admin to arrange payment. This time is not yet reserved.
         </p>
 
         {/* Details Table */}
@@ -146,8 +143,8 @@ export default async function BookingConfirmedPage({ searchParams }) {
               }`}
             >
               {booking.paymentStatus === "PAID"
-                ? "Paid Online"
-                : "Payment required before session"}
+                ? "Paid and confirmed"
+                : "Awaiting admin confirmation"}
             </span>
           </div>
         </div>
@@ -160,10 +157,10 @@ export default async function BookingConfirmedPage({ searchParams }) {
           <ul className="list-disc pl-5 space-y-1">
             {booking.paymentStatus !== "PAID" && (
               <li>
-                To confirm your booking, please pay the admin at{" "}
+                Contact the Admin at{" "}
                 <strong className="text-charcoal">{CONTACT_PHONE}</strong>{" "}
-                before the session. Payment before the session is required for
-                confirmation, as per clinic policy.
+                to arrange payment. The time is reserved only after Admin or
+                Reception records that payment.
               </li>
             )}
             <li>
