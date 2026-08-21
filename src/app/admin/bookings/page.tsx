@@ -21,6 +21,7 @@ import {
 } from "@/components/admin/ui";
 import {
   COUNSELING_TYPE_LABELS,
+  COUNSELING_SERVICE_DEFAULTS,
   counselingTypeLabel,
   counselingTypesForServiceSlugs,
 } from "@/server/domain/counselingType";
@@ -126,7 +127,7 @@ interface Consultant {
   status?: string;
   isActive?: boolean;
   feeMinor?: number;
-  services?: { id: string; name: string; slug: string }[];
+  services?: { id: string; name: string; slug: string; feeMinor?: number }[];
 }
 
 export default function AdminBookingsPage() {
@@ -228,7 +229,7 @@ export default function AdminBookingsPage() {
 
       <Panel
         title="Session Register"
-        subtitle={`${total} bookings match the current filters.`}
+        subtitle={`${total} bookings match the current filters. Past appointments are included unless you choose a date range.`}
       >
         {/* Filters */}
         <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-7">
@@ -472,7 +473,13 @@ function ScheduleModal({
     );
   }, [bookable, therapistId]);
 
-  // Prefill the fee from the chosen consultant's default rate.
+  const setFeeForService = (consultant: Consultant | undefined, type: string) => {
+    const slug = COUNSELING_SERVICE_DEFAULTS[type as keyof typeof COUNSELING_SERVICE_DEFAULTS]?.slug;
+    const service = consultant?.services?.find((item) => item.slug === slug);
+    setFeeRupees(String((service?.feeMinor ?? consultant?.feeMinor ?? 0) / 100));
+  };
+
+  // Prefill the fee from the chosen consultant's configured service rate.
   const onConsultantChange = (id: string) => {
     setTherapistId(id);
     const c = bookable.find((x) => x.id === id);
@@ -480,7 +487,7 @@ function ScheduleModal({
       (c?.services ?? []).map((service) => service.slug),
     );
     setCounselingType(types[0] ?? "");
-    if (c?.feeMinor != null) setFeeRupees(String(c.feeMinor / 100));
+    if (types[0]) setFeeForService(c, types[0]);
   };
 
   // Debounced client search against the admin clients endpoint. All state
@@ -584,7 +591,10 @@ function ScheduleModal({
           <Field label="Service">
             <select
               value={counselingType}
-              onChange={(e) => setCounselingType(e.target.value)}
+              onChange={(e) => {
+                setCounselingType(e.target.value);
+                setFeeForService(bookable.find((item) => item.id === therapistId), e.target.value);
+              }}
               className={inputClass}
               disabled={!therapistId || offeredCounselingTypes.length === 0}
             >
@@ -611,7 +621,7 @@ function ScheduleModal({
               className={inputClass}
             />
           </Field>
-          <Field label="Time">
+          <Field label="Time (IST)">
             <input
               type="time"
               value={time}
@@ -1134,7 +1144,7 @@ function BookingDetailModal({
                   className={inputClass}
                 />
               </Field>
-              <Field label="New time">
+              <Field label="New time (IST)">
                 <input
                   type="time"
                   value={newTime}

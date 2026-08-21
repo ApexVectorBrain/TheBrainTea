@@ -11,4 +11,6 @@ export default async function handler() {
   if (!response.ok) console.error(`send-appointment-reminders: HTTP ${response.status}`);
 }
 
-export const config: Config = { schedule: "0 * * * *" };
+// Run in short intervals so the service can target the one-hour mark. The
+// database email journal ensures each appointment receives one reminder only.
+export const config: Config = { schedule: "*/5 * * * *" };

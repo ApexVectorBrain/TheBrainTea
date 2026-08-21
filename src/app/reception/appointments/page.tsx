@@ -122,7 +122,7 @@ export default function ReceptionAppointmentsPage() {
 
       <Panel
         title="Session Register"
-        subtitle={`${total} appointments match the current filters.`}
+        subtitle={`${total} appointments match the current filters. Past appointments are included unless you choose a date range.`}
       >
         {/* Filters */}
         <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-7">

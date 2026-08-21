@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { CalendarCheck, Link2Off } from "lucide-react";
 import { formatINR } from "@/lib/format";
 import {
   ErrorNote,
@@ -34,6 +35,12 @@ export default function TherapistProfilePage() {
   const [passwordError, setPasswordError] = useState("");
   const [passwordNotice, setPasswordNotice] = useState("");
   const [passwordBusy, setPasswordBusy] = useState(false);
+  const [calendar, setCalendar] = useState<{
+    configured: boolean;
+    connection: { googleEmail: string | null; connectedAt: string } | null;
+  } | null>(null);
+  const [calendarError, setCalendarError] = useState("");
+  const [calendarBusy, setCalendarBusy] = useState(false);
 
   const load = useCallback(async () => {
     const res = await fetch("/api/therapist/me");
@@ -47,12 +54,44 @@ export default function TherapistProfilePage() {
     }
   }, []);
 
+  const loadCalendar = useCallback(async () => {
+    try {
+      const res = await fetch("/api/therapist/google-calendar");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to load Google Calendar status");
+      setCalendar(data);
+    } catch (err) {
+      setCalendarError(err instanceof Error ? err.message : "Failed to load Google Calendar status");
+    }
+  }, []);
+
   useEffect(() => {
     const run = async () => {
       await load();
     };
     run();
   }, [load]);
+
+  useEffect(() => {
+    loadCalendar();
+    const status = new URLSearchParams(window.location.search).get("googleCalendar");
+    if (status === "failed") setCalendarError("Google Calendar could not be connected. Please try again.");
+  }, [loadCalendar]);
+
+  const disconnectCalendar = async () => {
+    setCalendarBusy(true);
+    setCalendarError("");
+    try {
+      const res = await fetch("/api/therapist/google-calendar", { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to disconnect Google Calendar");
+      await loadCalendar();
+    } catch (err) {
+      setCalendarError(err instanceof Error ? err.message : "Failed to disconnect Google Calendar");
+    } finally {
+      setCalendarBusy(false);
+    }
+  };
 
   const saveProfile = async () => {
     setBusy(true);
@@ -212,6 +251,50 @@ export default function TherapistProfilePage() {
               >
                 {passwordBusy ? "Updating..." : "Change password"}
               </button>
+            </div>
+          </Panel>
+
+          <Panel
+            title="Google Calendar & Meet"
+            subtitle="Connect once to create private calendar events and a unique Google Meet link for your confirmed appointments."
+          >
+            <div className="max-w-2xl space-y-4 font-dmsans">
+              {calendarError && <p role="alert" className="text-xs font-medium text-red-700">{calendarError}</p>}
+              {calendar?.connection ? (
+                <div className="surface-inset flex flex-wrap items-center justify-between gap-4 rounded-soft p-4">
+                  <div>
+                    <p className="flex items-center gap-2 text-sm font-semibold text-ocean-deep">
+                      <CalendarCheck size={18} aria-hidden="true" /> Google Calendar connected
+                    </p>
+                    <p className="mt-1 text-xs text-ink-muted">
+                      {calendar.connection.googleEmail || "Your Google account"} will own future appointment events and Meet links.
+                    </p>
+                    <p className="mt-1 text-xs text-ink-muted">
+                      Disconnecting is unavailable while you have future confirmed appointments.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={disconnectCalendar}
+                    disabled={calendarBusy}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-red-200 px-4 py-2 text-xs font-bold uppercase tracking-wider text-red-700 transition-colors hover:bg-red-50 disabled:opacity-50"
+                  >
+                    <Link2Off size={15} aria-hidden="true" /> {calendarBusy ? "Disconnecting..." : "Disconnect"}
+                  </button>
+                </div>
+              ) : calendar?.configured ? (
+                <div>
+                  <p className="mb-3 text-sm text-ink-muted">No Google account is connected yet. This does not give The Brain Tea access to your Gmail inbox; it only permits creating and updating your own Calendar events and Meet links.</p>
+                  <a
+                    href="/api/therapist/google-calendar/connect"
+                    className="inline-flex min-h-11 items-center rounded-full bg-ocean px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-surface-raised-sm transition-all hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-ocean focus:ring-offset-2"
+                  >
+                    Connect Google Calendar
+                  </a>
+                </div>
+              ) : (
+                <p className="text-sm text-ink-muted">Google Calendar setup is not ready yet. Please ask the clinic administrator to finish the Google setup.</p>
+              )}
             </div>
           </Panel>
         </>

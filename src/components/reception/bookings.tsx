@@ -18,6 +18,7 @@ import {
 } from "@/components/admin/ui";
 import {
   COUNSELING_TYPE_LABELS,
+  COUNSELING_SERVICE_DEFAULTS,
   counselingTypeLabel,
   counselingTypesForServiceSlugs,
 } from "@/server/domain/counselingType";
@@ -85,7 +86,7 @@ export interface Consultant {
   status?: string;
   isActive?: boolean;
   feeMinor?: number;
-  services?: { id: string; name: string; slug: string }[];
+  services?: { id: string; name: string; slug: string; feeMinor?: number }[];
   availability?: {
     dayOfWeek: number;
     startTime: string;
@@ -485,7 +486,7 @@ export function BookingDetailModal({
                   className={inputClass}
                 />
               </Field>
-              <Field label="New time">
+              <Field label="New time (IST)">
                 <input
                   type="time"
                   value={newTime}
@@ -654,6 +655,12 @@ export function ScheduleModal({
     ).sort((a, b) => a.startTime.localeCompare(b.startTime));
   }, [bookable, date, therapistId]);
 
+  const setFeeForService = (consultant: Consultant | undefined, type: string) => {
+    const slug = COUNSELING_SERVICE_DEFAULTS[type as keyof typeof COUNSELING_SERVICE_DEFAULTS]?.slug;
+    const service = consultant?.services?.find((item) => item.slug === slug);
+    setFeeRupees(String((service?.feeMinor ?? consultant?.feeMinor ?? 0) / 100));
+  };
+
   const onConsultantChange = (id: string) => {
     setTherapistId(id);
     const c = bookable.find((x) => x.id === id);
@@ -661,7 +668,7 @@ export function ScheduleModal({
       (c?.services ?? []).map((service) => service.slug),
     );
     setCounselingType(types[0] ?? "");
-    if (c?.feeMinor != null) setFeeRupees(String(c.feeMinor / 100));
+    if (types[0]) setFeeForService(c, types[0]);
   };
 
   // Debounced client search against the reception clients endpoint.
@@ -806,7 +813,10 @@ export function ScheduleModal({
           <Field label="Service">
             <select
               value={counselingType}
-              onChange={(e) => setCounselingType(e.target.value)}
+              onChange={(e) => {
+                setCounselingType(e.target.value);
+                setFeeForService(bookable.find((item) => item.id === therapistId), e.target.value);
+              }}
               className={inputClass}
               disabled={!therapistId || offeredCounselingTypes.length === 0}
             >
@@ -833,7 +843,7 @@ export function ScheduleModal({
               className={inputClass}
             />
           </Field>
-          <Field label="Time">
+          <Field label="Time (IST)">
             {isOvertime ? (
               <input
                 type="time"

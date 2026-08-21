@@ -18,11 +18,8 @@ APP_BASE_URL="https://<your-site>.netlify.app"
 CRON_SECRET="<long random secret>"
 RESEND_API_KEY="re_..."
 RESEND_FROM_EMAIL="The Brain Tea <appointments@thebraintea.co.in>"
-GOOGLE_CALENDAR_ID="your-calendar-id@group.calendar.google.com"
-GOOGLE_SERVICE_ACCOUNT_EMAIL="calendar-bot@your-project.iam.gserviceaccount.com"
-GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-# Google Workspace only: enables invitations to each therapist's own calendar.
-GOOGLE_WORKSPACE_IMPERSONATED_USER="calendar@thebraintea.co.in"
+GOOGLE_CLIENT_ID="...apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="..."
 PHONEPE_ENV="sandbox"                      # "production" when live
 PHONEPE_CLIENT_ID="<from PhonePe business dashboard>"
 PHONEPE_CLIENT_SECRET="<from PhonePe business dashboard>"
@@ -31,13 +28,14 @@ PHONEPE_WEBHOOK_USERNAME="<choose one; also set in PhonePe dashboard>"
 PHONEPE_WEBHOOK_PASSWORD="<choose one; also set in PhonePe dashboard>"
 ```
 
-Verify the domain used by `RESEND_FROM_EMAIL` in Resend. The Google Calendar
-service account creates a unique Meet link for every appointment. Enable the
-Google Calendar API and share the chosen calendar with that service account as
-an editor. To invite the assigned consultant to their own Google Calendar,
-configure Google Workspace domain-wide delegation and set
-`GOOGLE_WORKSPACE_IMPERSONATED_USER`. The `send-appointment-reminders` scheduled function
-runs hourly and uses the existing `APP_BASE_URL` and `CRON_SECRET` settings.
+Verify the domain used by `RESEND_FROM_EMAIL` in Resend. In Google Cloud,
+enable Google Calendar API and add
+`https://thebraintea.co.in/api/google-calendar/callback` as the authorised
+redirect URI (use your exact `APP_BASE_URL`). Consultants then connect their
+own work Google account once from their portal; their calendar creates the
+event and unique Meet link. Gmail inbox access is neither requested nor used.
+The scheduled function checks every five minutes but sends each appointment
+only one reminder, approximately one hour before it starts.
 
 Generate `ENCRYPTION_KEY` locally:
 

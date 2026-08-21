@@ -22,6 +22,8 @@ import {
   sessionOverlapsWorkingHours,
 } from "../domain/workingHours";
 import { clinicDayOfWeekForDate, formatClinicTime } from "../clinicTime";
+import { notifyBookingCancelled, notifyBookingCreated, notifyBookingRescheduled } from "./emailNotificationService";
+import { cancelBookingMeeting, syncBookingMeeting } from "./googleCalendarService";
 
 // Booking lifecycle service. All state changes flow through the domain state
 // machine and are journalled to BookingStatusHistory. A public submission is
@@ -196,6 +198,12 @@ export async function createBooking(input: CreateBookingInput) {
     if (service.therapists.length === 0) {
       throw conflict("This consultant does not offer the selected service");
     }
+    const serviceRate = await tx.therapistServiceRate.findUnique({
+      where: {
+        therapistId_serviceId: { therapistId: therapist.id, serviceId: service.id },
+      },
+      select: { feeMinor: true },
+    });
 
     await validateSlotWithinSchedule(
       tx,
@@ -225,9 +233,9 @@ export async function createBooking(input: CreateBookingInput) {
         clientId: client.id,
         dateTime: input.dateTime,
         durationMinutes: service.durationMinutes,
-        // The client pays the consultant's own rate (fee model), not a
-        // fixed per-service price.
-        amountMinor: therapist.feeMinor,
+        // Snapshot the configured consultant/service rate. Historical
+        // bookings are never rewritten when an admin changes future pricing.
+        amountMinor: serviceRate?.feeMinor ?? therapist.feeMinor,
         commissionBps,
         status: initialStatus,
         paymentStatus: "UNPAID",
@@ -252,6 +260,12 @@ export async function createBooking(input: CreateBookingInput) {
     where: { id: result.booking.id },
     include: { client: true, therapist: true, service: true },
   });
+  // This deliberately sits outside the booking transaction: email or Google
+  // outages must never lose the booking request. The email journal prevents
+  // duplicate delivery if a request is retried.
+  await notifyBookingCreated(booking.id).catch((error) =>
+    console.error("Could not send booking-created notifications", booking.id, error),
+  );
   // Kept for API compatibility while the online gateway is dormant.
   return { booking, payment: null };
 }
@@ -268,7 +282,7 @@ export async function transitionBooking(input: {
   reason?: string;
   ip?: string;
 }) {
-  return prisma.$transaction(async (tx) => {
+  const updated = await prisma.$transaction(async (tx) => {
     const booking = await tx.booking.findUnique({
       where: { id: input.bookingId },
       include: { slot: true },
@@ -358,6 +372,15 @@ export async function transitionBooking(input: {
     );
     return updated;
   });
+  if (input.toStatus === "CANCELLED") {
+    await cancelBookingMeeting(updated.id).catch((error) =>
+      console.error("Could not cancel Google Calendar event", updated.id, error),
+    );
+    await notifyBookingCancelled(updated.id).catch((error) =>
+      console.error("Could not send cancellation notifications", updated.id, error),
+    );
+  }
+  return updated;
 }
 
 /**
@@ -372,7 +395,7 @@ export async function rescheduleBooking(input: {
   reason?: string;
   ip?: string;
 }) {
-  return prisma.$transaction(async (tx) => {
+  const updated = await prisma.$transaction(async (tx) => {
     await releaseExpiredReservations(tx);
 
     const booking = await tx.booking.findUnique({
@@ -462,6 +485,13 @@ export async function rescheduleBooking(input: {
     );
     return updated;
   });
+  await syncBookingMeeting(updated.id).catch((error) =>
+    console.error("Could not update Google Calendar event", updated.id, error),
+  );
+  await notifyBookingRescheduled(updated.id).catch((error) =>
+    console.error("Could not send reschedule notifications", updated.id, error),
+  );
+  return updated;
 }
 
 /**

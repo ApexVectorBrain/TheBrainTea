@@ -29,6 +29,7 @@ export const GET = handleApi(
           select: { id: true, name: true, slug: true },
           orderBy: { name: "asc" },
         },
+        serviceRates: { select: { serviceId: true, feeMinor: true } },
       },
     });
     if (!therapist) throw notFound("Consultant not found");
@@ -80,11 +81,18 @@ export const GET = handleApi(
       }),
     ]);
 
+    const rates = new Map(therapist.serviceRates.map((rate) => [rate.serviceId, rate.feeMinor]));
     return NextResponse.json({
       consultant: {
         ...therapist,
         email: therapist.user?.email ?? null,
         user: undefined,
+        serviceRates: undefined,
+        services: therapist.services.map((service) => ({
+          ...service,
+          feeMinor: rates.get(service.id) ?? therapist.feeMinor,
+          hasCustomRate: rates.has(service.id),
+        })),
         effectiveCommissionBps: therapist.commissionBps ?? defaultBps,
       },
       balance,
@@ -108,6 +116,16 @@ const patchSchema = z.object({
   commissionBps: z.number().int().min(0).max(10000).nullable().optional(),
   // Full replacement set of the services this consultant offers.
   serviceIds: z.array(z.string().min(1)).optional(),
+  // Future per-service prices for this consultant. An omitted service keeps
+  // its existing configured price (or falls back to the default session fee).
+  servicePrices: z
+    .array(
+      z.object({
+        serviceId: z.string().min(1),
+        feeRupees: z.number().positive(),
+      }),
+    )
+    .optional(),
   availability: z
     .array(
       z.object({
@@ -142,12 +160,22 @@ export const PATCH = handleApi(
     const { id } = await ctx.params;
     const body = parseBody(patchSchema, await request.json());
 
-    const therapist = await prisma.therapist.findUnique({ where: { id } });
+    const therapist = await prisma.therapist.findUnique({
+      where: { id },
+      include: { services: { select: { id: true } } },
+    });
     if (!therapist) throw notFound("Consultant not found");
 
     // Commission changes run through the journalled commission service.
     if (body.commissionBps !== undefined) {
       await setTherapistCommission(id, body.commissionBps, session);
+    }
+
+    const assignedServiceIds = new Set(
+      body.serviceIds ?? therapist.services.map((service) => service.id),
+    );
+    if (body.servicePrices?.some((price) => !assignedServiceIds.has(price.serviceId))) {
+      throw notFound("A price can only be set for a service assigned to this consultant");
     }
 
     await prisma.$transaction(async (tx) => {
@@ -163,6 +191,9 @@ export const PATCH = handleApi(
       }
       if (body.serviceIds !== undefined) {
         data.services = { set: body.serviceIds.map((sid) => ({ id: sid })) };
+        await tx.therapistServiceRate.deleteMany({
+          where: { therapistId: id, serviceId: { notIn: body.serviceIds } },
+        });
       }
       if (Object.keys(data).length > 0) {
         await tx.therapist.update({ where: { id }, data });
@@ -180,6 +211,20 @@ export const PATCH = handleApi(
             })),
           });
         }
+      }
+
+      if (body.servicePrices) {
+        await Promise.all(
+          body.servicePrices.map((price) =>
+            tx.therapistServiceRate.upsert({
+              where: {
+                therapistId_serviceId: { therapistId: id, serviceId: price.serviceId },
+              },
+              create: { therapistId: id, serviceId: price.serviceId, feeMinor: rupeesToMinor(price.feeRupees) },
+              update: { feeMinor: rupeesToMinor(price.feeRupees) },
+            }),
+          ),
+        );
       }
 
       await recordAudit(

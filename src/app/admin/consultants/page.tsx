@@ -51,7 +51,13 @@ interface ConsultantDetail {
       startTime: string;
       endTime: string;
     }[];
-    services: { id: string; name: string; slug: string }[];
+    services: {
+      id: string;
+      name: string;
+      slug: string;
+      feeMinor: number;
+      hasCustomRate: boolean;
+    }[];
   };
   allServices: { id: string; name: string; slug: string }[];
   balance: {
@@ -281,6 +287,7 @@ function ConsultantDetailModal({
   const [feeRupees, setFeeRupees] = useState("");
   const [commissionPct, setCommissionPct] = useState("");
   const [serviceIds, setServiceIds] = useState<string[]>([]);
+  const [servicePrices, setServicePrices] = useState<Record<string, string>>({});
   const [availability, setAvailability] = useState<AvailabilityDraft[]>([]);
 
   const load = useCallback(async () => {
@@ -299,6 +306,14 @@ function ConsultantDetailModal({
     );
     setServiceIds(
       (data.consultant.services ?? []).map((s: { id: string }) => s.id),
+    );
+    setServicePrices(
+      Object.fromEntries(
+        (data.consultant.services ?? []).map((s: { id: string; feeMinor: number }) => [
+          s.id,
+          String(s.feeMinor / 100),
+        ]),
+      ),
     );
     setAvailability(availabilityDrafts(data.consultant.availability ?? []));
   }, [consultantId]);
@@ -493,6 +508,60 @@ function ConsultantDetailModal({
                   Save services
                 </button>
               </>
+            )}
+          </div>
+
+          <div>
+            <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-ink-muted">
+              Service pricing
+            </h4>
+            <p className="mb-3 text-[11px] italic text-ink-muted">
+              Set the price this consultant charges for each assigned service.
+              These prices apply only to new bookings; completed and existing
+              appointments retain their recorded amount.
+            </p>
+            {c.services.length === 0 ? (
+              <p className="text-xs italic text-ink-muted">
+                Assign services above before setting their prices.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {c.services.map((service) => (
+                    <Field key={service.id} label={`${service.name} (₹)`}>
+                      <input
+                        type="number"
+                        min={1}
+                        step={1}
+                        value={servicePrices[service.id] ?? String(service.feeMinor / 100)}
+                        onChange={(event) =>
+                          setServicePrices((current) => ({
+                            ...current,
+                            [service.id]: event.target.value,
+                          }))
+                        }
+                        className={inputClass}
+                        aria-label={`${service.name} price in rupees`}
+                      />
+                    </Field>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() =>
+                    patch({
+                      servicePrices: c.services.map((service) => ({
+                        serviceId: service.id,
+                        feeRupees: Number(servicePrices[service.id] ?? service.feeMinor / 100),
+                      })),
+                    })
+                  }
+                  className="min-h-11 rounded-full bg-ocean px-5 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-surface-raised-sm disabled:opacity-40"
+                >
+                  Save service prices
+                </button>
+              </div>
             )}
           </div>
 

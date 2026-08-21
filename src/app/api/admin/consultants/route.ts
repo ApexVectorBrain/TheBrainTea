@@ -23,6 +23,7 @@ export const GET = handleApi(async (request: Request) => {
           select: { id: true, name: true, slug: true },
           orderBy: { name: "asc" },
         },
+        serviceRates: { select: { serviceId: true, feeMinor: true } },
       },
       orderBy: { name: "asc" },
     }),
@@ -49,7 +50,12 @@ export const GET = handleApi(async (request: Request) => {
       feeMinor: t.feeMinor,
       commissionBps: t.commissionBps,
       effectiveCommissionBps: t.commissionBps ?? defaultBps,
-      services: t.services,
+      services: t.services.map((service) => ({
+        ...service,
+        feeMinor:
+          t.serviceRates.find((rate) => rate.serviceId === service.id)?.feeMinor ??
+          t.feeMinor,
+      })),
       totalBookings: countMap.get(t.id) ?? 0,
       earnedMinor: balanceMap.get(t.id)?.earnedMinor ?? 0,
       paidMinor: balanceMap.get(t.id)?.paidMinor ?? 0,

@@ -23,6 +23,7 @@ export const GET = handleApi(async (request: Request) => {
         select: { id: true, name: true, slug: true },
         orderBy: { name: "asc" },
       },
+      serviceRates: { select: { serviceId: true, feeMinor: true } },
       availability: {
         select: { dayOfWeek: true, startTime: true, endTime: true },
         orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
@@ -31,5 +32,16 @@ export const GET = handleApi(async (request: Request) => {
     orderBy: { name: "asc" },
   });
 
-  return NextResponse.json({ consultants });
+  return NextResponse.json({
+    consultants: consultants.map((consultant) => ({
+      ...consultant,
+      services: consultant.services.map((service) => ({
+        ...service,
+        feeMinor:
+          consultant.serviceRates.find((rate) => rate.serviceId === service.id)
+            ?.feeMinor ?? consultant.feeMinor,
+      })),
+      serviceRates: undefined,
+    })),
+  });
 });

@@ -19,8 +19,7 @@ export const GET = handleApi(async (request: Request) => {
   });
   if (!service || !service.isActive) throw notFound("Service not found");
 
-  const consultants = orderBookingConsultants(
-    await prisma.therapist.findMany({
+  const consultantRows = await prisma.therapist.findMany({
       where: {
         status: "APPROVED",
         isActive: true,
@@ -33,9 +32,18 @@ export const GET = handleApi(async (request: Request) => {
         photo: true,
         bio: true,
         feeMinor: true,
+        serviceRates: {
+          where: { serviceId: service.id },
+          select: { feeMinor: true },
+        },
       },
       orderBy: { name: "asc" },
-    }),
+    });
+  const consultants = orderBookingConsultants(
+    consultantRows.map(({ serviceRates, ...consultant }) => ({
+      ...consultant,
+      feeMinor: serviceRates[0]?.feeMinor ?? consultant.feeMinor,
+    })),
   );
 
   return NextResponse.json({

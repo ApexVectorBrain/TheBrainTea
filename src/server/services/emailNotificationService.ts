@@ -2,7 +2,6 @@ import { Resend } from "resend";
 import { prisma } from "@/lib/db";
 import {
   ensureBookingMeeting,
-  isGoogleCalendarConfigured,
 } from "./googleCalendarService";
 
 const ADMIN_EMAIL = "admin@thebraintea.co.in";
@@ -15,15 +14,15 @@ type NotificationType =
   | "PAYMENT_APPROVED_CONSULTANT"
   | "PAYMENT_DETAILS_ADMIN"
   | "REMINDER_CLIENT"
-  | "REMINDER_CONSULTANT";
+  | "REMINDER_CONSULTANT"
+  | string;
 
 type BookingEmail = Awaited<ReturnType<typeof getBooking>>;
 
 function configured() {
   return Boolean(
       process.env.RESEND_API_KEY &&
-      process.env.RESEND_FROM_EMAIL &&
-      isGoogleCalendarConfigured(),
+      process.env.RESEND_FROM_EMAIL,
   );
 }
 
@@ -66,8 +65,6 @@ async function getBooking(bookingId: string) {
 }
 
 function appointmentHtml(booking: NonNullable<BookingEmail>, intro: string): string {
-  const meetLink = booking.meetingUrl;
-  if (!meetLink) throw new Error("Booking does not have a Google Meet link");
   const status = appointmentStatus(booking);
   return `<p>${escapeHtml(intro)}</p>
     <h2>Appointment details</h2>
@@ -76,8 +73,10 @@ function appointmentHtml(booking: NonNullable<BookingEmail>, intro: string): str
     <strong>Service:</strong> ${escapeHtml(booking.service.name)}<br />
     <strong>When:</strong> ${formatDateTime(booking.dateTime)} (${TIME_ZONE})<br />
     <strong>Duration:</strong> ${booking.durationMinutes} minutes</p>
-    <p>If you decide to meet online, join using this Google Meet link at the appointment time:<br />
-    <a href="${escapeHtml(meetLink)}">${escapeHtml(meetLink)}</a></p>
+    ${booking.meetingUrl
+      ? `<p>If you decide to meet online, join using this Google Meet link at the appointment time:<br />
+    <a href="${escapeHtml(booking.meetingUrl)}">${escapeHtml(booking.meetingUrl)}</a></p>`
+      : `<p><strong>Online option:</strong> A Google Meet link will be included once the appointment is approved. The consultant must first connect their Google Calendar in the consultant portal.</p>`}
     <p>The Brain Tea</p>`;
 }
 
@@ -89,7 +88,7 @@ async function sendOnce(
   html: string,
 ): Promise<boolean> {
   if (!configured()) {
-    console.warn("email-notifications: Resend or Google Calendar configuration is incomplete; skipping email");
+    console.warn("email-notifications: Resend configuration is incomplete; skipping email");
     return false;
   }
   try {
@@ -130,10 +129,6 @@ async function sendAppointmentPair(
   subject: string,
   intro: string,
 ) {
-  if (!booking.meetingUrl) {
-    console.warn(`email-notifications: booking ${booking.id} has no Google Meet link; skipping appointment email`);
-    return;
-  }
   const html = appointmentHtml(booking, intro);
   const recipients: Array<[NotificationType, string]> = [[types[0], booking.client.email]];
   if (booking.therapist.user?.email) recipients.push([types[1], booking.therapist.user.email]);
@@ -148,6 +143,32 @@ export async function notifyBookingCreated(bookingId: string) {
     ["BOOKING_DETAILS_CLIENT", "BOOKING_DETAILS_CONSULTANT"],
     `Booking ${appointmentStatus(booking).toLowerCase()}: ${booking.service.name}`,
     "Your consultation has been booked. We will update you when payment is recorded.",
+  );
+}
+
+export async function notifyBookingRescheduled(bookingId: string) {
+  const booking = await getBooking(bookingId);
+  if (!booking) return;
+  // The timestamp forms an event key, so every distinct reschedule gets its
+  // own notification while retries of the same action remain idempotent.
+  const eventKey = booking.updatedAt.getTime();
+  await sendAppointmentPair(
+    booking,
+    [`RESCHEDULED_CLIENT_${eventKey}`, `RESCHEDULED_CONSULTANT_${eventKey}`],
+    `Appointment rescheduled: ${booking.service.name}`,
+    "Your appointment time has been updated. Please use the details below.",
+  );
+}
+
+export async function notifyBookingCancelled(bookingId: string) {
+  const booking = await getBooking(bookingId);
+  if (!booking) return;
+  const eventKey = booking.updatedAt.getTime();
+  await sendAppointmentPair(
+    booking,
+    [`CANCELLED_CLIENT_${eventKey}`, `CANCELLED_CONSULTANT_${eventKey}`],
+    `Appointment cancelled: ${booking.service.name}`,
+    "This appointment has been cancelled. Please do not attend at the scheduled time.",
   );
 }
 
@@ -182,11 +203,15 @@ export async function notifyPaymentApproved(bookingId: string) {
 
 export async function sendUpcomingReminders() {
   const now = new Date();
+  // The scheduler runs every five minutes. This narrow window produces one
+  // reminder close to one hour before the appointment; EmailNotification's
+  // unique key prevents repeats when scheduler runs overlap or retry.
+  const fiftyFiveMinutes = new Date(now.getTime() + 55 * 60 * 1000);
   const inOneHour = new Date(now.getTime() + 60 * 60 * 1000);
   const bookings = await prisma.booking.findMany({
     where: {
-      dateTime: { gt: now, lte: inOneHour },
-      status: { in: ["CONFIRMED", "COMPLETED"] },
+      dateTime: { gt: fiftyFiveMinutes, lte: inOneHour },
+      status: "CONFIRMED",
     },
     select: { id: true },
   });

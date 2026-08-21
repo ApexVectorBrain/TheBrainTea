@@ -54,11 +54,28 @@ model Therapist {
   // Services this consultant offers. The public booking flow is service-first:
   // a client picks a service, then chooses among the consultants that offer it.
   services      Service[]               @relation("TherapistServices")
+  serviceRates  TherapistServiceRate[]
   assignedClients Client[]              @relation("ClientPrimaryTherapist")
+  googleCalendarConnection GoogleCalendarConnection?
   createdAt     DateTime                @default(now())
   updatedAt     DateTime                @updatedAt
 
   @@index([status])
+}
+
+// Each consultant grants access to their own Google Calendar. Refresh tokens
+// are encrypted before storage; no Google credential is ever sent to a
+// browser or shared with another consultant.
+model GoogleCalendarConnection {
+  id                    String    @id @default(uuid())
+  therapistId           String    @unique
+  therapist             Therapist @relation(fields: [therapistId], references: [id], onDelete: Cascade)
+  googleEmail           String?
+  encryptedRefreshToken String
+  tokenExpiresAt        DateTime?
+  scopes                String?
+  connectedAt           DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 }
 
 model TherapistAvailability {
@@ -108,8 +125,26 @@ model Service {
   bookings        Booking[]
   // Consultants who offer this service (inverse of Therapist.services).
   therapists      Therapist[] @relation("TherapistServices")
+  therapistRates  TherapistServiceRate[]
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
+}
+
+// A consultant can charge a different amount for each service they offer.
+// Existing consultants fall back to Therapist.feeMinor until the admin saves
+// an explicit rate, so this additive table never alters historic bookings.
+model TherapistServiceRate {
+  id          String    @id @default(uuid())
+  therapistId String
+  therapist   Therapist @relation(fields: [therapistId], references: [id], onDelete: Cascade)
+  serviceId   String
+  service     Service   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  feeMinor    Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([therapistId, serviceId])
+  @@index([serviceId])
 }
 
 model Client {
