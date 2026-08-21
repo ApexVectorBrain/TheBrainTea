@@ -14,6 +14,8 @@ function compactRupees(rupees: number): string {
   return `${sign}${abs}`;
 }
 
+const CLINIC_TIME_ZONE = "Asia/Kolkata";
+
 export function formatINR(
   minor: number | null | undefined,
   opts: { compact?: boolean } = {},
@@ -32,6 +34,7 @@ export function formatINR(
 
 export function formatDate(value: string | Date): string {
   return new Date(value).toLocaleDateString("en-IN", {
+    timeZone: CLINIC_TIME_ZONE,
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -40,6 +43,8 @@ export function formatDate(value: string | Date): string {
 
 export function formatTime(value: string | Date): string {
   return new Date(value).toLocaleTimeString("en-IN", {
+    timeZone: CLINIC_TIME_ZONE,
+    hour12: true,
     hour: "2-digit",
     minute: "2-digit",
   });

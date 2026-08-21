@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import {
+  badRequest,
   handleApi,
   paginated,
   parsePagination,
   requireReception,
 } from "@/server/http";
+import { clinicDateKey, clinicDayBounds } from "@/server/clinicTime";
 
 // Read-only payment record for the desk: which fees have actually landed,
 // through which provider, against which invoice.
@@ -39,9 +41,14 @@ export const GET = handleApi(async (request: Request) => {
   const from = searchParams.get("from");
   const to = searchParams.get("to");
   if (from || to) {
+    const fromBounds = from ? clinicDayBounds(from) : null;
+    const toBounds = to ? clinicDayBounds(to) : null;
+    if ((from && !fromBounds) || (to && !toBounds)) {
+      throw badRequest("Invalid date filter");
+    }
     where.createdAt = {
-      ...(from ? { gte: new Date(`${from}T00:00:00`) } : {}),
-      ...(to ? { lte: new Date(`${to}T23:59:59.999`) } : {}),
+      ...(fromBounds ? { gte: fromBounds.start } : {}),
+      ...(toBounds ? { lte: toBounds.end } : {}),
     };
   }
 
@@ -58,10 +65,9 @@ export const GET = handleApi(async (request: Request) => {
 
   // "Today" is the closed [00:00, 23:59:59.999] window, matching the front-desk
   // dashboard exactly — an unbounded `gte` would drift from it.
-  const dayStart = new Date();
-  dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date();
-  dayEnd.setHours(23, 59, 59, 999);
+  const { start: dayStart, end: dayEnd } = clinicDayBounds(
+    clinicDateKey(),
+  )!;
 
   const [payments, total, collected, refunded, collectedToday, outstanding] =
     await Promise.all([

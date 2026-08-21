@@ -18,7 +18,11 @@ import {
   scheduleAdminBooking,
 } from "@/server/services/bookingService";
 import { rupeesToMinor } from "@/server/money";
-import { parseClinicDateTime } from "@/server/clinicTime";
+import {
+  clinicDateKey,
+  clinicDayBounds,
+  parseClinicDateTime,
+} from "@/server/clinicTime";
 
 // Front-desk appointment register. Same filtering surface as the admin
 // booking list, plus the desk-specific `queue` presets that drive the
@@ -39,10 +43,9 @@ function queueFilter(
   queue: string | null,
   now: Date,
 ): Prisma.BookingWhereInput | null {
-  const dayStart = new Date(now);
-  dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(now);
-  dayEnd.setHours(23, 59, 59, 999);
+  const { start: dayStart, end: dayEnd } = clinicDayBounds(
+    clinicDateKey(now),
+  )!;
 
   switch (queue) {
     case "unconfirmed":
@@ -58,7 +61,7 @@ function queueFilter(
       return { dateTime: { gte: dayStart, lte: dayEnd } };
     case "upcoming": {
       const weekAhead = new Date(dayStart);
-      weekAhead.setDate(weekAhead.getDate() + 7);
+      weekAhead.setTime(weekAhead.getTime() + 7 * 24 * 60 * 60_000);
       return {
         dateTime: { gte: now, lt: weekAhead },
         status: { notIn: ["CANCELLED", "REFUNDED"] },
@@ -113,9 +116,14 @@ export const GET = handleApi(async (request: Request) => {
   const from = searchParams.get("from");
   const to = searchParams.get("to");
   if (from || to) {
+    const fromBounds = from ? clinicDayBounds(from) : null;
+    const toBounds = to ? clinicDayBounds(to) : null;
+    if ((from && !fromBounds) || (to && !toBounds)) {
+      throw badRequest("Invalid date filter");
+    }
     where.dateTime = {
-      ...(from ? { gte: new Date(`${from}T00:00:00`) } : {}),
-      ...(to ? { lte: new Date(`${to}T23:59:59.999`) } : {}),
+      ...(fromBounds ? { gte: fromBounds.start } : {}),
+      ...(toBounds ? { lte: toBounds.end } : {}),
     };
   }
 

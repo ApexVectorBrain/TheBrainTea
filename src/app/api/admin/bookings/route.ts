@@ -19,7 +19,7 @@ import {
 } from "@/server/services/bookingService";
 import { stripNotes } from "@/server/serializers/publicBooking";
 import { rupeesToMinor } from "@/server/money";
-import { parseClinicDateTime } from "@/server/clinicTime";
+import { clinicDayBounds, parseClinicDateTime } from "@/server/clinicTime";
 
 // Admin booking list: pagination + status/payment/consultant filters,
 // free-text search over client and invoice fields, date windowing, sorting.
@@ -66,9 +66,14 @@ export const GET = handleApi(async (request: Request) => {
   const from = searchParams.get("from");
   const to = searchParams.get("to");
   if (from || to) {
+    const fromBounds = from ? clinicDayBounds(from) : null;
+    const toBounds = to ? clinicDayBounds(to) : null;
+    if ((from && !fromBounds) || (to && !toBounds)) {
+      throw badRequest("Invalid date filter");
+    }
     where.dateTime = {
-      ...(from ? { gte: new Date(`${from}T00:00:00`) } : {}),
-      ...(to ? { lte: new Date(`${to}T23:59:59.999`) } : {}),
+      ...(fromBounds ? { gte: fromBounds.start } : {}),
+      ...(toBounds ? { lte: toBounds.end } : {}),
     };
   }
 

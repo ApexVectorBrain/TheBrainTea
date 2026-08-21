@@ -20,6 +20,7 @@ import {
   transitionBooking,
 } from "@/server/services/bookingService";
 import { recordManualPayment } from "@/server/services/paymentService";
+import { parseClinicDateTimeValue } from "@/server/clinicTime";
 
 // Appointment detail and front-desk actions. PATCH carries a discriminated
 // action:
@@ -160,8 +161,8 @@ export const PATCH = handleApi(
             `A ${current.status.toLowerCase()} appointment cannot be rescheduled from the front desk`,
           );
         }
-        const newDateTime = new Date(body.dateTime);
-        if (isNaN(newDateTime.getTime())) throw badRequest("Invalid date");
+        const newDateTime = parseClinicDateTimeValue(body.dateTime);
+        if (!newDateTime) throw badRequest("Invalid date");
         const booking = await rescheduleBooking({
           bookingId: id,
           newDateTime,

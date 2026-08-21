@@ -20,6 +20,7 @@ import {
   recordManualPayment,
 } from "@/server/services/paymentService";
 import { recordAudit } from "@/server/audit";
+import { parseClinicDateTimeValue } from "@/server/clinicTime";
 
 // Booking detail + admin actions. PATCH carries a discriminated action:
 //   { action: "transition", toStatus, reason? }
@@ -102,8 +103,8 @@ export const PATCH = handleApi(
       }
       case "reschedule": {
         const session = await requireAdmin(request);
-        const newDateTime = new Date(body.dateTime);
-        if (isNaN(newDateTime.getTime())) throw badRequest("Invalid date");
+        const newDateTime = parseClinicDateTimeValue(body.dateTime);
+        if (!newDateTime) throw badRequest("Invalid date");
         const booking = await rescheduleBooking({
           bookingId: id,
           newDateTime,

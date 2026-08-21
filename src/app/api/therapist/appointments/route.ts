@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import {
+  badRequest,
   handleApi,
   paginated,
   parsePagination,
@@ -9,6 +10,7 @@ import {
 } from "@/server/http";
 import { BOOKING_STATUSES } from "@/server/domain/bookingStatus";
 import { stripNotes } from "@/server/serializers/publicBooking";
+import { clinicDayBounds } from "@/server/clinicTime";
 
 // Own-scoped appointment register — identical filter/search/sort surface to
 // the admin list, but therapistId is fixed to the caller and never a filter
@@ -35,9 +37,14 @@ export const GET = handleApi(async (request: Request) => {
   const from = searchParams.get("from");
   const to = searchParams.get("to");
   if (from || to) {
+    const fromBounds = from ? clinicDayBounds(from) : null;
+    const toBounds = to ? clinicDayBounds(to) : null;
+    if ((from && !fromBounds) || (to && !toBounds)) {
+      throw badRequest("Invalid date filter");
+    }
     where.dateTime = {
-      ...(from ? { gte: new Date(`${from}T00:00:00`) } : {}),
-      ...(to ? { lte: new Date(`${to}T23:59:59.999`) } : {}),
+      ...(fromBounds ? { gte: fromBounds.start } : {}),
+      ...(toBounds ? { lte: toBounds.end } : {}),
     };
   }
 

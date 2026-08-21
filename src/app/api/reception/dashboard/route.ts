@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { handleApi, requireReception } from "@/server/http";
 import { releaseExpiredReservations } from "@/server/services/bookingService";
+import { clinicDateKey, clinicDayBounds } from "@/server/clinicTime";
 
 // Front-desk overview. Everything here is aggregated live from Booking,
 // PaymentRecord and Client — no cached counters — and is scoped to what a
@@ -34,14 +35,12 @@ export const GET = handleApi(async (request: Request) => {
   await releaseExpiredReservations();
 
   const now = new Date();
-  const dayStart = new Date(now);
-  dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(now);
-  dayEnd.setHours(23, 59, 59, 999);
+  const todayBounds = clinicDayBounds(clinicDateKey(now))!;
+  const { start: dayStart, end: dayEnd } = todayBounds;
   const weekAhead = new Date(dayStart);
-  weekAhead.setDate(weekAhead.getDate() + 7);
+  weekAhead.setTime(weekAhead.getTime() + 7 * 24 * 60 * 60_000);
   const weekBack = new Date(dayStart);
-  weekBack.setDate(weekBack.getDate() - 7);
+  weekBack.setTime(weekBack.getTime() - 7 * 24 * 60 * 60_000);
 
   const today = { gte: dayStart, lte: dayEnd };
 
