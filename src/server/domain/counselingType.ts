@@ -5,7 +5,6 @@
 // financial ledger all stay data-driven rather than hard-coded per booking.
 
 export const COUNSELING_TYPES = [
-  "ASSESSMENT",
   "CAREER_ACADEMIC",
   "COUPLE_FAMILY",
   "INDIVIDUAL",
@@ -15,7 +14,6 @@ export type CounselingType = (typeof COUNSELING_TYPES)[number];
 
 /** Human labels for admin UI / audit trails. */
 export const COUNSELING_TYPE_LABELS: Record<CounselingType, string> = {
-  ASSESSMENT: "Assessment",
   CAREER_ACADEMIC: "Career & Academic Counselling",
   COUPLE_FAMILY: "Couples & Family Therapy",
   INDIVIDUAL: "Individual Counselling",
@@ -36,14 +34,6 @@ export const COUNSELING_SERVICE_DEFAULTS: Record<
   CounselingType,
   CounselingServiceDefault
 > = {
-  ASSESSMENT: {
-    slug: "assessment",
-    name: "Assessment",
-    description:
-      "A structured first consultation to understand a client's concerns, goals and support needs.",
-    durationMinutes: 50,
-    priceMinor: 180000,
-  },
   CAREER_ACADEMIC: {
     slug: "career-academic-counselling",
     name: "Career & Academic Counselling",
@@ -66,7 +56,7 @@ export const COUNSELING_SERVICE_DEFAULTS: Record<
     description:
       "One-to-one counselling focused on the client's concerns, goals and ongoing wellbeing.",
     durationMinutes: 50,
-    priceMinor: 180000,
+    priceMinor: 150000,
   },
 };
 

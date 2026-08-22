@@ -12,7 +12,6 @@ const prisma = new PrismaClient();
 
 const MADHUMATI_SLUGS = ["dr-madhumati-dhumak", "madhumati-dhumak"];
 const ACTIVE_SERVICE_SLUGS = [
-  "assessment",
   "couples-counseling",
   "career-academic-counselling",
 ];

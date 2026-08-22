@@ -69,7 +69,8 @@ function appointmentHtml(booking: NonNullable<BookingEmail>, intro: string): str
   return `<p>${escapeHtml(intro)}</p>
     <h2>Appointment details</h2>
     <p><strong>Status:</strong> ${status}</p>
-    <p><strong>Consultant:</strong> ${escapeHtml(booking.therapist.name)}<br />
+    <p><strong>Client:</strong> ${escapeHtml(booking.client.name)}<br />
+    <strong>Consultant:</strong> ${escapeHtml(booking.therapist.name)}<br />
     <strong>Service:</strong> ${escapeHtml(booking.service.name)}<br />
     <strong>When:</strong> ${formatDateTime(booking.dateTime)} (${TIME_ZONE})<br />
     <strong>Duration:</strong> ${booking.durationMinutes} minutes</p>

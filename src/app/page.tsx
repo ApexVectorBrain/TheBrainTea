@@ -248,13 +248,13 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 md:px-12 relative">
           {/* Arch-topped Cards Grid with negative top margin to overlap the transition */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto -mt-24 md:-mt-36 lg:-mt-44 relative z-30">
-            {/* Card 1: Assessment */}
+            {/* Card 1: Individual Counselling */}
             <div className="flex flex-col items-center">
               {/* Bare arched image — no white wrapper */}
               <div className="relative aspect-[3/4] w-full rounded-t-full overflow-hidden shadow-lg">
                 <Image
-                  src="/team/office3.jpg"
-                  alt="A calm consultation space at The Brain Tea"
+                  src="/team/office.jpg"
+                  alt="A private counselling space at The Brain Tea"
                   fill
                   sizes="(max-width: 768px) 100vw, 30vw"
                   className="object-cover"
@@ -263,11 +263,14 @@ export default function Home() {
               {/* White text box at bottom */}
               <div className="bg-warm-white rounded-b-[24px] w-full px-5 py-6 text-center shadow-warm-soft -mt-1 border border-t-0 border-warm-sand/15">
                 <h3 className="font-cormorant text-xl md:text-2xl font-semibold text-forest-slate mb-2 uppercase tracking-wide">
-                  Assessment
+                  Individual Counselling
                 </h3>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-teal-sage mb-3 font-dmsans">
+                  In person or online
+                </p>
                 <p className="text-xs md:text-sm text-forest-slate/80 leading-relaxed mb-5 font-dmsans">
-                  A structured first consultation to understand your concerns,
-                  clarify your goals, and decide on the most helpful next step.
+                  A one-to-one space to explore what you&apos;re carrying, clarify
+                  your goals, and receive support that meets you where you are.
                 </p>
                 <Link
                   href="/book"
@@ -278,12 +281,12 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Card 2: Individual Counselling */}
+            {/* Card 2: Career & Academic Counselling */}
             <div className="flex flex-col items-center">
               <div className="relative aspect-[3/4] w-full rounded-t-full overflow-hidden shadow-lg">
                 <Image
-                  src="/team/office.jpg"
-                  alt="A private counselling space at The Brain Tea"
+                  src="/team/office3.jpg"
+                  alt="A calm consultation space at The Brain Tea"
                   fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1024px) 45vw, 30vw"
                   className="object-cover"
@@ -291,11 +294,14 @@ export default function Home() {
               </div>
               <div className="bg-warm-white rounded-b-[24px] w-full px-5 py-6 text-center shadow-warm-soft -mt-1 border border-t-0 border-warm-sand/15">
                 <h3 className="font-cormorant text-xl md:text-2xl font-semibold text-forest-slate mb-2 uppercase tracking-wide">
-                  Individual Counselling
+                  Career &amp; Academic Counselling
                 </h3>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-teal-sage mb-3 font-dmsans">
+                  In person or online
+                </p>
                 <p className="text-xs md:text-sm text-forest-slate/80 leading-relaxed mb-5 font-dmsans">
-                  A one-to-one space to explore what you&apos;re carrying, clarify
-                  your goals, and receive support that meets you where you are.
+                  A supportive space to navigate career decisions, academic
+                  pressure, and the transitions that come with them.
                 </p>
                 <Link
                   href="/book"
@@ -321,6 +327,9 @@ export default function Home() {
                 <h3 className="font-cormorant text-xl md:text-2xl font-semibold text-forest-slate mb-2 uppercase tracking-wide">
                   Couples &amp; Family Therapy
                 </h3>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-teal-sage mb-3 font-dmsans">
+                  In person or online
+                </p>
                 <p className="text-xs md:text-sm text-forest-slate/80 leading-relaxed mb-5 font-dmsans">
                   A structured, neutral space for couples and families alike —
                   resolve conflict, dismantle communication barriers, strengthen
@@ -451,7 +460,7 @@ export default function Home() {
                   As a therapy clinic in Pune, our vision is to build a space
                   where people don&apos;t have to perform, explain away their
                   emotions, or fear being judged. Every conversation, whether
-                  in assessment or couples therapy, is held with
+                  in individual or couples therapy, is held with
                   curiosity, compassion, and genuine presence.
                 </p>
                 <p>

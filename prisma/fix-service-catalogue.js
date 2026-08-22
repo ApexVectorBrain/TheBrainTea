@@ -2,7 +2,6 @@
  * Bring a live database's service catalogue in line with what the clinic
  * actually offers:
  *
- *   - Assessment
  *   - Individual Counselling
  *   - Couples & Family Therapy
  *   - Career & Academic Counselling
@@ -12,7 +11,7 @@
  *
  * Why this exists: the catalogue is database-driven, so editing seed.js does
  * not change a database that was already seeded — a stale row (e.g. "Somatic
- * Experiencing" or "Mental Health Assessment") keeps rendering on /services
+ * Experiencing") keeps rendering on /services
  * until it is removed here. Unlike seed.js this is non-destructive: it only
  * touches Service rows, never bookings, clients or the ledger.
  *
@@ -33,14 +32,13 @@ const prisma = new PrismaClient();
 const SESSION_MINUTES = 50;
 
 /**
- * Slugs that may remain. The first three are the public catalogue; the last
- * two are the canonical rows that admin/reception scheduling upserts per
+ * Slugs that may remain. The public catalogue rows are also the canonical
+ * rows that admin/reception scheduling upserts per
  * counselling type (see src/server/domain/counselingType.ts) and which
  * existing staff-booked appointments point at — deleting those would orphan
  * real bookings.
  */
 const KEEP_SLUGS = [
-  "assessment",
   "individual-counselling",
   "couples-counseling",
   "career-academic-counselling",

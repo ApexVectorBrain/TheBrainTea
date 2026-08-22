@@ -9,7 +9,7 @@ import {
 
 describe("counselingType domain", () => {
   it("recognises the supported types", () => {
-    expect(isCounselingType("ASSESSMENT")).toBe(true);
+    expect(isCounselingType("LEGACY_TYPE")).toBe(false);
     expect(isCounselingType("CAREER_ACADEMIC")).toBe(true);
     expect(isCounselingType("INDIVIDUAL")).toBe(true);
     expect(isCounselingType("COUPLE_FAMILY")).toBe(true);
@@ -18,7 +18,7 @@ describe("counselingType domain", () => {
   });
 
   it("labels known types and falls back for unknown/null", () => {
-    expect(counselingTypeLabel("ASSESSMENT")).toBe("Assessment");
+    expect(counselingTypeLabel("LEGACY_TYPE")).toBe("—");
     expect(counselingTypeLabel("CAREER_ACADEMIC")).toBe(
       "Career & Academic Counselling",
     );
@@ -33,11 +33,10 @@ describe("counselingType domain", () => {
   it("maps a consultant's assigned service slugs to scheduling choices", () => {
     expect(
       counselingTypesForServiceSlugs([
-        "assessment",
         "individual-counselling",
         "unrelated-service",
       ]),
-    ).toEqual(["ASSESSMENT", "INDIVIDUAL"]);
+    ).toEqual(["INDIVIDUAL"]);
     expect(counselingTypesForServiceSlugs([])).toEqual([]);
   });
 
@@ -59,8 +58,7 @@ describe("counselingType domain", () => {
     expect(new Set(slugs).size).toBe(slugs.length);
   });
 
-  it("keeps assessment and individual fees at ₹1,800", () => {
-    expect(COUNSELING_SERVICE_DEFAULTS.ASSESSMENT.priceMinor).toBe(180000);
-    expect(COUNSELING_SERVICE_DEFAULTS.INDIVIDUAL.priceMinor).toBe(180000);
+  it("keeps the individual counselling fee at ₹1,500", () => {
+    expect(COUNSELING_SERVICE_DEFAULTS.INDIVIDUAL.priceMinor).toBe(150000);
   });
 });

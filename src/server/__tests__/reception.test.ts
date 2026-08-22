@@ -167,7 +167,7 @@ suite("reception desk", () => {
       paymentReceived?: boolean;
       clientId?: string;
       isOvertime?: boolean;
-      counselingType?: "ASSESSMENT" | "INDIVIDUAL";
+      counselingType?: "INDIVIDUAL";
     } = {},
   ) {
     const res = await bookingsPost(
@@ -302,7 +302,7 @@ suite("reception desk", () => {
       (
         await schedule(futureSlot(12, 11), {
           isOvertime: false,
-          counselingType: "ASSESSMENT",
+          counselingType: "INDIVIDUAL",
         })
       ).status,
     ).toBe(409);

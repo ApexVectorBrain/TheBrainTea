@@ -34,7 +34,7 @@ const PROGRAMS = [
       "Mental-health awareness",
       "Administrative operations",
       "Case discussion",
-      "Assessment observation",
+      "Clinical observation",
     ],
     eligibility: [
       "BA/BSc Psychology student or graduate",
@@ -51,7 +51,7 @@ const PROGRAMS = [
     learning: [
       "Case discussions",
       "Clinical observation",
-      "Psychological assessments",
+      "Clinical documentation",
       "Report writing",
       "Treatment planning",
       "Ethics & confidentiality",

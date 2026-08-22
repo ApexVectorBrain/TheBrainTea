@@ -11,21 +11,6 @@ export interface ServiceContent {
 
 export const SERVICES: ServiceContent[] = [
   {
-    slug: "assessment",
-    name: "Assessment",
-    tagline: "A steady space to understand yourself.",
-    description:
-      "A structured first consultation to understand your concerns, goals, and the support that may be most helpful for you.",
-    suitableFor: [
-      "Understanding current concerns",
-      "Choosing the right support",
-      "Clarifying therapy goals",
-      "Career or academic concerns",
-      "Emotional wellbeing",
-    ],
-    availability: ["Online", "Offline"],
-  },
-  {
     slug: "couple-family-therapy",
     name: "Couple & Family Therapy",
     tagline: "Reconnect through structured, guided conversation.",
@@ -57,26 +42,6 @@ export const SERVICES: ServiceContent[] = [
       "Young adult well-being",
     ],
     availability: ["Online", "Offline"],
-  },
-  {
-    slug: "psychometric-testing-assessment",
-    name: "Psychometric Testing & Assessment",
-    tagline: "Clear, evidence-based answers.",
-    description:
-      "Structured psychological assessments that provide clarity on personality, cognitive ability, learning, and emotional-behavioral concerns.",
-    suitableFor: [
-      "Personality assessment",
-      "Intelligence assessment",
-      "Learning difficulty assessment",
-      "Career assessment",
-      "Emotional & behavioral assessment",
-      "ADHD screening",
-      "Autism screening",
-      "Diagnostic psychological evaluation",
-    ],
-    availability: ["Offline"],
-    process:
-      "Each assessment includes a clear purpose, session duration, testing process, and a defined report timeline.",
   },
   {
     slug: "psychiatric-support",

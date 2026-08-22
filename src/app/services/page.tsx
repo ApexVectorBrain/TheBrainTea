@@ -204,7 +204,7 @@ export default async function Services() {
   }));
 
   const pricingPlans = [
-    { type: "Assessment", price: "₹1,800" },
+    { type: "Individual Counselling", price: "₹1,500" },
     { type: "Couple Therapy", price: "₹2,000" },
   ];
 

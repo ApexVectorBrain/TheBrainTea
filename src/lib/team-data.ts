@@ -105,7 +105,7 @@ export const TEAM: TeamMember[] = [
     photo: "/team/sharayu-harpale.jpg",
     qualification: "Clinical Psychologist",
     experience:
-      "Experience in assessment, counselling, formulation and intervention",
+      "Experience in counselling, formulation and intervention",
     approaches: [
       "Cognitive Behaviour Therapy",
       "Supportive Psychotherapy",

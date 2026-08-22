@@ -123,25 +123,6 @@ async function main() {
     `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=800&q=80`;
   const serviceRows = [
     {
-      name: "Assessment",
-      slug: "assessment",
-      durationMinutes: 50,
-      priceMinor: 180000,
-      description:
-        "A structured first consultation to understand your concerns, goals, and the support that may be most helpful for you.",
-      tagline: "Clarity for your next step.",
-      image: "/team/office3.jpg",
-      suitableFor: [
-        "Understanding current concerns",
-        "Choosing the right support",
-        "Clarifying therapy goals",
-        "Career or academic concerns",
-        "Emotional wellbeing",
-      ],
-      availability: ["Online", "Offline"],
-      process: null,
-    },
-    {
       name: "Individual Counselling",
       slug: "individual-counselling",
       durationMinutes: 50,
@@ -249,7 +230,7 @@ async function main() {
       activeFromDay: -HISTORY_DAYS,
       activeToDay: FUTURE_DAYS,
       schedule: { days: [1, 2, 3, 4, 5], hours: [9, 10, 11, 13, 14, 15, 16] },
-      serviceSlugs: ["individual-counselling", "assessment", "couples-counseling"],
+      serviceSlugs: ["individual-counselling", "couples-counseling"],
     },
     {
       email: "rohan@thebraintea.com",
@@ -320,7 +301,7 @@ async function main() {
       password: null,
       name: "Dr. Ananya Iyer",
       slug: "dr-ananya-iyer",
-      bio: "Child and adolescent psychologist focusing on developmental assessments, learning differences, and family systems work. Currently onboarding to the practice.",
+      bio: "Child and adolescent psychologist focusing on developmental needs, learning differences, and family systems work. Currently onboarding to the practice.",
       feeMinor: 120000,
       commissionBps: 3200,
       status: "PENDING",
@@ -767,17 +748,15 @@ async function main() {
 
       const paidUpfront = rand() < 0.65 || status === "REFUNDED";
 
-      // Classify each seeded booking as assessment, individual, or
+      // Classify each seeded booking as individual, career/academic, or
       // couple/family so the
       // admin appointment register has representative counselling-type data.
       const counselingType =
-        service.slug === "assessment"
-          ? "ASSESSMENT"
-          : service.slug === "career-academic-counselling"
-            ? "CAREER_ACADEMIC"
-            : service.slug === "couples-counseling"
-              ? "COUPLE_FAMILY"
-              : "INDIVIDUAL";
+        service.slug === "career-academic-counselling"
+          ? "CAREER_ACADEMIC"
+          : service.slug === "couples-counseling"
+            ? "COUPLE_FAMILY"
+            : "INDIVIDUAL";
 
       const booking = await prisma.booking.create({
         data: {

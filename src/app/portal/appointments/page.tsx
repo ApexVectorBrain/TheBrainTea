@@ -6,21 +6,21 @@ import { WHATSAPP_URL, CONTACT_PHONE } from "../../../lib/site";
 
 const APPOINTMENTS = [
   {
-    service: "Assessment",
+    service: "Individual Counselling",
     date: "12 Jul 2026",
     time: "4:30 PM",
     mode: "Online",
     status: "Confirmed",
   },
   {
-    service: "Assessment",
+    service: "Individual Counselling",
     date: "28 Jun 2026",
     time: "5:00 PM",
     mode: "Offline",
     status: "Completed",
   },
   {
-    service: "Assessment",
+    service: "Individual Counselling",
     date: "14 Jun 2026",
     time: "5:00 PM",
     mode: "Offline",

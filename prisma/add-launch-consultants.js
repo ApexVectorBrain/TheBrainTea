@@ -67,7 +67,7 @@ Sharayu is a Clinical Psychologist dedicated to helping individuals navigate emo
 
 Her approach is empathetic, collaborative, and evidence-based. She integrates approaches such as Cognitive Behaviour Therapy (CBT), supportive psychotherapy, and solution-focused techniques, adapting them to each individual's needs, experiences, and goals. Alongside creating a safe and supportive environment, she focuses on practical strategies that help individuals understand unhelpful patterns, develop healthier coping skills, and make sustainable changes in their everyday lives.
 
-Her clinical experience includes psychological assessment, counselling, case formulation, and therapeutic interventions across a range of emotional and psychological concerns. She works with individuals experiencing anxiety and stress, self-esteem concerns, relationship difficulties, grief, life transitions, and adjustment challenges, with experience working across different age groups.
+Her clinical experience includes counselling, case formulation, and therapeutic interventions across a range of emotional and psychological concerns. She works with individuals experiencing anxiety and stress, self-esteem concerns, relationship difficulties, grief, life transitions, and adjustment challenges, with experience working across different age groups.
 
 She believes therapy is not about “fixing” a person, but about creating the space and support needed for growth. Her aim is to build a therapeutic relationship grounded in trust, authenticity, and compassion, while helping individuals reconnect with their strengths and move towards a life that feels more meaningful and aligned with who they are.`,
   },

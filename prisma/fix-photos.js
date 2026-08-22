@@ -29,7 +29,6 @@ const CONSULTANT_PHOTOS = {
  *   career      -> the study wall of psychology books
  */
 const SERVICE_IMAGES = {
-  assessment: "/team/office3.jpg",
   "couples-counseling": "/team/office2.jpg",
   "couple-family-counselling": "/team/office2.jpg",
   "career-academic-counselling": "/team/office6.jpg",
