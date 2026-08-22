@@ -24,6 +24,7 @@ import {
 import { clinicDayOfWeekForDate, formatClinicTime } from "../clinicTime";
 import { notifyBookingCancelled, notifyBookingCreated, notifyBookingRescheduled } from "./emailNotificationService";
 import { cancelBookingMeeting, syncBookingMeeting } from "./googleCalendarService";
+import { defaultPaymentProviderName, getPaymentProvider } from "../payments/registry";
 
 // Booking lifecycle service. All state changes flow through the domain state
 // machine and are journalled to BookingStatusHistory. A public submission is
@@ -174,6 +175,12 @@ async function assertNoOverlappingBooking(
 }
 
 export async function createBooking(input: CreateBookingInput) {
+  const providerName = defaultPaymentProviderName();
+  // Manual is deliberately retained for desk-arranged payments. Every other
+  // configured provider uses the secure online checkout reservation flow.
+  const requiresOnlinePayment = providerName !== "manual";
+  if (requiresOnlinePayment) getPaymentProvider(providerName);
+
   const result = await prisma.$transaction(async (tx) => {
     await releaseExpiredReservations(tx);
 
@@ -224,7 +231,12 @@ export async function createBooking(input: CreateBookingInput) {
     });
 
     const commissionBps = await resolveBookingCommissionBps(therapist, tx);
-    const initialStatus: BookingStatus = "PENDING";
+    const initialStatus: BookingStatus = requiresOnlinePayment
+      ? "AWAITING_PAYMENT"
+      : "PENDING";
+    const expiresAt = requiresOnlinePayment
+      ? new Date(Date.now() + RESERVATION_TTL_MINUTES * 60_000)
+      : null;
 
     const booking = await tx.booking.create({
       data: {
@@ -239,17 +251,40 @@ export async function createBooking(input: CreateBookingInput) {
         commissionBps,
         status: initialStatus,
         paymentStatus: "UNPAID",
-        expiresAt: null,
+        expiresAt,
         invoiceNumber: null,
       },
     });
+    if (requiresOnlinePayment) {
+      // Claim the slot before the client is sent to the gateway. The unique
+      // constraint makes simultaneous checkout attempts converge safely.
+      try {
+        await tx.bookingSlot.create({
+          data: {
+            therapistId: therapist.id,
+            startAt: input.dateTime,
+            bookingId: booking.id,
+          },
+        });
+      } catch (error) {
+        if (isUniqueViolation(error)) {
+          throw conflict(
+            "That time was just reserved by another client. Please choose another slot.",
+            "SLOT_TAKEN",
+          );
+        }
+        throw error;
+      }
+    }
     await tx.bookingStatusHistory.create({
       data: {
         bookingId: booking.id,
         fromStatus: null,
         toStatus: initialStatus,
         actorType: "CLIENT",
-        reason: "Booking request submitted; client must contact admin",
+        reason: requiresOnlinePayment
+          ? "Online payment reservation created"
+          : "Booking request submitted; client must contact admin",
       },
     });
 
@@ -266,8 +301,29 @@ export async function createBooking(input: CreateBookingInput) {
   await notifyBookingCreated(booking.id).catch((error) =>
     console.error("Could not send booking-created notifications", booking.id, error),
   );
-  // Kept for API compatibility while the online gateway is dormant.
-  return { booking, payment: null };
+  if (!requiresOnlinePayment) return { booking, payment: null };
+
+  // Gateway calls must not run inside the database transaction. If the call
+  // fails, the reserved booking remains reachable on the payment-status page,
+  // where the client can safely retry within its 30-minute reservation window.
+  let payment: { checkoutUrl: string } | null = null;
+  try {
+    const charge = await createCharge({
+      bookingId: booking.id,
+      idempotencyKey: chargeIdempotencyKey(booking.id, 1),
+      providerName,
+    });
+    if (
+      charge.clientAction.type === "checkout" &&
+      typeof charge.clientAction.payload.checkoutUrl === "string"
+    ) {
+      payment = { checkoutUrl: charge.clientAction.payload.checkoutUrl };
+    }
+  } catch (error) {
+    console.error("Could not create online payment checkout", booking.id, error);
+  }
+
+  return { booking, payment };
 }
 
 /**

@@ -202,6 +202,14 @@ export default function BookingWizard({ services = [], initialService = "" }) {
         return;
       }
       const booking = data.booking;
+      if (data.payment?.checkoutUrl) {
+        window.location.assign(data.payment.checkoutUrl);
+        return;
+      }
+      if (booking.status === "AWAITING_PAYMENT") {
+        router.push(`/booking/payment-status?bookingId=${booking.id}`);
+        return;
+      }
       router.push(`/booking-confirmed?id=${booking.id}`);
     } catch (err) {
       console.error(err);
@@ -677,9 +685,8 @@ export default function BookingWizard({ services = [], initialService = "" }) {
                 Completing your booking
               </h4>
               <p className="text-sm text-sage leading-relaxed mb-5">
-                Send your preferred session request, then contact the Admin to
-                arrange payment. The time is confirmed only after the Admin or
-                Reception records the payment.
+                Continue to secure payment to reserve this appointment. Your
+                time is confirmed only after payment succeeds.
               </p>
             </div>
 
@@ -694,7 +701,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
                 disabled={isSubmitting}
                 className="bg-forest hover:bg-terracotta text-warm-white font-medium px-8 py-4 rounded-full transition-colors disabled:opacity-50 min-w-[200px] shadow-sm hover:shadow-md"
               >
-                {isSubmitting ? "Sending..." : "Send Session Request"}
+                {isSubmitting ? "Opening secure payment..." : "Continue to Payment"}
               </button>
             </div>
           </div>

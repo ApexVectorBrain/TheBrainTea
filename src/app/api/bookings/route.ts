@@ -41,7 +41,7 @@ export const POST = handleApi(async (request: Request) => {
   const dateTime = parseClinicDateTime(body.date, body.time);
   if (!dateTime) throw badRequest("Invalid date or time");
 
-  const { booking } = await createBooking({
+  const { booking, payment } = await createBooking({
     therapistSlug: body.therapistSlug,
     serviceSlug: body.serviceSlug,
     dateTime,
@@ -63,5 +63,6 @@ export const POST = handleApi(async (request: Request) => {
       email: booking.client.email,
       phone: booking.client.phone,
     },
+    payment,
   });
 });
