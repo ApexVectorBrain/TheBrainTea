@@ -302,7 +302,7 @@ describe("phonepeProvider.parseWebhook", () => {
     .digest("hex");
 
   const completedBody = JSON.stringify({
-    event: "checkout.order.completed",
+    event: "pg.order.completed",
     payload: {
       merchantOrderId: "TBTabc",
       orderId: "OMO1",
@@ -316,8 +316,8 @@ describe("phonepeProvider.parseWebhook", () => {
       authorization: validAuth,
     });
     expect(parsed).toEqual({
-      externalId: "checkout.order.completed:TBTabc",
-      eventType: "checkout.order.completed",
+      externalId: "pg.order.completed:TBTabc",
+      eventType: "pg.order.completed",
       status: "SUCCEEDED",
       providerOrderId: "TBTabc",
       providerPaymentId: "TXN9",
@@ -349,7 +349,7 @@ describe("phonepeProvider.parseWebhook", () => {
       });
 
     expect(
-      await parse("checkout.order.failed", { merchantOrderId: "TBTabc" }),
+      await parse("pg.order.failed", { merchantOrderId: "TBTabc" }),
     ).toMatchObject({ status: "FAILED", providerOrderId: "TBTabc" });
 
     expect(

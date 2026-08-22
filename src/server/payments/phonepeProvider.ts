@@ -377,6 +377,11 @@ export const phonepeProvider: PaymentProvider = {
     };
 
     switch (event) {
+      // PhonePe's current Business dashboard emits pg.order.*. Keep the
+      // checkout aliases for merchants already configured on the older event
+      // catalogue, so changing the dashboard selection never breaks payment
+      // confirmation.
+      case "pg.order.completed":
       case "checkout.order.completed":
         return {
           ...base,
@@ -385,6 +390,7 @@ export const phonepeProvider: PaymentProvider = {
           providerPaymentId:
             payload.paymentDetails?.[0]?.transactionId ?? payload.orderId,
         };
+      case "pg.order.failed":
       case "checkout.order.failed":
         return {
           ...base,

@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { CalendarPlus, Search } from "lucide-react";
+import { CalendarOff, CalendarPlus, Search } from "lucide-react";
+import { ConsultantLeaveModal } from "@/components/staff/ConsultantLeaveModal";
 import { titleCase } from "@/lib/format";
 import {
   ErrorNote,
@@ -48,6 +49,7 @@ export default function ReceptionAppointmentsPage() {
 
   const [detailId, setDetailId] = useState<string | null>(null);
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/reception/consultants")
@@ -111,13 +113,22 @@ export default function ReceptionAppointmentsPage() {
             Book, confirm, reschedule and close out sessions.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setScheduleOpen(true)}
-          className="inline-flex items-center gap-2 rounded-full bg-ocean px-5 py-2.5 font-dmsans text-xs font-bold uppercase tracking-wider text-white shadow-surface-raised-sm transition-all hover:-translate-y-0.5"
-        >
-          <CalendarPlus size={13} /> Schedule appointment
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setLeaveOpen(true)}
+            className="inline-flex items-center gap-2 rounded-full border border-ocean/25 px-5 py-2.5 font-dmsans text-xs font-bold uppercase tracking-wider text-ocean-deep transition-colors hover:bg-surface-sunken"
+          >
+            <CalendarOff size={13} /> Consultant leave
+          </button>
+          <button
+            type="button"
+            onClick={() => setScheduleOpen(true)}
+            className="inline-flex items-center gap-2 rounded-full bg-ocean px-5 py-2.5 font-dmsans text-xs font-bold uppercase tracking-wider text-white shadow-surface-raised-sm transition-all hover:-translate-y-0.5"
+          >
+            <CalendarPlus size={13} /> Schedule appointment
+          </button>
+        </div>
       </div>
 
       <Panel
@@ -236,6 +247,12 @@ export default function ReceptionAppointmentsPage() {
             setPage(1);
             fetchRows();
           }}
+        />
+      )}
+      {leaveOpen && (
+        <ConsultantLeaveModal
+          consultants={consultants}
+          onClose={() => setLeaveOpen(false)}
         />
       )}
     </div>

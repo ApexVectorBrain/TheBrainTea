@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Trash2 } from "lucide-react";
-import { formatDateTime } from "@/lib/format";
 import {
   ErrorNote,
   Field,
@@ -28,24 +26,10 @@ interface WeeklySlot {
   endTime: string;
 }
 
-interface SlotBlock {
-  id: string;
-  startAt: string;
-  endAt: string;
-  reason: string | null;
-}
-
 export default function TherapistSettingsPage() {
   const [weekly, setWeekly] = useState<WeeklySlot[]>([]);
-  const [blocks, setBlocks] = useState<SlotBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  const [blockStart, setBlockStart] = useState("");
-  const [blockEnd, setBlockEnd] = useState("");
-  const [blockReason, setBlockReason] = useState("");
-  const [blockError, setBlockError] = useState("");
-  const [blockBusy, setBlockBusy] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -57,7 +41,6 @@ export default function TherapistSettingsPage() {
         if (!res.ok)
           throw new Error(data.error || "Failed to load availability");
         setWeekly(data.weekly);
-        setBlocks(data.blocks);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to load availability",
@@ -68,58 +51,6 @@ export default function TherapistSettingsPage() {
     };
     load();
   }, []);
-
-  const addBlock = async () => {
-    if (!blockStart || !blockEnd) {
-      setBlockError("Start and end are required");
-      return;
-    }
-    setBlockBusy(true);
-    setBlockError("");
-    try {
-      const res = await fetch("/api/therapist/availability/blocks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          startAt: new Date(blockStart).toISOString(),
-          endAt: new Date(blockEnd).toISOString(),
-          reason: blockReason || undefined,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to add block");
-      setBlocks((rows) =>
-        [...rows, data.block].sort((a, b) =>
-          a.startAt.localeCompare(b.startAt),
-        ),
-      );
-      setBlockStart("");
-      setBlockEnd("");
-      setBlockReason("");
-    } catch (err) {
-      setBlockError(err instanceof Error ? err.message : "Failed to add block");
-    } finally {
-      setBlockBusy(false);
-    }
-  };
-
-  const removeBlock = async (id: string) => {
-    setBlockBusy(true);
-    try {
-      const res = await fetch(`/api/therapist/availability/blocks/${id}`, {
-        method: "DELETE",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to remove block");
-      setBlocks((rows) => rows.filter((b) => b.id !== id));
-    } catch (err) {
-      setBlockError(
-        err instanceof Error ? err.message : "Failed to remove block",
-      );
-    } finally {
-      setBlockBusy(false);
-    }
-  };
 
   const groupedByDay = DAYS.map((_, day) =>
     weekly.map((w, idx) => ({ ...w, idx })).filter((w) => w.dayOfWeek === day),
@@ -132,7 +63,7 @@ export default function TherapistSettingsPage() {
           Availability Settings
         </h1>
         <p className="font-dmsans text-sm text-ink-muted">
-          View admin-set working hours and block off one-off unavailability.
+          View the weekly working hours set by your clinic administrator.
         </p>
       </div>
 
@@ -172,77 +103,6 @@ export default function TherapistSettingsPage() {
 
           </div>
         )}
-      </Panel>
-
-      <Panel
-        title="Unavailability Blocks"
-        subtitle="Block off leave or one-off unavailability within your normal hours."
-      >
-        <div className="space-y-4 font-dmsans">
-          <ErrorNote message={blockError} />
-          <div className="flex flex-wrap items-end gap-3">
-            <Field label="From">
-              <input
-                type="datetime-local"
-                value={blockStart}
-                onChange={(e) => setBlockStart(e.target.value)}
-                className={inputClass}
-              />
-            </Field>
-            <Field label="To">
-              <input
-                type="datetime-local"
-                value={blockEnd}
-                onChange={(e) => setBlockEnd(e.target.value)}
-                className={inputClass}
-              />
-            </Field>
-            <Field label="Reason (optional)">
-              <input
-                value={blockReason}
-                onChange={(e) => setBlockReason(e.target.value)}
-                className={inputClass}
-                placeholder="e.g. Leave"
-              />
-            </Field>
-            <button
-              type="button"
-              disabled={blockBusy}
-              onClick={addBlock}
-              className="rounded-full bg-ocean px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-surface-raised-sm disabled:opacity-40"
-            >
-              Add block
-            </button>
-          </div>
-
-          {blocks.length === 0 ? (
-            <p className="text-xs italic text-ink-muted">
-              No unavailability blocks scheduled.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {blocks.map((b) => (
-                <div
-                  key={b.id}
-                  className="surface-inset flex flex-wrap items-center justify-between gap-2 rounded-soft px-4 py-2.5 text-xs"
-                >
-                  <span className="font-semibold text-ocean-deep">
-                    {formatDateTime(b.startAt)} → {formatDateTime(b.endAt)}
-                  </span>
-                  <span className="text-ink-muted">{b.reason || "—"}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeBlock(b.id)}
-                    disabled={blockBusy}
-                    className="text-ink-muted hover:text-red-700"
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
       </Panel>
     </div>
   );
