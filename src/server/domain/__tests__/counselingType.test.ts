@@ -48,6 +48,7 @@ describe("counselingType domain", () => {
       expect(def.durationMinutes).toBeGreaterThan(0);
       expect(Number.isInteger(def.priceMinor)).toBe(true);
       expect(def.priceMinor).toBeGreaterThan(0);
+      expect(def.availability).toEqual(["Online", "Offline"]);
     }
   });
 

@@ -3,12 +3,12 @@ import { TEAM } from "../team-data";
 import publicRoster from "../../../prisma/public-roster.json";
 
 describe("public practitioner roster", () => {
-  it("includes Ananya as a counseling psychologist with her updated bio", () => {
+  it("includes Ananya as a counselling psychologist with her updated bio", () => {
     const ananya = TEAM.find((member) => member.slug === "ananya-sunil-nair");
 
     expect(ananya).toMatchObject({
       name: "Ananya Sunil Nair",
-      role: "Counseling Psychologist",
+      role: "Counselling Psychologist",
     });
     expect(ananya?.intro.join(" ")).toContain(
       "Ananya takes a client-centered, integrative approach",
@@ -46,9 +46,11 @@ describe("public practitioner roster", () => {
 
     expect(gauri).toMatchObject({
       name: "Gauri Ghorpade",
-      role: "Psychologist",
+      role: "Counselling Psychologist",
       photo: "/team/gauri-ghorpade.png",
       photoPosition: "50% 28%",
+      qualification:
+        "PGDP Counselling & Psychotherapy · MSc Psychology · BSc Clinical Psychology",
       specialisations: [
         "Anxiety, Stress & Emotional Wellbeing",
         "Relationships, Self-Worth & Personal Challenges",
@@ -72,8 +74,10 @@ describe("public practitioner roster", () => {
 
     expect(krutika).toMatchObject({
       name: "Krutika A. Sonigra",
-      role: "Psychologist, Counselor & Art Therapy Practitioner",
+      role: "Counselling Psychologist",
       photo: "/team/krutika-a-sonigra.png",
+      qualification:
+        "PGDP Counselling Psychology · MSc Clinical Psychology · BA Psychology",
       specialisations: [
         "Anxiety",
         "Stress Management",
@@ -93,10 +97,56 @@ describe("public practitioner roster", () => {
         "Ultimately, her mission is to equip clients with effective coping strategies and tools for sustainable emotional well-being.",
       ],
     });
-    expect(krutika).not.toHaveProperty("qualification");
     expect(krutika).not.toHaveProperty("experience");
     expect(krutika).not.toHaveProperty("languages");
     expect(krutika).not.toHaveProperty("fee");
+  });
+
+  it("uses a distinct qualification for Sharayu instead of repeating her role", () => {
+    const sharayu = TEAM.find((member) => member.slug === "sharayu-harpale");
+
+    expect(sharayu).toMatchObject({
+      role: "Counselling Psychologist",
+      qualification:
+        "PDCP Clinical Psychology · MA Psychology · BA Psychology",
+    });
+    expect(sharayu?.qualification).not.toBe(sharayu?.role);
+  });
+
+  it("includes Shwetha's supplied profile and portrait", () => {
+    const shwetha = TEAM.find(
+      (member) => member.slug === "shwetha-jayakrishnan",
+    );
+
+    expect(shwetha).toMatchObject({
+      name: "Shwetha Jayakrishnan",
+      role: "Counselling Psychologist",
+      photo: "/team/shwetha-jayakrishnan.png",
+      qualification: "MSc Clinical Psychology · BA Psychology",
+      specialisations: [
+        "Anxiety",
+        "Overthinking",
+        "Relationship Difficulties",
+        "Emotional Overwhelm",
+        "Self-Esteem Concerns",
+        "Feeling Stuck",
+      ],
+    });
+    expect(shwetha?.intro).toHaveLength(5);
+    expect(shwetha?.intro.join(" ")).toContain(
+      "therapy doesn't have to be intimidating or overly clinical",
+    );
+    expect(
+      publicRoster.newPublicConsultants.find(
+        ({ slug }) => slug === "shwetha-jayakrishnan",
+      ),
+    ).toMatchObject({ exclusiveServiceSlug: "individual-counselling" });
+  });
+
+  it("standardises every practitioner title to Counselling Psychologist", () => {
+    expect(TEAM.every(({ role }) => role.includes("Counselling Psychologist"))).toBe(
+      true,
+    );
   });
 
   it("provisions every public team member in the database roster", () => {

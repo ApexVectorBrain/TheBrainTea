@@ -570,6 +570,7 @@ async function resolveCounselingService(
       priceMinor: def.priceMinor,
       slug: def.slug,
       isActive: true,
+      availability: def.availability,
     },
   });
 }

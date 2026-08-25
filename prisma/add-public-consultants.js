@@ -45,12 +45,20 @@ async function main() {
 
   const created = [];
   const preserved = [];
+  const serviceRestricted = [];
   for (const consultant of newPublicConsultants) {
     const existing = await prisma.therapist.findUnique({
       where: { slug: consultant.slug },
       select: { id: true },
     });
     if (existing) {
+      if (consultant.exclusiveServiceSlug === "individual-counselling") {
+        await prisma.therapist.update({
+          where: { id: existing.id },
+          data: { services: { set: [{ id: individual.id }] } },
+        });
+        serviceRestricted.push(consultant.name);
+      }
       preserved.push(consultant.name);
       continue;
     }
@@ -78,7 +86,11 @@ async function main() {
     created.push(consultant.name);
   }
 
-  console.log("Public consultants synchronised.", { created, preserved });
+  console.log("Public consultants synchronised.", {
+    created,
+    preserved,
+    serviceRestricted,
+  });
 }
 
 main()

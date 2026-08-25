@@ -55,7 +55,10 @@ export default function TeamPage() {
                       alt={`${member.name}, ${member.role} at The Brain Tea`}
                       fill
                       sizes="(max-width: 1024px) 100vw, 35vw"
-                      className="object-cover object-center transition-transform duration-700 hover:scale-105"
+                      className="object-cover transition-transform duration-700 hover:scale-105"
+                      style={{
+                        objectPosition: member.photoPosition ?? "50% 50%",
+                      }}
                     />
                   </div>
 

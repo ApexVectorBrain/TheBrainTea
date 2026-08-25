@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Clock, Laptop } from "lucide-react";
+import { Clock, Laptop, MapPin } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { formatServiceDuration } from "@/lib/format";
 
@@ -11,12 +11,12 @@ export const dynamic = "force-dynamic";
 // shows the actual space rather than a stock photo of strangers.
 const FALLBACK_IMAGE = "/team/office.jpg";
 
-function formatLabel(availability: string[]): string {
-  if (!availability.length) return "In-Person or Online";
+function formatLabels(availability: string[]): string[] {
+  if (!availability.length) return ["Online", "In-Person"];
   const labels = availability.map((a) =>
     a.toLowerCase() === "online" ? "Online" : "In-Person",
   );
-  return [...new Set(labels)].join(" or ");
+  return [...new Set(labels)];
 }
 
 // Organic leaf shapes (same paths as the homepage testimonial accents)
@@ -198,7 +198,7 @@ export default async function Services() {
     slug: s.slug,
     title: s.name,
     duration: formatServiceDuration(s.slug, s.durationMinutes),
-    format: formatLabel(s.availability),
+    formats: formatLabels(s.availability),
     description: s.description,
     image: s.image || FALLBACK_IMAGE,
   }));
@@ -307,10 +307,19 @@ export default async function Services() {
                         <Clock className="w-3.5 h-3.5" />
                         {service.duration}
                       </span>
-                      <span className="flex items-center gap-1.5 bg-muted-sage/20 px-4 py-2 rounded-full border border-teal-sage/10">
-                        <Laptop className="w-3.5 h-3.5" />
-                        {service.format}
-                      </span>
+                      {service.formats.map((format) => (
+                        <span
+                          key={format}
+                          className="flex items-center gap-1.5 bg-muted-sage/20 px-4 py-2 rounded-full border border-teal-sage/10"
+                        >
+                          {format === "Online" ? (
+                            <Laptop className="w-3.5 h-3.5" />
+                          ) : (
+                            <MapPin className="w-3.5 h-3.5" />
+                          )}
+                          {format}
+                        </span>
+                      ))}
                     </div>
 
                     <p className="text-forest-slate/90 text-base md:text-lg leading-relaxed font-dmsans">
