@@ -102,7 +102,7 @@ export default function About() {
               <p>
                 This is why we bridge the gap between talk therapy and active
                 restoration. While our expert clinicians provide the
-                foundational work of counseling and psychiatric support, we
+                foundational work of counselling and psychiatric support, we
                 integrate movement, sensory grounding, and social interaction
                 into the process. Whether it is the insight of traditional
                 therapy, the release of a yoga session, the quiet focus of
@@ -197,19 +197,23 @@ export default function About() {
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
             variants={staggerContainer}
-            className={`grid items-start gap-8 justify-center ${
+            className={`flex flex-wrap items-start justify-center gap-8 ${
               TEAM.length === 1
-                ? "grid-cols-1 max-w-md mx-auto"
+                ? "max-w-md mx-auto"
                 : TEAM.length === 2
-                  ? "grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto"
-                  : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+                  ? "max-w-4xl mx-auto"
+                  : ""
             }`}
           >
             {TEAM.map((t) => (
               <motion.div
                 key={t.name}
                 variants={fadeInUp}
-                className="glass-card rounded-2xl overflow-hidden shadow-warm-soft border border-muted-sage/20 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative group"
+                className={`glass-card w-full rounded-2xl overflow-hidden shadow-warm-soft border border-muted-sage/20 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative group ${
+                  TEAM.length === 1
+                    ? ""
+                    : "max-w-md md:max-w-none md:w-[calc(50%-1rem)] xl:w-[calc(33.333%-1.334rem)]"
+                }`}
               >
                 {/* Visual hover border highlighter */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-transparent group-hover:bg-teal-sage transition-colors duration-300 z-10" />

@@ -53,7 +53,7 @@ export const TEAM: TeamMember[] = [
   {
     slug: "ananya-sunil-nair",
     name: "Ananya Sunil Nair",
-    role: "Counseling Psychologist",
+    role: "Counselling Psychologist",
     photo: "/team/ananya-sunil-nair.jpg",
     qualification:
       "MSc Clinical Psychology · BA Psychology, Sociology & Economics",
@@ -101,9 +101,9 @@ export const TEAM: TeamMember[] = [
   {
     slug: "sharayu-harpale",
     name: "Sharayu Harpale",
-    role: "Clinical Psychologist",
+    role: "Counselling Psychologist",
     photo: "/team/sharayu-harpale.jpg",
-    qualification: "Clinical Psychologist",
+    qualification: "PDCP Clinical Psychology · MA Psychology · BA Psychology",
     experience:
       "Experience in counselling, formulation and intervention",
     approaches: [
@@ -124,9 +124,11 @@ export const TEAM: TeamMember[] = [
   {
     slug: "gauri-ghorpade",
     name: "Gauri Ghorpade",
-    role: "Psychologist",
+    role: "Counselling Psychologist",
     photo: "/team/gauri-ghorpade.png",
     photoPosition: "50% 28%",
+    qualification:
+      "PGDP Counselling & Psychotherapy · MSc Psychology · BSc Clinical Psychology",
     approaches: [
       "Integrative & Evidence-Based",
       "Person-Centred",
@@ -149,8 +151,10 @@ export const TEAM: TeamMember[] = [
   {
     slug: "krutika-a-sonigra",
     name: "Krutika A. Sonigra",
-    role: "Psychologist, Counselor & Art Therapy Practitioner",
+    role: "Counselling Psychologist",
     photo: "/team/krutika-a-sonigra.png",
+    qualification:
+      "PGDP Counselling Psychology · MSc Clinical Psychology · BA Psychology",
     approaches: [
       "Holistic Practice",
       "Evidence-Based Traditional Therapy",
@@ -168,6 +172,29 @@ export const TEAM: TeamMember[] = [
       "Krutika A. Sonigra is a psychologist, counselor, and art therapy practitioner dedicated to creating a safe, non-judgmental space where clients feel truly heard, understood, and supported. Rejecting a rigid, one-size-fits-all model, Krutika tailors each session to the individual’s unique personality, challenges, and goals.",
       "Her holistic practice integrates evidence-based traditional therapy with expressive arts and relational frameworks. This creative, multi-modal approach enables clients, both individuals and couples to process complex emotions, strengthen relationship bonds, and access deeper self-awareness beyond verbal expression. Krutika collaborates with clients across a range of focus areas, including anxiety, stress management, self-esteem, interpersonal dynamics, and personal growth.",
       "Ultimately, her mission is to equip clients with effective coping strategies and tools for sustainable emotional well-being.",
+    ],
+  },
+  {
+    slug: "shwetha-jayakrishnan",
+    name: "Shwetha Jayakrishnan",
+    role: "Counselling Psychologist",
+    photo: "/team/shwetha-jayakrishnan.png",
+    qualification: "MSc Clinical Psychology · BA Psychology",
+    approaches: ["Warm", "Collaborative", "Human-Centred", "Practical Coping"],
+    specialisations: [
+      "Anxiety",
+      "Overthinking",
+      "Relationship Difficulties",
+      "Emotional Overwhelm",
+      "Self-Esteem Concerns",
+      "Feeling Stuck",
+    ],
+    intro: [
+      "Hello! I'm Shwetha, a mental health professional who believes that therapy doesn't have to be intimidating or overly clinical.",
+      "I like to provide a space where you can simply be honest without worrying about being judged, or misunderstood.",
+      "My approach is warm, collaborative and human-centered. I'd like to understand you as a person, while working towards understanding what you're going through and finding practical ways to cope, grow and feel more in control of your life.",
+      "Whether it's anxiety, overthinking, relationship difficulties, emotional overwhelm, self-esteem concerns, or simply feeling stuck, I'm here to hear you out and hold your hand through the process of feeling better :)",
+      "For me therapy isn't about changing who you are. It's about helping you understand yourself better and making life more easier and manageable to you.",
     ],
   },
 ];

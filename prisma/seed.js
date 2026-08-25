@@ -158,7 +158,7 @@ async function main() {
         "Premarital counselling",
         "Communication skills",
       ],
-      availability: ["Offline"],
+      availability: ["Online", "Offline"],
       process: null,
     },
     {

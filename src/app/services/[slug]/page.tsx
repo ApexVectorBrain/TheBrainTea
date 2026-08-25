@@ -77,7 +77,7 @@ export default async function ServiceDetail({
                 ) : (
                   <MapPin className="w-3 h-3" />
                 )}
-                {mode}
+                {mode.toLowerCase() === "online" ? "Online" : "In-Person"}
               </Badge>
             ))}
           </div>

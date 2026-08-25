@@ -25,6 +25,7 @@ export interface CounselingServiceDefault {
   description: string;
   durationMinutes: number;
   priceMinor: number;
+  availability: ["Online", "Offline"];
 }
 
 // Canonical Service definition per counselling type. Used to upsert a stable
@@ -41,6 +42,7 @@ export const COUNSELING_SERVICE_DEFAULTS: Record<
       "Structured guidance for career transitions, academic stress and decision-making clarity.",
     durationMinutes: 50,
     priceMinor: 140000,
+    availability: ["Online", "Offline"],
   },
   COUPLE_FAMILY: {
     slug: "couples-counseling",
@@ -49,6 +51,7 @@ export const COUNSELING_SERVICE_DEFAULTS: Record<
       "Structured counselling for couples or families, guided by a consultant.",
     durationMinutes: 50,
     priceMinor: 220000,
+    availability: ["Online", "Offline"],
   },
   INDIVIDUAL: {
     slug: "individual-counselling",
@@ -57,6 +60,7 @@ export const COUNSELING_SERVICE_DEFAULTS: Record<
       "One-to-one counselling focused on the client's concerns, goals and ongoing wellbeing.",
     durationMinutes: 50,
     priceMinor: 150000,
+    availability: ["Online", "Offline"],
   },
 };
 

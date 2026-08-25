@@ -56,7 +56,7 @@ const services = [
       "Premarital counselling",
       "Communication skills",
     ],
-    availability: ["Offline"],
+    availability: ["Online", "Offline"],
   },
   {
     name: "Career & Academic Counselling",
@@ -252,7 +252,7 @@ She believes therapy is not about “fixing” a person, but about creating the 
   }
 
   console.log("Fresh launch seed complete.");
-  console.log("Consultants: 6 (the complete public practitioner roster)");
+  console.log("Consultants: 7 (the complete public practitioner roster)");
   console.log("Services: 4");
   console.log("Clients, bookings, payments, and payouts: 0");
 }

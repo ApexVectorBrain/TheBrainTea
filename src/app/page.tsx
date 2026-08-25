@@ -154,7 +154,7 @@ export default function Home() {
                     remains independent. */}
                 <Image
                   src="/team/madhumati-hero.png"
-                  alt="Madhumati Dhumak - Lead Counseling Psychologist"
+                  alt="Madhumati Dhumak - Lead Counselling Psychologist"
                   fill
                   priority
                   sizes="(max-width: 1024px) 100vw, 35vw"
@@ -444,7 +444,7 @@ export default function Home() {
                 Madhumati Dhumak
               </h2>
               <p className="text-[11px] font-bold tracking-[0.2em] text-teal-sage uppercase mb-4 leading-relaxed">
-                About the Brain tea- Pune Counseling &amp; Psychotherapy wellness
+                About the Brain tea- Pune Counselling &amp; Psychotherapy wellness
                 &amp; Health Services
               </p>
               <h3 className="font-cormorant text-3xl md:text-[42px] font-semibold text-forest-slate mb-6 leading-tight">
