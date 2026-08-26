@@ -28,6 +28,10 @@ function displayConsultantName(name) {
   return name?.replace(/^Dr\.\s+(?=Madhumati Dhumak$)/, "");
 }
 
+export function hasAvailableSlots(slots = []) {
+  return slots.some((slot) => slot.isAvailable);
+}
+
 export default function BookingWizard({ services = [], initialService = "" }) {
   const router = useRouter();
 
@@ -454,7 +458,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
                   <p className="text-sage text-sm italic">
                     Loading available slots...
                   </p>
-                ) : slots.length > 0 ? (
+                ) : hasAvailableSlots(slots) ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {slots.map((slot) => (
                       <button

@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import {
   assertTransition,
+  SLOT_HOLDING_STATUSES,
   SLOT_RELEASING_STATUSES,
   type BookingStatus,
 } from "../domain/bookingStatus";
@@ -141,29 +142,32 @@ async function assertNoOverlappingBooking(
   therapistId: string,
   dateTime: Date,
   durationMinutes: number,
+  excludeBookingId?: string,
 ): Promise<void> {
-  // Arbitrary-minute overtime starts cannot rely on the exact-start unique
-  // constraint alone. Serialize overtime checks per consultant, then reject
-  // any live hold whose booked duration intersects the proposed session.
-  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`overtime:${therapistId}`}))`;
+  // Serialize calendar checks per consultant, then inspect active Booking
+  // rows directly. This covers historical PENDING staff appointments that
+  // predate BookingSlot creation as well as arbitrary-minute overlaps.
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`calendar:${therapistId}`}))`;
 
   const end = new Date(dateTime.getTime() + durationMinutes * 60000);
-  const candidates = await tx.bookingSlot.findMany({
+  const candidates = await tx.booking.findMany({
     where: {
       therapistId,
-      startAt: {
+      ...(excludeBookingId ? { id: { not: excludeBookingId } } : {}),
+      status: { in: SLOT_HOLDING_STATUSES },
+      dateTime: {
         gt: new Date(dateTime.getTime() - 24 * 60 * 60000),
         lt: end,
       },
     },
     select: {
-      startAt: true,
-      booking: { select: { durationMinutes: true } },
+      dateTime: true,
+      durationMinutes: true,
     },
   });
   const overlaps = candidates.some(
     (candidate) =>
-      candidate.startAt.getTime() + candidate.booking.durationMinutes * 60000 >
+      candidate.dateTime.getTime() + candidate.durationMinutes * 60000 >
       dateTime.getTime(),
   );
   if (overlaps) {
@@ -218,6 +222,12 @@ export async function createBooking(input: CreateBookingInput) {
       input.dateTime,
       service.durationMinutes,
     );
+    await assertNoOverlappingBooking(
+      tx,
+      therapist.id,
+      input.dateTime,
+      service.durationMinutes,
+    );
 
     const client = await tx.client.upsert({
       where: { email: input.client.email },
@@ -255,26 +265,26 @@ export async function createBooking(input: CreateBookingInput) {
         invoiceNumber: null,
       },
     });
-    if (requiresOnlinePayment) {
-      // Claim the slot before the client is sent to the gateway. The unique
-      // constraint makes simultaneous checkout attempts converge safely.
-      try {
-        await tx.bookingSlot.create({
-          data: {
-            therapistId: therapist.id,
-            startAt: input.dateTime,
-            bookingId: booking.id,
-          },
-        });
-      } catch (error) {
-        if (isUniqueViolation(error)) {
-          throw conflict(
-            "That time was just reserved by another client. Please choose another slot.",
-            "SLOT_TAKEN",
-          );
-        }
-        throw error;
+    // Every live booking owns a slot record, including desk-arranged/manual
+    // payments. The active-booking overlap check above protects arbitrary
+    // durations; this unique claim is a second concurrency guard for exact
+    // start-time races.
+    try {
+      await tx.bookingSlot.create({
+        data: {
+          therapistId: therapist.id,
+          startAt: input.dateTime,
+          bookingId: booking.id,
+        },
+      });
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw conflict(
+          "That time was just reserved by another client. Please choose another slot.",
+          "SLOT_TAKEN",
+        );
       }
+      throw error;
     }
     await tx.bookingStatusHistory.create({
       data: {
@@ -351,7 +361,7 @@ export async function transitionBooking(input: {
       booking.paymentStatus !== "PAID"
     ) {
       throw conflict(
-        "Record payment before confirming a session request. Payment confirmation is what reserves the time.",
+        "Record payment before confirming a session request. The appointment time is already reserved while it is pending.",
       );
     }
 
@@ -475,29 +485,24 @@ export async function rescheduleBooking(input: {
       false,
     );
 
-    const isUnpaidRequest =
-      booking.status === "PENDING" && booking.paymentStatus !== "PAID";
     if (booking.slot) {
       await tx.bookingSlot.delete({ where: { id: booking.slot.id } });
     }
     try {
-      // Normal booking slots are keyed by their exact start time. Reschedules
-      // can use any staff-approved time, so also guard their full duration.
-      if (!isUnpaidRequest) {
-        await assertNoOverlappingBooking(
-          tx,
-          booking.therapistId,
-          input.newDateTime,
-          booking.durationMinutes,
-        );
-        await tx.bookingSlot.create({
-          data: {
-            therapistId: booking.therapistId,
-            startAt: input.newDateTime,
-            bookingId: booking.id,
-          },
-        });
-      }
+      await assertNoOverlappingBooking(
+        tx,
+        booking.therapistId,
+        input.newDateTime,
+        booking.durationMinutes,
+        booking.id,
+      );
+      await tx.bookingSlot.create({
+        data: {
+          therapistId: booking.therapistId,
+          startAt: input.newDateTime,
+          bookingId: booking.id,
+        },
+      });
     } catch (err) {
       if (isUniqueViolation(err)) {
         throw conflict(
@@ -604,10 +609,11 @@ export interface ScheduleAdminBookingInput {
  * Staff appointment scheduling (admin console and reception desk). Captures
  * the consultant, counselling type, date/time and fee, attaching an existing
  * or freshly-created client.
- * The booking is created CONFIRMED (staff-scheduled, no reservation TTL); the
- * DB slot-uniqueness guard prevents double-booking and leave blocks are
- * honoured. When the fee has already been collected the payment is recorded
- * through the manual provider so revenue/commission ledgers stay accurate.
+ * The booking is created PENDING and immediately holds its calendar slot,
+ * even before payment is collected. The DB uniqueness guard prevents races,
+ * and leave blocks are honoured. When the fee has already been collected the
+ * payment is recorded through the manual provider so revenue/commission
+ * ledgers stay accurate.
  *
  * Deliberately not exposed to consultants — only /api/admin and
  * /api/reception routes call this.
@@ -680,6 +686,26 @@ export async function scheduleAdminBooking(input: ScheduleAdminBookingInput) {
       throw badRequest("Only authorised front-desk staff can book overtime");
     }
 
+    // Leave takes precedence over working-hours and overtime validation: for
+    // any proposed time on a leave period, staff should see the reason the
+    // consultant cannot be booked instead of an unrelated schedule message.
+    const end = new Date(
+      input.dateTime.getTime() + service.durationMinutes * 60000,
+    );
+    const block = await tx.slotBlock.findFirst({
+      where: {
+        therapistId: therapist.id,
+        startAt: { lt: end },
+        endAt: { gt: input.dateTime },
+      },
+    });
+    if (block) {
+      throw conflict(
+        "The consultant is on a leave",
+        "CONSULTANT_ON_LEAVE",
+      );
+    }
+
     const startTime = formatClinicTime(input.dateTime);
     const windows = await tx.therapistAvailability.findMany({
       where: {
@@ -705,31 +731,12 @@ export async function scheduleAdminBooking(input: ScheduleAdminBookingInput) {
         "Overtime must be outside the consultant's five-hour working window",
       );
     }
-    if (isOvertime) {
-      await assertNoOverlappingBooking(
-        tx,
-        therapist.id,
-        input.dateTime,
-        service.durationMinutes,
-      );
-    }
-
-    // Leave blocks apply to both normal and overtime sessions.
-    const end = new Date(
-      input.dateTime.getTime() + service.durationMinutes * 60000,
+    await assertNoOverlappingBooking(
+      tx,
+      therapist.id,
+      input.dateTime,
+      service.durationMinutes,
     );
-    const block = await tx.slotBlock.findFirst({
-      where: {
-        therapistId: therapist.id,
-        startAt: { lt: end },
-        endAt: { gt: input.dateTime },
-      },
-    });
-    if (block) {
-      throw conflict(
-        "The consultant is on leave or otherwise unavailable at the selected time",
-      );
-    }
 
     const commissionBps = await resolveBookingCommissionBps(therapist, tx);
 
@@ -750,6 +757,23 @@ export async function scheduleAdminBooking(input: ScheduleAdminBookingInput) {
         expiresAt: null,
       },
     });
+    try {
+      await tx.bookingSlot.create({
+        data: {
+          therapistId: therapist.id,
+          startAt: input.dateTime,
+          bookingId: booking.id,
+        },
+      });
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw conflict(
+          "The consultant already has an appointment at that time. Please choose another slot.",
+          "SLOT_TAKEN",
+        );
+      }
+      throw error;
+    }
     await tx.booking.update({
       where: { id: booking.id },
       data: { invoiceNumber: null },

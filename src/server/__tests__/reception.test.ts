@@ -20,6 +20,8 @@ import {
 } from "@/app/api/reception/clients/[id]/route";
 import { GET as paymentsGet } from "@/app/api/reception/payments/route";
 import { GET as consultantsGet } from "@/app/api/reception/consultants/route";
+import { GET as availableSlotsGet } from "@/app/api/bookings/available-slots/route";
+import { clinicDayBounds } from "@/server/clinicTime";
 
 // End-to-end tests of the reception desk through its real route handlers:
 // RBAC, zod validation, the SQL each endpoint issues, and the ledger effects
@@ -265,11 +267,131 @@ suite("reception desk", () => {
     expect(charge.providerRef).toBe(`UTR${STAMP}`);
   });
 
-  it("refuses to double-book the consultant's slot", async () => {
+  it("hides occupied slots and refuses legacy or concurrent double-booking", async () => {
     const slot = futureSlot(6, 10);
-    expect((await schedule(slot)).status).toBe(201);
+    const first = await schedule(slot);
+    expect(first.status).toBe(201);
+    const bookingId = (first.body as unknown as { booking: { id: string } })
+      .booking.id;
+    expect(
+      await prisma.bookingSlot.count({ where: { bookingId } }),
+    ).toBe(1);
+
+    const availableResponse = await availableSlotsGet(
+      req(`/api/bookings/available-slots?therapist=${SLUG}&date=${ymd(slot)}`),
+    );
+    const availableBody = (await json(availableResponse)) as unknown as {
+      slots: { startTime: string; isAvailable: boolean }[];
+    };
+    expect(
+      availableBody.slots.find((candidate) => candidate.startTime === hm(slot)),
+    ).toMatchObject({ isAvailable: false });
+
+    // Simulate a historical staff booking created before PENDING appointments
+    // received BookingSlot rows. Availability and server validation must still
+    // treat its active Booking row as occupied.
+    await prisma.bookingSlot.delete({ where: { bookingId } });
+    const legacyResponse = await availableSlotsGet(
+      req(`/api/bookings/available-slots?therapist=${SLUG}&date=${ymd(slot)}`),
+    );
+    const legacyBody = (await json(legacyResponse)) as unknown as {
+      slots: { startTime: string; isAvailable: boolean }[];
+    };
+    expect(
+      legacyBody.slots.find((candidate) => candidate.startTime === hm(slot)),
+    ).toMatchObject({ isAvailable: false });
+
     const second = await schedule(slot);
     expect(second.status).toBe(409);
+    expect(second.body).toMatchObject({ code: "SLOT_TAKEN" });
+    expect(
+      await prisma.booking.count({ where: { therapistId, dateTime: slot } }),
+    ).toBe(1);
+
+    const cancelled = await bookingPatch(
+      req(`/api/reception/bookings/${bookingId}`, {
+        method: "PATCH",
+        body: {
+          action: "transition",
+          toStatus: "CANCELLED",
+          reason: "Client cancelled",
+        },
+      }),
+      params(bookingId),
+    );
+    expect(cancelled.status).toBe(200);
+    const releasedResponse = await availableSlotsGet(
+      req(`/api/bookings/available-slots?therapist=${SLUG}&date=${ymd(slot)}`),
+    );
+    const releasedBody = (await json(releasedResponse)) as unknown as {
+      slots: { startTime: string; isAvailable: boolean }[];
+    };
+    expect(
+      releasedBody.slots.find((candidate) => candidate.startTime === hm(slot)),
+    ).toMatchObject({ isAvailable: true });
+  });
+
+  it("blocks a middle day of multi-day leave for staff and public availability", async () => {
+    const leaveStartDate = futureSlot(13, 11);
+    while (leaveStartDate.getDay() !== 1) {
+      leaveStartDate.setDate(leaveStartDate.getDate() + 1);
+    }
+    const slot = new Date(leaveStartDate);
+    slot.setDate(slot.getDate() + 1);
+    const leaveEndDate = new Date(leaveStartDate);
+    leaveEndDate.setDate(leaveEndDate.getDate() + 2);
+    const startBounds = clinicDayBounds(ymd(leaveStartDate));
+    const endBounds = clinicDayBounds(ymd(leaveEndDate));
+    expect(startBounds).not.toBeNull();
+    expect(endBounds).not.toBeNull();
+    const leave = await prisma.slotBlock.create({
+      data: {
+        therapistId,
+        startAt: startBounds!.start,
+        endAt: endBounds!.end,
+        reason: "Annual leave",
+      },
+    });
+
+    try {
+      const before = await prisma.booking.count({
+        where: { therapistId, dateTime: slot },
+      });
+      const deskAttempt = await schedule(slot);
+      expect(deskAttempt.status).toBe(409);
+      expect(deskAttempt.body).toMatchObject({
+        error: "The consultant is on a leave",
+        code: "CONSULTANT_ON_LEAVE",
+      });
+      expect(
+        await prisma.booking.count({ where: { therapistId, dateTime: slot } }),
+      ).toBe(before);
+
+      const overtimeSlot = new Date(slot);
+      overtimeSlot.setHours(19, 17, 0, 0);
+      const overtimeAttempt = await schedule(overtimeSlot, {
+        isOvertime: true,
+      });
+      expect(overtimeAttempt.status).toBe(409);
+      expect(overtimeAttempt.body).toMatchObject({
+        error: "The consultant is on a leave",
+        code: "CONSULTANT_ON_LEAVE",
+      });
+
+      const publicResponse = await availableSlotsGet(
+        req(`/api/bookings/available-slots?therapist=${SLUG}&date=${ymd(slot)}`),
+      );
+      const publicBody = (await json(publicResponse)) as unknown as {
+        slots: { isAvailable: boolean }[];
+      };
+      expect(publicResponse.status).toBe(200);
+      expect(publicBody.slots.length).toBeGreaterThan(0);
+      expect(publicBody.slots.every((candidate) => !candidate.isAvailable)).toBe(
+        true,
+      );
+    } finally {
+      await prisma.slotBlock.delete({ where: { id: leave.id } });
+    }
   });
 
   it("persists and counts a receptionist-authorised overtime session", async () => {

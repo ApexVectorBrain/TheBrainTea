@@ -101,7 +101,7 @@ export const TEAM: TeamMember[] = [
   {
     slug: "sharayu-harpale",
     name: "Sharayu Harpale",
-    role: "Counselling Psychologist",
+    role: "Clinical Psychologist",
     photo: "/team/sharayu-harpale.jpg",
     qualification: "PDCP Clinical Psychology · MA Psychology · BA Psychology",
     experience:

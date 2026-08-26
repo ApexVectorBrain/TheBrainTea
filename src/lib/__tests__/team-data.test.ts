@@ -106,7 +106,7 @@ describe("public practitioner roster", () => {
     const sharayu = TEAM.find((member) => member.slug === "sharayu-harpale");
 
     expect(sharayu).toMatchObject({
-      role: "Counselling Psychologist",
+      role: "Clinical Psychologist",
       qualification:
         "PDCP Clinical Psychology · MA Psychology · BA Psychology",
     });
@@ -143,10 +143,14 @@ describe("public practitioner roster", () => {
     ).toMatchObject({ exclusiveServiceSlug: "individual-counselling" });
   });
 
-  it("standardises every practitioner title to Counselling Psychologist", () => {
-    expect(TEAM.every(({ role }) => role.includes("Counselling Psychologist"))).toBe(
-      true,
-    );
+  it("uses the supplied psychologist title for every practitioner", () => {
+    expect(
+      TEAM.every(({ role }) =>
+        ["Counselling Psychologist", "Clinical Psychologist"].some((title) =>
+          role.includes(title),
+        ),
+      ),
+    ).toBe(true);
   });
 
   it("provisions every public team member in the database roster", () => {

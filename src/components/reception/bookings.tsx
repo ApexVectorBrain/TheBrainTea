@@ -23,7 +23,6 @@ import {
   counselingTypesForServiceSlugs,
 } from "@/server/domain/counselingType";
 import { RECEPTION_TRANSITIONS } from "@/server/domain/receptionScope";
-import { generateSlotsForWindows } from "@/server/domain/workingHours";
 
 // Shared front-desk booking pieces: the appointment table, the detail modal
 // with the desk's action set, and the scheduling modal. Built entirely from
@@ -83,6 +82,7 @@ export interface BookingDetail extends BookingRow {
 export interface Consultant {
   id: string;
   name: string;
+  slug?: string;
   status?: string;
   isActive?: boolean;
   feeMinor?: number;
@@ -619,6 +619,10 @@ export function ScheduleModal({
   );
   const [paymentRef, setPaymentRef] = useState("");
   const isOvertime = bookingMode === "overtime";
+  const [normalSlots, setNormalSlots] = useState<
+    { startTime: string; endTime: string }[]
+  >([]);
+  const [loadingNormalSlots, setLoadingNormalSlots] = useState(false);
 
   const [clientMode, setClientMode] = useState<"existing" | "new">("existing");
   const [clientQuery, setClientQuery] = useState("");
@@ -644,16 +648,47 @@ export function ScheduleModal({
     );
   }, [bookable, therapistId]);
 
-  const normalSlots = useMemo(() => {
-    if (!therapistId || !date) return [];
+  useEffect(() => {
     const consultant = bookable.find((item) => item.id === therapistId);
-    const dayOfWeek = new Date(`${date}T00:00:00`).getDay();
-    return generateSlotsForWindows(
-      (consultant?.availability ?? []).filter(
-        (window) => window.dayOfWeek === dayOfWeek,
-      ),
-    ).sort((a, b) => a.startTime.localeCompare(b.startTime));
-  }, [bookable, date, therapistId]);
+    if (bookingMode !== "normal" || !consultant?.slug || !date) {
+      return;
+    }
+
+    let cancelled = false;
+    const load = async () => {
+      setLoadingNormalSlots(true);
+      setTime("");
+      try {
+        const params = new URLSearchParams({
+          therapist: consultant.slug!,
+          date,
+        });
+        const res = await fetch(`/api/bookings/available-slots?${params}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Could not load slots");
+        if (!cancelled) {
+          setNormalSlots(
+            (data.slots ?? []).filter(
+              (slot: { isAvailable: boolean }) => slot.isAvailable,
+            ),
+          );
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setNormalSlots([]);
+          setError(
+            err instanceof Error ? err.message : "Could not load slots",
+          );
+        }
+      } finally {
+        if (!cancelled) setLoadingNormalSlots(false);
+      }
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [bookable, bookingMode, date, therapistId]);
 
   const setFeeForService = (consultant: Consultant | undefined, type: string) => {
     const slug = COUNSELING_SERVICE_DEFAULTS[type as keyof typeof COUNSELING_SERVICE_DEFAULTS]?.slug;
@@ -857,13 +892,15 @@ export function ScheduleModal({
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
                 className={inputClass}
-                disabled={!therapistId || !date}
+                disabled={!therapistId || !date || loadingNormalSlots}
               >
                 <option value="">
                   {!therapistId || !date
                     ? "Select consultant and date first"
+                    : loadingNormalSlots
+                      ? "Loading available sessions…"
                     : normalSlots.length === 0
-                      ? "No working hours on this day"
+                      ? "No available slots on this day"
                       : "Select a session"}
                 </option>
                 {normalSlots.map((slot) => (

@@ -377,7 +377,7 @@ suite("booking & finance integration", () => {
         newDateTime: slotB,
         session: adminSession,
       }),
-    ).rejects.toThrow(/no longer available/);
+    ).rejects.toThrow(/overlapping appointment|no longer available/);
     // Moving B to a free slot succeeds
     const slotC = futureSlot(12, 11);
     const moved = await rescheduleBooking({

@@ -11,7 +11,9 @@ vi.mock("next/link", () => ({
     React.createElement("a", null, children),
 }));
 
-const { default: BookingWizard } = await import("../BookingWizard.js");
+const { default: BookingWizard, hasAvailableSlots } = await import(
+  "../BookingWizard.js"
+);
 
 const service = {
   id: "svc-1",
@@ -57,5 +59,29 @@ describe("BookingWizard step 1 — service selection", () => {
     });
     expect(html).toContain("Choose Your Consultant");
     expect(html).not.toContain("No services are open for booking");
+  });
+});
+
+describe("BookingWizard slot availability", () => {
+  it("treats a leave day with every slot blocked as unavailable", () => {
+    expect(
+      hasAvailableSlots([
+        { startTime: "09:00", isAvailable: false },
+        { startTime: "10:00", isAvailable: false },
+      ]),
+    ).toBe(false);
+  });
+
+  it("keeps a partially blocked day bookable", () => {
+    expect(
+      hasAvailableSlots([
+        { startTime: "09:00", isAvailable: false },
+        { startTime: "10:00", isAvailable: true },
+      ]),
+    ).toBe(true);
+  });
+
+  it("treats an empty schedule as unavailable", () => {
+    expect(hasAvailableSlots([])).toBe(false);
   });
 });

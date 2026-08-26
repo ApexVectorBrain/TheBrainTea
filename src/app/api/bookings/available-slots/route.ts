@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { releaseExpiredReservations } from "@/server/services/bookingService";
+import { SLOT_HOLDING_STATUSES } from "@/server/domain/bookingStatus";
 import { badRequest, handleApi, notFound } from "@/server/http";
 import { generateSlotsForWindows } from "@/server/domain/workingHours";
 import {
   clinicDayBounds,
   clinicDayOfWeek,
-  formatClinicTime,
   parseClinicDateTime,
 } from "@/server/clinicTime";
 
@@ -35,17 +35,22 @@ export const GET = handleApi(async (request: Request) => {
 
   const { start: startOfDay, end: endOfDay } = bounds;
 
-  const [weeklySlots, heldSlots, blocks] = await Promise.all([
+  const [weeklySlots, activeBookings, blocks] = await Promise.all([
     prisma.therapistAvailability.findMany({
       where: { therapistId: therapist.id, dayOfWeek },
     }),
-    // BookingSlot rows are the single source of truth for live holds.
-    prisma.bookingSlot.findMany({
+    // Active Booking rows also cover legacy staff appointments created before
+    // every desk booking received a BookingSlot row.
+    prisma.booking.findMany({
       where: {
         therapistId: therapist.id,
-        startAt: { gte: startOfDay, lte: endOfDay },
+        status: { in: SLOT_HOLDING_STATUSES },
+        dateTime: {
+          gt: new Date(startOfDay.getTime() - 24 * 60 * 60000),
+          lt: endOfDay,
+        },
       },
-      select: { startAt: true },
+      select: { dateTime: true, durationMinutes: true },
     }),
     prisma.slotBlock.findMany({
       where: {
@@ -55,10 +60,6 @@ export const GET = handleApi(async (request: Request) => {
       },
     }),
   ]);
-
-  const heldTimes = new Set(
-    heldSlots.map((s) => formatClinicTime(s.startAt)),
-  );
 
   const availableSlots = generateSlotsForWindows(weeklySlots)
     .map((slot) => ({
@@ -71,12 +72,19 @@ export const GET = handleApi(async (request: Request) => {
       const isBlocked = blocks.some(
         (b) => b.startAt < slotEnd && b.endAt > slotStart,
       );
+      const isBooked = activeBookings.some(
+        (booking) =>
+          booking.dateTime < slotEnd &&
+          new Date(
+            booking.dateTime.getTime() + booking.durationMinutes * 60000,
+          ) > slotStart,
+      );
       const isPast = slotStart.getTime() <= Date.now();
       return {
         id: slot.id,
         startTime: slot.startTime,
         endTime: slot.endTime,
-        isAvailable: !heldTimes.has(slot.startTime) && !isBlocked && !isPast,
+        isAvailable: !isBooked && !isBlocked && !isPast,
       };
     })
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
