@@ -23,7 +23,7 @@ import {
   sessionOverlapsWorkingHours,
 } from "../domain/workingHours";
 import { clinicDayOfWeekForDate, formatClinicTime } from "../clinicTime";
-import { notifyBookingCancelled, notifyBookingCreated, notifyBookingRescheduled } from "./emailNotificationService";
+import { notifyBookingCancelled, notifyBookingCreated, notifyBookingRescheduled, notifyFeeWaivedBookingApproved } from "./emailNotificationService";
 import { cancelBookingMeeting, syncBookingMeeting } from "./googleCalendarService";
 import { defaultPaymentProviderName, getPaymentProvider } from "../payments/registry";
 
@@ -619,9 +619,10 @@ export interface ScheduleAdminBookingInput {
  * /api/reception routes call this.
  */
 export async function scheduleAdminBooking(input: ScheduleAdminBookingInput) {
-  if (!Number.isInteger(input.feeMinor) || input.feeMinor <= 0) {
-    throw badRequest("The session fee must be a positive amount");
+  if (!Number.isInteger(input.feeMinor) || input.feeMinor < 0) {
+    throw badRequest("The session fee cannot be negative");
   }
+  const isFeeWaived = input.feeMinor === 0;
 
   const created = await prisma.$transaction(async (tx) => {
     await releaseExpiredReservations(tx);
@@ -740,7 +741,7 @@ export async function scheduleAdminBooking(input: ScheduleAdminBookingInput) {
 
     const commissionBps = await resolveBookingCommissionBps(therapist, tx);
 
-    const initialStatus: BookingStatus = "PENDING";
+    const initialStatus: BookingStatus = isFeeWaived ? "CONFIRMED" : "PENDING";
     const booking = await tx.booking.create({
       data: {
         therapistId: therapist.id,
@@ -753,7 +754,9 @@ export async function scheduleAdminBooking(input: ScheduleAdminBookingInput) {
         commissionBps,
         counselingType: input.counselingType,
         status: initialStatus,
-        paymentStatus: "UNPAID",
+        // A ₹0 appointment is a staff-authorised waiver, not an amount due.
+        // Mark it settled without creating a zero-value payment or ledger entry.
+        paymentStatus: isFeeWaived ? "PAID" : "UNPAID",
         expiresAt: null,
       },
     });
@@ -786,7 +789,11 @@ export async function scheduleAdminBooking(input: ScheduleAdminBookingInput) {
         toStatus: initialStatus,
         actorType: input.session.role,
         actorId: input.session.userId,
-        reason: isOvertime
+        reason: isFeeWaived
+          ? isOvertime
+            ? "Fee-waived overtime appointment authorised by the front desk"
+            : "Fee-waived appointment authorised by staff"
+          : isOvertime
           ? input.paymentReceived
             ? "Paid overtime appointment authorised by the front desk"
             : "Overtime appointment request awaiting payment"
@@ -811,7 +818,8 @@ export async function scheduleAdminBooking(input: ScheduleAdminBookingInput) {
           counselingType: input.counselingType,
           dateTime: input.dateTime.toISOString(),
           feeMinor: input.feeMinor,
-          paymentReceived: input.paymentReceived,
+          paymentReceived: isFeeWaived ? false : input.paymentReceived,
+          feeWaived: isFeeWaived,
           isOvertime,
         },
         ip: input.ip,
@@ -827,7 +835,11 @@ export async function scheduleAdminBooking(input: ScheduleAdminBookingInput) {
   // provider may be a real gateway and an in-person payment must never
   // create a gateway order — so the GROSS_REVENUE / commission / platform
   // ledger postings and payout maths all stay correct and idempotent.
-  if (input.paymentReceived) {
+  if (isFeeWaived) {
+    await notifyFeeWaivedBookingApproved(created.id).catch((error) =>
+      console.error("Could not send fee-waived appointment notifications", created.id, error),
+    );
+  } else if (input.paymentReceived) {
     const { record: charge } = await createCharge({
       bookingId: created.id,
       idempotencyKey: chargeIdempotencyKey(created.id, 1),

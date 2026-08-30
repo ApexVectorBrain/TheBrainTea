@@ -115,10 +115,14 @@ async function loadBooking(bookingId: string) {
   if (!booking) throw new Error("Booking not found while syncing Google Calendar");
   return booking;
 }
+export function calendarEventTitle(clientName: string): string {
+  return `${clientName}-The Brain Tea`;
+}
+
 function eventPayload(booking: Awaited<ReturnType<typeof loadBooking>>) {
   const endsAt = new Date(booking.dateTime.getTime() + booking.durationMinutes * 60000);
   return {
-    summary: `The Brain Tea consultation — ${booking.client.name}`,
+    summary: calendarEventTitle(booking.client.name),
     description: `Consultation with ${booking.client.name}. Service: ${booking.service.name}.`,
     start: { dateTime: booking.dateTime.toISOString(), timeZone: TIME_ZONE }, end: { dateTime: endsAt.toISOString(), timeZone: TIME_ZONE },
     visibility: "private", guestsCanInviteOthers: false, guestsCanModify: false, guestsCanSeeOtherGuests: false,

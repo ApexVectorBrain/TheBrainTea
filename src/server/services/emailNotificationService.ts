@@ -202,6 +202,23 @@ export async function notifyPaymentApproved(bookingId: string) {
   await sendOnce(booking.id, "PAYMENT_DETAILS_ADMIN", ADMIN_EMAIL, `Payment received: ${booking.client.name}`, paymentDetails);
 }
 
+/** Notify a staff-authorised complimentary appointment without recording a payment. */
+export async function notifyFeeWaivedBookingApproved(bookingId: string) {
+  try {
+    await ensureBookingMeeting(bookingId);
+  } catch (error) {
+    console.error("Unable to create Google Meet link for fee-waived appointment", bookingId, error);
+  }
+  const booking = await getBooking(bookingId);
+  if (!booking || booking.amountMinor !== 0 || booking.paymentStatus !== "PAID") return;
+  await sendAppointmentPair(
+    booking,
+    ["FEE_WAIVED_CLIENT", "FEE_WAIVED_CONSULTANT"],
+    `Appointment approved: ${booking.service.name}`,
+    "This fee-waived appointment is approved.",
+  );
+}
+
 export async function sendUpcomingReminders() {
   const now = new Date();
   // The scheduler runs every five minutes. This narrow window produces one

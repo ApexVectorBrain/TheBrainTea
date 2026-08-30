@@ -194,7 +194,7 @@ const scheduleSchema = z
     counselingType: z.enum(COUNSELING_TYPES),
     date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Expected YYYY-MM-DD"),
     time: z.string().regex(/^\d{2}:\d{2}$/, "Expected HH:MM"),
-    feeRupees: z.number().positive(),
+    feeRupees: z.number().nonnegative(),
     paymentReceived: z.boolean().default(false),
     isOvertime: z.boolean().default(false),
     paymentRef: z.string().max(64).optional(),
