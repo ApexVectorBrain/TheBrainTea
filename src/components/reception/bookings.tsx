@@ -736,7 +736,8 @@ export function ScheduleModal({
       return setError("This consultant has no assigned services");
     if (!date || !time) return setError("Select a date and time");
     const fee = Number(feeRupees);
-    if (!fee || fee <= 0) return setError("Enter a valid fee amount");
+    if (!feeRupees.trim() || !Number.isFinite(fee) || fee < 0)
+      return setError("Enter a fee amount of ₹0 or more");
     if (clientMode === "existing" && !selectedClient)
       return setError("Search for and select a client");
     if (
@@ -917,28 +918,37 @@ export function ScheduleModal({
               min={0}
               step="0.01"
               value={feeRupees}
-              onChange={(e) => setFeeRupees(e.target.value)}
+              onChange={(e) => {
+                setFeeRupees(e.target.value);
+                if (Number(e.target.value) === 0) setPaymentReceived(false);
+              }}
               className={inputClass}
               placeholder="e.g. 1500"
             />
           </Field>
           <div className="flex flex-col justify-end gap-2">
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-ink">
-              <input
-                type="checkbox"
-                checked={paymentReceived}
-                onChange={(e) => setPaymentReceived(e.target.checked)}
-                className="h-4 w-4 accent-ocean"
-              />
-              Fee collected at the desk
-            </label>
-            {paymentReceived && (
-              <input
-                value={paymentRef}
-                onChange={(e) => setPaymentRef(e.target.value)}
-                className={`${inputClass} !py-2 !text-xs`}
-                placeholder="Payment reference / UPI UTR (optional)"
-              />
+            {Number(feeRupees) === 0 && feeRupees.trim() ? (
+              <p className="text-sm text-ink-muted">This is a fee-waived appointment and will be confirmed automatically.</p>
+            ) : (
+              <>
+                <label className="flex cursor-pointer items-center gap-2 text-sm text-ink">
+                  <input
+                    type="checkbox"
+                    checked={paymentReceived}
+                    onChange={(e) => setPaymentReceived(e.target.checked)}
+                    className="h-4 w-4 accent-ocean"
+                  />
+                  Fee collected at the desk
+                </label>
+                {paymentReceived && (
+                  <input
+                    value={paymentRef}
+                    onChange={(e) => setPaymentRef(e.target.value)}
+                    className={`${inputClass} !py-2 !text-xs`}
+                    placeholder="Payment reference / UPI UTR (optional)"
+                  />
+                )}
+              </>
             )}
           </div>
         </div>

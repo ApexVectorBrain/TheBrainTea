@@ -165,11 +165,13 @@ suite("reception desk", () => {
       clientId,
       isOvertime = slot.getHours() >= 14,
       counselingType = "INDIVIDUAL",
+      feeRupees = FEE_MINOR / 100,
     }: {
       paymentReceived?: boolean;
       clientId?: string;
       isOvertime?: boolean;
       counselingType?: "INDIVIDUAL";
+      feeRupees?: number;
     } = {},
   ) {
     const res = await bookingsPost(
@@ -180,7 +182,7 @@ suite("reception desk", () => {
           counselingType,
           date: ymd(slot),
           time: hm(slot),
-          feeRupees: FEE_MINOR / 100,
+          feeRupees,
           paymentReceived,
           isOvertime,
           ...(paymentReceived ? { paymentRef: `UTR${STAMP}` } : {}),
@@ -329,6 +331,21 @@ suite("reception desk", () => {
     expect(
       releasedBody.slots.find((candidate) => candidate.startTime === hm(slot)),
     ).toMatchObject({ isAvailable: true });
+  });
+
+  it("confirms a fee-waived appointment without a payment or ledger entry", async () => {
+    const slot = futureSlot(5, 10);
+    const { status, body } = await schedule(slot, { feeRupees: 0 });
+    expect(status).toBe(201);
+
+    const bookingId = (body as unknown as { booking: { id: string } }).booking.id;
+    const booking = await prisma.booking.findUniqueOrThrow({ where: { id: bookingId } });
+    expect(booking.amountMinor).toBe(0);
+    expect(booking.status).toBe("CONFIRMED");
+    expect(booking.paymentStatus).toBe("PAID");
+    expect(booking.invoiceNumber).toBeNull();
+    expect(await prisma.paymentRecord.count({ where: { bookingId } })).toBe(0);
+    expect(await prisma.ledgerEntry.count({ where: { bookingId } })).toBe(0);
   });
 
   it("blocks a middle day of multi-day leave for staff and public availability", async () => {
