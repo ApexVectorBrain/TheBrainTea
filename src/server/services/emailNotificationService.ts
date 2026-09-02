@@ -219,6 +219,18 @@ export async function notifyFeeWaivedBookingApproved(bookingId: string) {
   );
 }
 
+/** Notify both parties when a reconnect recovery adds a previously missing link. */
+export async function notifyMeetingLinkRecovered(bookingId: string) {
+  const booking = await getBooking(bookingId);
+  if (!booking?.meetingUrl) return;
+  await sendAppointmentPair(
+    booking,
+    ["MEETING_LINK_RECOVERED_CLIENT", "MEETING_LINK_RECOVERED_CONSULTANT"],
+    `Google Meet link added: ${booking.service.name}`,
+    "Google Calendar has been reconnected and the missing Google Meet link is now available for this appointment.",
+  );
+}
+
 export async function sendUpcomingReminders() {
   const now = new Date();
   // The scheduler runs every five minutes. This narrow window produces one

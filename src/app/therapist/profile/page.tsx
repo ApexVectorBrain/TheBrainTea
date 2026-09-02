@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { CalendarCheck, Link2Off } from "lucide-react";
+import { CalendarCheck, Link2Off, RefreshCw } from "lucide-react";
 import { formatINR } from "@/lib/format";
 import {
   ErrorNote,
@@ -38,8 +38,10 @@ export default function TherapistProfilePage() {
   const [calendar, setCalendar] = useState<{
     configured: boolean;
     connection: { googleEmail: string | null; connectedAt: string } | null;
+    missingFutureAppointments: number;
   } | null>(null);
   const [calendarError, setCalendarError] = useState("");
+  const [calendarNotice, setCalendarNotice] = useState("");
   const [calendarBusy, setCalendarBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -74,8 +76,20 @@ export default function TherapistProfilePage() {
 
   useEffect(() => {
     loadCalendar();
-    const status = new URLSearchParams(window.location.search).get("googleCalendar");
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get("googleCalendar");
     if (status === "failed") setCalendarError("Google Calendar could not be connected. Please try again.");
+    if (status === "connected") {
+      const recovered = Number(params.get("recovered") || 0);
+      const failed = Number(params.get("failed") || 0);
+      setCalendarNotice(
+        failed > 0
+          ? `Google Calendar reconnected. ${recovered} appointment${recovered === 1 ? " was" : "s were"} recovered; ${failed} still need attention.`
+          : recovered > 0
+            ? `Google Calendar reconnected and ${recovered} missing appointment${recovered === 1 ? " was" : "s were"} added successfully.`
+            : "Google Calendar reconnected successfully. No appointments needed recovery.",
+      );
+    }
   }, [loadCalendar]);
 
   const disconnectCalendar = async () => {
@@ -260,8 +274,13 @@ export default function TherapistProfilePage() {
           >
             <div className="max-w-2xl space-y-4 font-dmsans">
               {calendarError && <p role="alert" className="text-xs font-medium text-red-700">{calendarError}</p>}
+              {calendarNotice && (
+                <p role="status" className="rounded-soft border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+                  {calendarNotice}
+                </p>
+              )}
               {calendar?.connection ? (
-                <div className="surface-inset flex flex-wrap items-center justify-between gap-4 rounded-soft p-4">
+                <div className="surface-inset space-y-4 rounded-soft p-4">
                   <div>
                     <p className="flex items-center gap-2 text-sm font-semibold text-ocean-deep">
                       <CalendarCheck size={18} aria-hidden="true" /> Google Calendar connected
@@ -270,26 +289,39 @@ export default function TherapistProfilePage() {
                       {calendar.connection.googleEmail || "Your Google account"} will own future appointment events and Meet links.
                     </p>
                     <p className="mt-1 text-xs text-ink-muted">
-                      Disconnecting is unavailable while you have future confirmed appointments.
+                      {calendar.missingFutureAppointments > 0
+                        ? `${calendar.missingFutureAppointments} paid future appointment${calendar.missingFutureAppointments === 1 ? " is" : "s are"} safely stored here but missing from Google Calendar.`
+                        : "All paid future appointments are currently linked to Google Calendar."}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={disconnectCalendar}
-                    disabled={calendarBusy}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-red-200 px-4 py-2 text-xs font-bold uppercase tracking-wider text-red-700 transition-colors hover:bg-red-50 disabled:opacity-50"
-                  >
-                    <Link2Off size={15} aria-hidden="true" /> {calendarBusy ? "Disconnecting..." : "Disconnect"}
-                  </button>
+                  <div className="flex flex-wrap gap-3">
+                    <a
+                      href="/api/therapist/google-calendar/connect?reconnect=1"
+                      className="inline-flex min-h-11 items-center gap-2 rounded-full bg-ocean px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-surface-raised-sm transition-all hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-ocean focus:ring-offset-2"
+                    >
+                      <RefreshCw size={15} aria-hidden="true" /> Reconnect &amp; recover
+                    </a>
+                    <button
+                      type="button"
+                      onClick={disconnectCalendar}
+                      disabled={calendarBusy}
+                      className="inline-flex min-h-11 items-center gap-2 rounded-full border border-red-200 px-4 py-2 text-xs font-bold uppercase tracking-wider text-red-700 transition-colors hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50"
+                    >
+                      <Link2Off size={15} aria-hidden="true" /> {calendarBusy ? "Disconnecting..." : "Disconnect"}
+                    </button>
+                  </div>
+                  <p className="text-xs leading-relaxed text-ink-muted">
+                    Reconnecting does not remove appointments or existing calendar events. After Google approves access, missing paid future appointments are added automatically with their Meet links.
+                  </p>
                 </div>
               ) : calendar?.configured ? (
                 <div>
                   <p className="mb-3 text-sm text-ink-muted">No Google account is connected yet. This does not give The Brain Tea access to your Gmail inbox; it only permits creating and updating your own Calendar events and Meet links.</p>
                   <a
-                    href="/api/therapist/google-calendar/connect"
+                    href="/api/therapist/google-calendar/connect?reconnect=1"
                     className="inline-flex min-h-11 items-center rounded-full bg-ocean px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-surface-raised-sm transition-all hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-ocean focus:ring-offset-2"
                   >
-                    Connect Google Calendar
+                    Connect &amp; recover appointments
                   </a>
                 </div>
               ) : (

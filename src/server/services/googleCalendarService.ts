@@ -9,7 +9,13 @@ const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events";
 const IDENTITY_SCOPES = "openid email";
 const TIME_ZONE = "Asia/Kolkata";
 
-type OAuthState = { therapistId: string; userId: string; nonce: string; expiresAt: number };
+type OAuthState = {
+  therapistId: string;
+  userId: string;
+  nonce: string;
+  expiresAt: number;
+  recoverFutureAppointments?: boolean;
+};
 type GoogleTokenResponse = {
   access_token?: string; refresh_token?: string; expires_in?: number; scope?: string;
   error?: string; error_description?: string;
@@ -36,9 +42,17 @@ function timingSafeEqual(left: string, right: string): boolean {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
-export function createGoogleOAuthState(therapistId: string, userId: string) {
+export function createGoogleOAuthState(
+  therapistId: string,
+  userId: string,
+  recoverFutureAppointments = false,
+) {
   const payload = Buffer.from(JSON.stringify({
-    therapistId, userId, nonce: crypto.randomBytes(24).toString("base64url"), expiresAt: Date.now() + 10 * 60 * 1000,
+    therapistId,
+    userId,
+    recoverFutureAppointments,
+    nonce: crypto.randomBytes(24).toString("base64url"),
+    expiresAt: Date.now() + 10 * 60 * 1000,
   } satisfies OAuthState)).toString("base64url");
   const state = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as OAuthState;
   return { state: `${payload}.${sign(payload)}`, nonce: state.nonce };
@@ -126,23 +140,165 @@ function eventPayload(booking: Awaited<ReturnType<typeof loadBooking>>) {
     description: `Consultation with ${booking.client.name}. Service: ${booking.service.name}.`,
     start: { dateTime: booking.dateTime.toISOString(), timeZone: TIME_ZONE }, end: { dateTime: endsAt.toISOString(), timeZone: TIME_ZONE },
     visibility: "private", guestsCanInviteOthers: false, guestsCanModify: false, guestsCanSeeOtherGuests: false,
+    // Lets a recovery run find an event that Google accepted even if the
+    // following database update was interrupted.
+    extendedProperties: {
+      private: { theBrainTeaBookingId: booking.id },
+    },
   };
+}
+
+type GoogleCalendarEvent = {
+  id?: string;
+  hangoutLink?: string;
+  error?: { message?: string };
+};
+
+async function readGoogleEvent(token: string, eventId: string) {
+  const response = await fetch(
+    `${GOOGLE_API}/calendars/primary/events/${encodeURIComponent(eventId)}?conferenceDataVersion=1`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (response.status === 404 || response.status === 410) return null;
+  const event = (await response.json()) as GoogleCalendarEvent;
+  if (!response.ok) {
+    throw new Error(
+      `Google Calendar event lookup failed: ${event.error?.message ?? response.status}`,
+    );
+  }
+  return event;
+}
+
+async function findGoogleEventForBooking(token: string, bookingId: string) {
+  const query = new URLSearchParams({
+    privateExtendedProperty: `theBrainTeaBookingId=${bookingId}`,
+    showDeleted: "false",
+    maxResults: "1",
+  });
+  const response = await fetch(
+    `${GOOGLE_API}/calendars/primary/events?${query}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  const result = (await response.json()) as {
+    items?: GoogleCalendarEvent[];
+    error?: { message?: string };
+  };
+  if (!response.ok) {
+    throw new Error(
+      `Google Calendar recovery lookup failed: ${result.error?.message ?? response.status}`,
+    );
+  }
+  return result.items?.[0] ?? null;
+}
+
+async function persistGoogleEvent(
+  bookingId: string,
+  event: GoogleCalendarEvent,
+) {
+  if (!event.id) throw new Error("Google Calendar did not return an event id");
+  await prisma.booking.update({
+    where: { id: bookingId },
+    data: {
+      googleCalendarEventId: event.id,
+      meetingUrl: event.hangoutLink ?? undefined,
+    },
+  });
+}
+
+async function waitForMeetLink(token: string, event: GoogleCalendarEvent) {
+  if (event.hangoutLink || !event.id) return event;
+  let current = event;
+  // Conference creation can briefly remain pending after the event itself is
+  // accepted. Keep this retry short so the OAuth callback stays responsive.
+  for (let attempt = 0; attempt < 3 && !current.hangoutLink; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    current = (await readGoogleEvent(token, event.id)) ?? current;
+  }
+  return current;
 }
 
 /** Create exactly one consultant-owned calendar event and Meet room per paid appointment. */
 export async function ensureBookingMeeting(bookingId: string) {
   const booking = await loadBooking(bookingId);
+  // A stored Meet URL proves this booking was already provisioned. Older
+  // events may predate event-id storage, so never duplicate them just to fill
+  // that secondary field.
   if (booking.meetingUrl) return booking.meetingUrl;
   const token = await accessTokenForTherapist(booking.therapistId);
+
+  // Repair a partial database write before searching or creating anything.
+  if (booking.googleCalendarEventId) {
+    const existingById = await readGoogleEvent(token, booking.googleCalendarEventId);
+    if (existingById) {
+      const completed = await waitForMeetLink(token, existingById);
+      await persistGoogleEvent(booking.id, completed);
+      if (completed.hangoutLink) return completed.hangoutLink;
+    }
+  }
+
+  const recovered = await findGoogleEventForBooking(token, booking.id);
+  if (recovered) {
+    const completed = await waitForMeetLink(token, recovered);
+    await persistGoogleEvent(booking.id, completed);
+    if (completed.hangoutLink) return completed.hangoutLink;
+    throw new Error("Google Calendar event exists but its Meet link is still pending");
+  }
+
   const response = await fetch(`${GOOGLE_API}/calendars/primary/events?conferenceDataVersion=1&sendUpdates=none`, {
     method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify({ ...eventPayload(booking), conferenceData: { createRequest: { requestId: `thebraintea-${booking.id}` } } }),
   });
-  const event = await response.json();
-  if (!response.ok || !event.hangoutLink) throw new Error(`Google Calendar event creation failed: ${event.error?.message ?? response.status}`);
-  const updated = await prisma.booking.updateMany({ where: { id: booking.id, meetingUrl: null }, data: { meetingUrl: event.hangoutLink, googleCalendarEventId: event.id ?? null } });
-  if (updated.count === 1) return event.hangoutLink as string;
-  return (await prisma.booking.findUniqueOrThrow({ where: { id: booking.id } })).meetingUrl!;
+  const event = (await response.json()) as GoogleCalendarEvent;
+  if (!response.ok || !event.id) throw new Error(`Google Calendar event creation failed: ${event.error?.message ?? response.status}`);
+  const completed = await waitForMeetLink(token, event);
+  await persistGoogleEvent(booking.id, completed);
+  if (!completed.hangoutLink) {
+    throw new Error("Google Calendar created the event but its Meet link is still pending");
+  }
+  return completed.hangoutLink;
+}
+
+export async function missingFutureCalendarBookingIds(therapistId: string) {
+  const bookings = await prisma.booking.findMany({
+    where: {
+      therapistId,
+      dateTime: { gt: new Date() },
+      status: "CONFIRMED",
+      paymentStatus: "PAID",
+      meetingUrl: null,
+    },
+    orderBy: { dateTime: "asc" },
+    select: { id: true },
+  });
+  return bookings.map((booking) => booking.id);
+}
+
+export async function backfillFutureBookingMeetings(therapistId: string) {
+  const bookingIds = await missingFutureCalendarBookingIds(therapistId);
+  const recoveredBookingIds: string[] = [];
+  const failures: Array<{ bookingId: string; reason: string }> = [];
+
+  // Sequential writes avoid bursting one consultant's calendar and allow one
+  // failed appointment to be reported without stopping the remaining work.
+  for (const bookingId of bookingIds) {
+    try {
+      await ensureBookingMeeting(bookingId);
+      recoveredBookingIds.push(bookingId);
+    } catch (error) {
+      failures.push({
+        bookingId,
+        reason: error instanceof Error ? error.message : "Unknown Calendar error",
+      });
+      console.error("Google Calendar recovery failed", bookingId, error);
+    }
+  }
+
+  return {
+    eligible: bookingIds.length,
+    recoveredBookingIds,
+    failed: failures.length,
+    failures,
+  };
 }
 export async function syncBookingMeeting(bookingId: string) {
   const booking = await loadBooking(bookingId);

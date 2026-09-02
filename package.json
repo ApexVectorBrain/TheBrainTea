@@ -16,7 +16,8 @@
     "db:fix-service-catalogue": "node prisma/fix-service-catalogue.js",
     "db:add-launch-consultants": "node prisma/add-launch-consultants.js",
     "db:add-public-consultants": "node prisma/add-public-consultants.js",
-    "db:set-service-availability": "node prisma/set-service-availability.js"
+    "db:set-service-availability": "node prisma/set-service-availability.js",
+    "db:reset-consultant-passwords": "node prisma/reset-consultant-passwords.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { conflict, handleApi, requireTherapist } from "@/server/http";
-import { disconnectGoogleCalendar, isGoogleCalendarConfigured } from "@/server/services/googleCalendarService";
+import {
+  disconnectGoogleCalendar,
+  isGoogleCalendarConfigured,
+  missingFutureCalendarBookingIds,
+} from "@/server/services/googleCalendarService";
 
 export const GET = handleApi(async (request: Request) => {
   const { therapistId } = await requireTherapist(request);
@@ -9,7 +13,14 @@ export const GET = handleApi(async (request: Request) => {
     where: { therapistId },
     select: { googleEmail: true, connectedAt: true, updatedAt: true },
   });
-  return NextResponse.json({ configured: isGoogleCalendarConfigured(), connection });
+  const missingFutureAppointments = (
+    await missingFutureCalendarBookingIds(therapistId)
+  ).length;
+  return NextResponse.json({
+    configured: isGoogleCalendarConfigured(),
+    connection,
+    missingFutureAppointments,
+  });
 });
 
 export const DELETE = handleApi(async (request: Request) => {
