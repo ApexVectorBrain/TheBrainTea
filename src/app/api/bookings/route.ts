@@ -19,11 +19,17 @@ const bookingSchema = z.object({
   email: z.string().email(),
   phone: z.string().min(8).max(20),
   age: z.coerce.number().int().min(1).max(120),
-  emergencyContact: z.string().min(3).max(200),
+  emergencyContact: z.string().max(200).optional().default(""),
+  referralSource: z.enum(["google", "social", "friend_family", "doctor", "workplace", "school", "other"]),
+  referralDoctor: z.string().trim().max(120).optional(),
+  utmSource: z.string().max(200).optional(),
+  utmCampaign: z.string().max(200).optional(),
+  gclid: z.string().max(500).optional(),
+  fbclid: z.string().max(500).optional(),
   gdprConsent: z.literal(true, {
     message: "Consent is mandatory to book a session",
   }),
-}).strict();
+}).strict().refine(body => body.referralSource !== "doctor" || !!body.referralDoctor?.trim(), { path: ["referralDoctor"], message: "Please enter the doctor's name" });
 
 export const POST = handleApi(async (request: Request) => {
   // Namespaced bucket: previously this used a bare IP key, which meant
@@ -42,6 +48,8 @@ export const POST = handleApi(async (request: Request) => {
   if (!dateTime) throw badRequest("Invalid date or time");
 
   const { booking, payment } = await createBooking({
+    referralSource: body.referralSource, referralDoctor: body.referralDoctor,
+    utmSource: body.utmSource, utmCampaign: body.utmCampaign, gclid: body.gclid, fbclid: body.fbclid,
     therapistSlug: body.therapistSlug,
     serviceSlug: body.serviceSlug,
     dateTime,

@@ -6,18 +6,18 @@
   --color-warm-sand: #dad7ca;
   --color-muted-sage: #9faca5;
   --color-warm-tan: #dccdb2;
-  --color-teal-sage: #698e8b;
-  --color-forest-slate: #55665d;
+  --color-teal-sage: #3d5f5b;
+  --color-forest-slate: #43594f;
   --color-near-black: #202623;
 
   /* Legacy mappings */
-  --color-forest: #698e8b;
+  --color-forest: #3d5f5b;
   --color-sage: #9faca5;
   --color-mist: #9faca5;
   --color-ivory: #fdfbf7; /* Bright, warm off-white */
   --color-sand: #dccdb2;
-  --color-terracotta: #698e8b;
-  --color-charcoal: #55665d;
+  --color-terracotta: #3d5f5b;
+  --color-charcoal: #43594f;
   --color-warm-white: #fdfbf7; /* Bright, warm off-white */
 
   /* Admin / Therapist panel palette (ocean design system) */
@@ -309,4 +309,13 @@ a {
 
 .animate-spin-slow {
   animation: spin-slow 22s linear infinite;
+}
+
+/* Preserve visible keyboard focus across public navigation and forms. */
+:where(a, button, summary, input, select, textarea):focus-visible {
+  outline: 3px solid #26333d;
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }

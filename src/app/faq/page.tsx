@@ -1,90 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, HelpCircle } from "lucide-react";
+import React from "react";
+import { HelpCircle } from "lucide-react";
 
-interface FAQItemProps {
-  question: string;
-  answer: string;
-  isOpen: boolean;
-  onToggle: () => void;
-}
-
-function FAQItem({ question, answer, isOpen, onToggle }: FAQItemProps) {
-  return (
-    <div
-      className={`glass-card rounded-2xl px-6 md:px-8 mb-4 border transition-all duration-300 relative overflow-hidden ${
-        isOpen
-          ? "border-teal-sage/40 shadow-md bg-warm-sand/95"
-          : "border-muted-sage/20 shadow-sm hover:border-teal-sage/30 bg-warm-sand/65"
-      }`}
-    >
-      {/* Dynamic Left Vertical Border Accent */}
-      <motion.div
-        initial={{ height: 0 }}
-        animate={{ height: isOpen ? "100%" : 0 }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="absolute left-0 top-0 w-1.5 bg-teal-sage"
-      />
-
-      <button
-        onClick={onToggle}
-        className="w-full flex justify-between items-center text-left py-5 focus:outline-none group relative z-10"
-      >
-        <span
-          className={`font-cormorant text-xl md:text-2xl font-semibold transition-colors pr-6 ${
-            isOpen
-              ? "text-forest-slate"
-              : "text-forest-slate/90 group-hover:text-teal-sage"
-          }`}
-        >
-          {question}
-        </span>
-        <motion.div
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-          className={`${isOpen ? "text-teal-sage" : "text-muted-sage group-hover:text-teal-sage"} shrink-0`}
-        >
-          <ChevronDown className="w-5 h-5" />
-        </motion.div>
-      </button>
-
-      <AnimatePresence initial={false}>
-        {isOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{
-              height: "auto",
-              opacity: 1,
-              transition: {
-                height: { duration: 0.3, ease: "easeOut" },
-                opacity: { duration: 0.25, delay: 0.05 },
-              },
-            }}
-            exit={{
-              height: 0,
-              opacity: 0,
-              transition: {
-                height: { duration: 0.3, ease: "easeIn" },
-                opacity: { duration: 0.15 },
-              },
-            }}
-            className="overflow-hidden"
-          >
-            <div className="font-dmsans text-sm md:text-base text-forest-slate/85 leading-relaxed pb-6 pr-6 text-pretty">
-              {answer}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+function FAQItem({ question, answer }: { question: string; answer: string }) {
+  return <details className="rounded-2xl px-6 md:px-8 mb-4 border border-muted-sage/30 bg-warm-sand/65">
+    <summary className="cursor-pointer py-5 font-cormorant text-xl md:text-2xl font-semibold text-forest-slate">{question}</summary>
+    <p className="text-sm md:text-base text-forest-slate leading-relaxed pb-6">{answer}</p>
+  </details>;
 }
 
 export default function FAQ() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-
   const faqs = [
     {
       question: "Is everything I share kept confidential?",
@@ -109,12 +35,12 @@ export default function FAQ() {
     {
       question: "Do you offer online sessions?",
       answer:
-        "Yes, we offer online video consultations for clients who prefer the comfort and convenience of therapy from home. Online sessions are conducted via a secure, HIPAA-compliant telehealth platform that ensures complete privacy. All you need is a stable internet connection and a quiet, private space.",
+        "Yes, we offer online video consultations for clients who prefer the comfort and convenience of therapy from home. Online sessions are conducted via Google Meet. All you need is a stable internet connection and a quiet, private space.",
     },
     {
       question: "What is the cost per session?",
       answer:
-        "Individual counselling sessions are 50 minutes and start at ₹1,500. Couple therapy sessions are also 50 minutes and start at ₹2,000. The exact fee depends on the therapist's experience and area of expertise. We believe that mental health care should be accessible, so we reserve a limited number of sliding-scale slots based on financial hardship and student status.",
+        "Session fees vary by consultant and service. Please see the current fees on our services and team pages or in the booking flow.",
     },
     {
       question: "How do I cancel or reschedule?",
@@ -138,12 +64,9 @@ export default function FAQ() {
     },
   ];
 
-  const handleToggle = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index);
-  };
-
   return (
     <div className="bg-warm-sand min-h-screen font-dmsans">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faqs.map(f => ({ "@type": "Question", name: f.question, acceptedAnswer: { "@type": "Answer", text: f.answer } })) }).replace(/</g, "\\u003c") }} />
       {/* PAGE HERO */}
       <section className="bg-warm-tan/30 pt-32 pb-20 border-b border-muted-sage/20">
         <div className="max-w-4xl mx-auto px-6 text-center">
@@ -168,8 +91,6 @@ export default function FAQ() {
               key={index}
               question={faq.question}
               answer={faq.answer}
-              isOpen={openIndex === index}
-              onToggle={() => handleToggle(index)}
             />
           ))}
         </div>

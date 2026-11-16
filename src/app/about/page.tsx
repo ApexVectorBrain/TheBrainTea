@@ -55,13 +55,13 @@ export default function About() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <span className="text-[11px] font-bold tracking-[0.25em] text-teal-sage uppercase mb-4 block">
+            <span className="text-xs font-bold tracking-[0.25em] text-teal-sage uppercase mb-4 block">
               Welcome to The Brain Tea
             </span>
             <h1 className="font-cormorant text-5xl md:text-6xl font-semibold text-forest-slate leading-tight mb-6">
               Your Approach to Whole-Person Wellness
             </h1>
-            <p className="text-forest-slate/85 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed font-dmsans">
+            <p className="text-forest-slate text-lg md:text-xl max-w-2xl mx-auto leading-relaxed font-dmsans">
               True well-being is not a one-size-fits-all checklist. You are a
               complex, vibrant individual, and your path to growth should be
               just as unique as you are — a space where you can finally breathe,
@@ -79,7 +79,7 @@ export default function About() {
             <h2 className="font-cormorant text-4xl md:text-[48px] font-semibold text-forest-slate mb-4">
               Our Story: Why &ldquo;The Brain Tea&rdquo;?
             </h2>
-            <div className="text-forest-slate/90 text-base md:text-lg space-y-6 leading-relaxed font-dmsans">
+            <div className="text-forest-slate text-base md:text-lg space-y-6 leading-relaxed font-dmsans">
               <p>
                 Life often feels like a turbulent, cluttered brew of stress,
                 expectations, and noise. For too long, the approach to mental
@@ -100,14 +100,9 @@ export default function About() {
                 when you connect your thoughts to your body and your community.
               </p>
               <p>
-                This is why we bridge the gap between talk therapy and active
-                restoration. While our expert clinicians provide the
-                foundational work of counselling and psychiatric support, we
-                integrate movement, sensory grounding, and social interaction
-                into the process. Whether it is the insight of traditional
-                therapy, the release of a yoga session, the quiet focus of
-                Reiki, or a fun workshop, we ensure your healing is holistic,
-                grounded, and complete.
+                Our practitioners tailor counselling to each person’s needs,
+                using thoughtful, evidence-based approaches and a supportive
+                therapeutic relationship.
               </p>
             </div>
           </div>
@@ -146,7 +141,7 @@ export default function About() {
             <h2 className="font-cormorant text-4xl md:text-[48px] font-semibold text-forest-slate leading-tight mb-4">
               The Principles That Guide Us
             </h2>
-            <p className="text-forest-slate/85 text-base md:text-lg">
+            <p className="text-forest-slate text-base md:text-lg">
               Our core values form the foundation of our clinical practice,
               dictating how we treat every individual who reaches out.
             </p>
@@ -164,7 +159,7 @@ export default function About() {
                 <h3 className="font-cormorant text-2xl font-semibold text-forest-slate mb-4">
                   {v.title}
                 </h3>
-                <p className="text-sm text-forest-slate/80 leading-relaxed font-dmsans">
+                <p className="text-sm text-forest-slate leading-relaxed font-dmsans">
                   {v.text}
                 </p>
               </div>
@@ -178,14 +173,14 @@ export default function About() {
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           {/* Section Header */}
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <span className="text-[11px] font-bold tracking-[0.25em] text-teal-sage uppercase mb-3 block">
+            <span className="text-xs font-bold tracking-[0.25em] text-teal-sage uppercase mb-3 block">
               Our Practitioners
             </span>
             <h2 className="font-cormorant text-4xl md:text-[48px] font-semibold text-forest-slate mb-4">
               Meet Our Dedicated Team
             </h2>
-            <p className="text-forest-slate/85 text-base md:text-lg">
-              A collaborative, compassionate group of licensed professionals
+            <p className="text-forest-slate text-base md:text-lg">
+              A collaborative, compassionate group of practitioners
               here to walk alongside you.
             </p>
           </div>
@@ -230,7 +225,7 @@ export default function About() {
                       style={{ objectPosition: t.photoPosition ?? "50% 50%" }}
                     />
                   ) : (
-                    <div className="flex h-full items-center justify-center font-cormorant text-7xl text-forest-slate/60">
+                    <div className="flex h-full items-center justify-center font-cormorant text-7xl text-forest-slate">
                       {t.name
                         .split(" ")
                         .map((part) => part[0])
@@ -253,62 +248,7 @@ export default function About() {
                     </p>
                   )}
 
-                  <details className="mt-5 border-t border-muted-sage/25 pt-4 group/profile">
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg py-1 text-sm font-semibold text-forest-slate transition-colors hover:text-teal-sage focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-sage/50 [&::-webkit-details-marker]:hidden">
-                      <span>View full profile</span>
-                      <span
-                        aria-hidden="true"
-                        className="text-xl font-light leading-none transition-transform duration-200 group-open/profile:rotate-45"
-                      >
-                        +
-                      </span>
-                    </summary>
-
-                    <div className="pt-5">
-                      <div className="space-y-4 text-sm text-forest-slate/85 leading-relaxed mb-6 font-dmsans">
-                        {t.intro.map((paragraph) => (
-                          <p key={paragraph}>{paragraph}</p>
-                        ))}
-                      </div>
-
-                      {/* Specialisation tags */}
-                      {t.specialisations.length > 0 && (
-                        <div>
-                          <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-charcoal/70">
-                            Specialises In
-                          </p>
-                          <div className="border-t border-muted-sage/20 pt-4 flex flex-wrap gap-1.5">
-                            {t.specialisations.map((tag) => (
-                              <span
-                                key={tag}
-                                className="text-[11px] font-medium text-forest-slate bg-warm-tan/40 border border-muted-sage/20 px-2 py-0.5 rounded-full font-dmsans"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {t.approaches.length > 0 && (
-                        <div className="mt-4">
-                          <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-charcoal/70">
-                            Therapeutic Approach
-                          </p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {t.approaches.map((approach) => (
-                              <span
-                                key={approach}
-                                className="text-[11px] font-medium text-forest-slate bg-muted-sage/15 border border-teal-sage/10 px-2 py-0.5 rounded-full font-dmsans"
-                              >
-                                {approach}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </details>
+                  <Link href={`/team#${t.slug}`} className="mt-5 inline-block text-sm font-semibold underline">View full profile</Link>
                 </div>
               </motion.div>
             ))}
@@ -322,7 +262,7 @@ export default function About() {
           <h2 className="font-cormorant text-3xl md:text-4xl font-semibold text-forest-slate mb-4">
             We are here to support your path forward.
           </h2>
-          <p className="text-sm text-forest-slate/80 mb-8 font-dmsans">
+          <p className="text-sm text-forest-slate mb-8 font-dmsans">
             Speak with one of our coordinators to find the therapist best suited
             to your needs.
           </p>

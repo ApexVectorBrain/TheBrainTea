@@ -40,6 +40,12 @@ describe("BookingWizard step 1 — service selection", () => {
     expect(continueIsDisabled(html)).toBe(false);
   });
 
+  it("renders service choices as keyboard-accessible radio controls", () => {
+    const html = render({ services: [service] });
+    expect(html).toMatch(/<label[^>]*>\s*<input[^>]*type="radio"[^>]*name="service"/);
+    expect(html).toContain("Individual Counselling");
+  });
+
   it("explains the empty list and disables Continue when nothing is bookable", () => {
     const html = render({ services: [] });
     expect(html).toContain("No services are open for booking");

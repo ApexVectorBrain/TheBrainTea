@@ -1,16 +1,18 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Logo from "./Logo";
 import { NavLink } from "./ui/NavLink";
-import { isDashboardRoute } from "../lib/site";
+import { isDashboardRoute, isCampaignRoute } from "../lib/site";
 
 export default function Header() {
   const pathname = usePathname();
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [lastPath, setLastPath] = useState(pathname);
@@ -73,13 +75,31 @@ export default function Header() {
     };
   }, [isMobileMenuOpen]);
 
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+    const menu = menuRef.current;
+    const links = () => Array.from(menu?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') ?? []);
+    links()[0]?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { setIsMobileMenuOpen(false); menuButtonRef.current?.focus(); }
+      if (event.key !== "Tab") return;
+      const items = links();
+      if (!items.length) return;
+      if (event.shiftKey && document.activeElement === items[0]) { event.preventDefault(); items[items.length - 1].focus(); }
+      else if (!event.shiftKey && document.activeElement === items[items.length - 1]) { event.preventDefault(); items[0].focus(); }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isMobileMenuOpen]);
+
   const isDashboard = isDashboardRoute(pathname);
   if (isDashboard) return null;
+  if (isCampaignRoute(pathname)) return <header className="absolute top-0 inset-x-0 z-40 flex items-center justify-between px-6 py-4 bg-ivory"><Link href="/" aria-label="The Brain Tea home"><Logo className="w-14 h-14" /></Link><Link href="/book" className="rounded-full bg-forest-slate text-white px-6 py-3">Book</Link></header>;
 
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "About", href: "/about" },
-    { name: "Meet The Team", href: "/about#meet-the-team" },
+    { name: "Meet The Team", href: "/team" },
     { name: "Services", href: "/services" },
     { name: "Internship", href: "/internship" },
     { name: "FAQ", href: "/faq" },
@@ -107,9 +127,9 @@ export default function Header() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             {navLinks.map((link) => {
-              const isTeamLink = link.href === "/about#meet-the-team";
+              const isTeamLink = link.href === "/team";
               const isActive = isTeamLink
-                ? isTeamSectionActive
+                ? pathname === "/team" || isTeamSectionActive
                 : pathname === link.href;
               return (
                 <NavLink
@@ -151,9 +171,12 @@ export default function Header() {
 
           {/* Mobile Menu Button */}
           <button
+            ref={menuButtonRef}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden z-50 text-forest p-1.5 focus:outline-none"
-            aria-label="Toggle mobile menu"
+            className="md:hidden z-50 text-forest w-12 h-12 grid place-items-center focus-visible:ring-2 focus-visible:ring-ocean rounded-lg"
+            aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-menu"
           >
             {isMobileMenuOpen ? (
               <X className="w-6 h-6 text-warm-white" />
@@ -168,13 +191,19 @@ export default function Header() {
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
+            ref={menuRef}
+            id="mobile-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation menu"
             initial={{ opacity: 0, y: "-100%" }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: "-100%" }}
             transition={{ type: "tween", duration: 0.4, ease: "easeInOut" }}
             className="fixed inset-0 z-40 bg-forest text-warm-white flex flex-col justify-center items-center px-6"
           >
-            <nav className="flex flex-col items-center space-y-8 text-center">
+            <button type="button" aria-label="Close menu" onClick={() => { setIsMobileMenuOpen(false); menuButtonRef.current?.focus(); }} className="absolute top-3 right-6 grid h-12 w-12 place-items-center rounded-lg text-warm-white focus-visible:ring-2 focus-visible:ring-warm-white"><X className="h-6 w-6" /></button>
+            <nav className="flex max-h-[80vh] overflow-y-auto flex-col items-center space-y-5 text-center">
               {navLinks.map((link, index) => (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -185,7 +214,7 @@ export default function Header() {
                   <NavLink
                     href={link.href}
                     onClick={() => {
-                      if (link.href === "/about#meet-the-team") {
+                      if (link.href === "/team") {
                         setIsTeamSectionActive(true);
                       }
                       setIsMobileMenuOpen(false);

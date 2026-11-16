@@ -9,7 +9,7 @@ export default function WhatsAppButton() {
   const pathname = usePathname();
   const [isHovered, setIsHovered] = useState(false);
 
-  const isDashboard = isDashboardRoute(pathname);
+  const isDashboard = isDashboardRoute(pathname) || pathname === "/book";
   if (isDashboard) return null;
 
   return (

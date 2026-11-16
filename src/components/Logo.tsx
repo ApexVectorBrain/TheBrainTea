@@ -27,8 +27,7 @@ export default function Logo({
         fill
         sizes="128px"
         className="object-contain"
-        priority
-        unoptimized
+        loading={variant === "light" ? "lazy" : "eager"}
       />
     </span>
   );

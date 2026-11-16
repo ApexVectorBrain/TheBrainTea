@@ -4,7 +4,7 @@
 # applies non-destructive changes; a destructive diff fails the build rather
 # than dropping data. Needs DATABASE_URL/DIRECT_URL in the site environment.
 [build]
-  command = "npx prisma generate && npx prisma db push --skip-generate && node prisma/fix-madhumati-fee.js && npm run db:set-service-availability && npm run db:add-public-consultants && if [ \"$RUN_ADD_LAUNCH_CONSULTANTS\" = \"true\" ]; then npm run db:add-launch-consultants; fi && npm run build"
+  command = "npx prisma generate && npx prisma db push --skip-generate && node prisma/fix-madhumati-fee.js && npm run db:set-service-availability && npm run db:add-public-consultants && node prisma/setup-free-call.js && if [ \"$RUN_ADD_LAUNCH_CONSULTANTS\" = \"true\" ]; then npm run db:add-launch-consultants; fi && npm run build"
   publish = ".next"
 
 [build.environment]

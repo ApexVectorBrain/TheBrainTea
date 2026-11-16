@@ -20,6 +20,7 @@ import { badRequest, conflict, notFound, type Session } from "../http";
 import { recordAudit } from "../audit";
 import {
   isGeneratedSlotStart,
+  generateFreeCallSlots,
   sessionOverlapsWorkingHours,
 } from "../domain/workingHours";
 import { clinicDayOfWeekForDate, formatClinicTime } from "../clinicTime";
@@ -40,6 +41,7 @@ export const RESERVATION_TTL_MINUTES = 30;
 const BOOKING_TRANSACTION_OPTIONS = { maxWait: 10_000, timeout: 20_000 };
 
 export interface CreateBookingInput {
+  referralSource?: string; referralDoctor?: string; utmSource?: string; utmCampaign?: string; gclid?: string; fbclid?: string;
   therapistSlug: string;
   serviceSlug: string;
   dateTime: Date;
@@ -111,6 +113,7 @@ async function validateSlotWithinSchedule(
   dateTime: Date,
   durationMinutes: number,
   requireWorkingHours = true,
+  freeCall = false,
 ): Promise<void> {
   if (dateTime.getTime() <= Date.now()) {
     throw badRequest("Sessions must be booked for a future time");
@@ -123,7 +126,7 @@ async function validateSlotWithinSchedule(
       where: { therapistId, dayOfWeek: clinicDayOfWeekForDate(dateTime) },
       select: { startTime: true, endTime: true },
     });
-    if (!isGeneratedSlotStart(startTime, windows))
+    if (!(freeCall ? generateFreeCallSlots(windows).some(slot => slot.startTime === startTime) : isGeneratedSlotStart(startTime, windows)))
       throw conflict(
         "The selected time is outside the consultant's working hours",
       );
@@ -182,7 +185,8 @@ export async function createBooking(input: CreateBookingInput) {
   const providerName = defaultPaymentProviderName();
   // Manual is deliberately retained for desk-arranged payments. Every other
   // configured provider uses the secure online checkout reservation flow.
-  const requiresOnlinePayment = providerName !== "manual";
+  const isFreeCall = input.serviceSlug === "free-15-minute-call";
+  const requiresOnlinePayment = !isFreeCall && providerName !== "manual";
   if (requiresOnlinePayment) getPaymentProvider(providerName);
 
   const result = await prisma.$transaction(async (tx) => {
@@ -221,6 +225,8 @@ export async function createBooking(input: CreateBookingInput) {
       therapist.id,
       input.dateTime,
       service.durationMinutes,
+      true,
+      isFreeCall,
     );
     await assertNoOverlappingBooking(
       tx,
@@ -235,13 +241,13 @@ export async function createBooking(input: CreateBookingInput) {
         name: input.client.name,
         phone: input.client.phone,
         age: input.client.age,
-        emergencyContact: input.client.emergencyContact,
+        ...(input.client.emergencyContact ? { emergencyContact: input.client.emergencyContact } : {}),
       },
       create: { ...input.client },
     });
 
     const commissionBps = await resolveBookingCommissionBps(therapist, tx);
-    const initialStatus: BookingStatus = requiresOnlinePayment
+    const initialStatus: BookingStatus = isFreeCall ? "CONFIRMED" : requiresOnlinePayment
       ? "AWAITING_PAYMENT"
       : "PENDING";
     const expiresAt = requiresOnlinePayment
@@ -253,14 +259,16 @@ export async function createBooking(input: CreateBookingInput) {
         therapistId: therapist.id,
         serviceId: service.id,
         clientId: client.id,
+        referralSource: input.referralSource, referralDoctor: input.referralDoctor,
+        utmSource: input.utmSource, utmCampaign: input.utmCampaign, gclid: input.gclid, fbclid: input.fbclid,
         dateTime: input.dateTime,
         durationMinutes: service.durationMinutes,
         // Snapshot the configured consultant/service rate. Historical
         // bookings are never rewritten when an admin changes future pricing.
-        amountMinor: serviceRate?.feeMinor ?? therapist.feeMinor,
+        amountMinor: isFreeCall ? 0 : serviceRate?.feeMinor ?? therapist.feeMinor,
         commissionBps,
         status: initialStatus,
-        paymentStatus: "UNPAID",
+        paymentStatus: isFreeCall ? "PAID" : "UNPAID",
         expiresAt,
         invoiceNumber: null,
       },
@@ -292,7 +300,7 @@ export async function createBooking(input: CreateBookingInput) {
         fromStatus: null,
         toStatus: initialStatus,
         actorType: "CLIENT",
-        reason: requiresOnlinePayment
+        reason: isFreeCall ? "Free introductory call booked" : requiresOnlinePayment
           ? "Online payment reservation created"
           : "Booking request submitted; client must contact admin",
       },
@@ -308,6 +316,10 @@ export async function createBooking(input: CreateBookingInput) {
   // This deliberately sits outside the booking transaction: email or Google
   // outages must never lose the booking request. The email journal prevents
   // duplicate delivery if a request is retried.
+  if (isFreeCall) {
+    await notifyFeeWaivedBookingApproved(booking.id).catch(error => console.error("Free call notification failed", error));
+    return { booking, payment: null };
+  }
   await notifyBookingCreated(booking.id).catch((error) =>
     console.error("Could not send booking-created notifications", booking.id, error),
   );

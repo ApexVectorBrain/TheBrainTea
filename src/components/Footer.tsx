@@ -44,9 +44,9 @@ export default function Footer() {
 
         {/* Column 2: Quick Links */}
         <div className="flex flex-col space-y-4 md:border-l md:border-muted-sage/20 md:pl-12">
-          <h4 className="font-cormorant text-xl font-semibold tracking-wide text-warm-sand">
+          <h2 className="font-cormorant text-xl font-semibold tracking-wide text-warm-sand">
             Quick Links
-          </h4>
+          </h2>
           <nav className="flex flex-col space-y-2.5">
             <Link
               href="/"
@@ -84,26 +84,20 @@ export default function Footer() {
             >
               Book Appointment
             </Link>
-            <Link
-              href="/admin/login"
-              className="font-dmsans text-sm text-warm-sand/80 hover:text-warm-sand transition-colors"
-            >
-              Admin Portal
-            </Link>
           </nav>
         </div>
 
         {/* Column 3: Contact Info */}
         <div className="flex flex-col space-y-4 md:border-l md:border-muted-sage/20 md:pl-12">
-          <h4 className="font-cormorant text-xl font-semibold tracking-wide text-warm-sand">
+          <h2 className="font-cormorant text-xl font-semibold tracking-wide text-warm-sand">
             Contact Info
-          </h4>
+          </h2>
           <div className="font-dmsans text-sm text-warm-sand/80 space-y-3 leading-relaxed">
             <p>
               <span className="block font-medium text-warm-sand">Address:</span>
-              Flat No. 8, 5th Floor, Abhimanshree Society,
+              Flat No. 8, 5th Floor, Abhimanshree Apartments 2,
               <br />
-              Baner-Pashan Link Road, above ICICI Direct, Pune - 411008
+              above ICICI Direct, Sakal Nagar, Aundh, Pune 411008
               <br />
               <span className="text-warm-sand/60 text-xs">
                 Near Sakal Nagar Metro station
@@ -132,6 +126,7 @@ export default function Footer() {
       {/* Legal / Policy Links */}
       <div className="max-w-7xl mx-auto px-6 md:px-12 border-t border-muted-sage/20 pt-8 pb-6">
         <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-dmsans">
+          <button type="button" className="text-warm-sand/70 hover:text-warm-sand text-xs" onClick={() => { try { localStorage.removeItem("tbt-analytics-consent"); for (const key of ["utmSource", "utmCampaign", "gclid", "fbclid"]) sessionStorage.removeItem(`tbt:${key}`); } catch {} window.location.reload(); }}>Cookie preferences</button>
           {[
             { name: "Terms & Conditions", href: "/terms" },
             { name: "Privacy Policy", href: "/privacy" },

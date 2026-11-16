@@ -79,14 +79,16 @@ export default function IntroOverlay() {
     if (typeof window === "undefined") return false;
     let seen = false;
     try {
-      seen = window.sessionStorage.getItem(SESSION_KEY) === "1";
+      seen = window.localStorage.getItem(SESSION_KEY) === "1";
     } catch {
       seen = false; // private mode / storage disabled — show it, self-limits per load
     }
     const prefersReduced = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
-    return !seen && !prefersReduced;
+    const params = new URLSearchParams(window.location.search);
+    const isAdVisit = [...params.keys()].some(key => key.startsWith("utm_") || key === "gclid" || key === "fbclid");
+    return window.location.pathname === "/" && !isAdVisit && !seen && !prefersReduced;
   });
   const [useCss] = useState(() =>
     typeof window === "undefined" ? false : isWebKitEngine(),
@@ -109,7 +111,7 @@ export default function IntroOverlay() {
     if (dismissedRef.current) return;
     dismissedRef.current = true;
     try {
-      window.sessionStorage.setItem(SESSION_KEY, "1");
+      window.localStorage.setItem(SESSION_KEY, "1");
     } catch {
       // ignore storage failures — worst case the intro shows again next load
     }
@@ -148,7 +150,8 @@ export default function IntroOverlay() {
 
   return (
     <div
-      aria-hidden="true"
+      role="dialog"
+      aria-label="Introduction"
       style={{
         position: "fixed",
         inset: 0,
@@ -212,7 +215,8 @@ function VideoIntro({ videoRef, onDone }) {
       muted
       autoPlay
       playsInline
-      preload="auto"
+      preload="none"
+      poster="/tbt-logo.png"
       onEnded={onDone}
       onError={onDone}
       style={{
@@ -223,7 +227,8 @@ function VideoIntro({ videoRef, onDone }) {
         backgroundColor: "transparent",
       }}
     >
-      <source src="/intro/tbt-animation.webm" type="video/webm" />
+      <source src="/intro/tbt-animation-optimized.webm" type="video/webm" />
+      <source src="/intro/tbt-intro-optimized.mp4" type="video/mp4" />
     </video>
   );
 }

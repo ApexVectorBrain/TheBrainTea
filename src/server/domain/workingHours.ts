@@ -118,3 +118,11 @@ export function isGeneratedSlotStart(
     (slot) => slot.startTime === startTime,
   );
 }
+
+/** Fifteen-minute starts within the same configured five-hour window. */
+export function generateFreeCallSlots(windows: WorkingWindow[]): GeneratedSlot[] {
+  const first = generateSlotsForWindows(windows)[0];
+  const start = first ? timeToMinutes(first.startTime) : null;
+  if (start === null) return [];
+  return Array.from({ length: 20 }, (_, i) => ({ startTime: minutesToTime(start + i * 15), endTime: minutesToTime(start + (i + 1) * 15) }));
+}
