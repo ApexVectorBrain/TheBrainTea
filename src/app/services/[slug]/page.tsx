@@ -37,6 +37,8 @@ export async function generateMetadata({
   return {
     title: `${service.name} | The Brain Tea`,
     description: service.description,
+    alternates: { canonical: `/services/${encodeURIComponent(service.slug)}` },
+    openGraph: { url: `/services/${encodeURIComponent(service.slug)}`, images: [{ url: "/social-share.jpg", width: 1200, height: 630 }] },
   };
 }
 

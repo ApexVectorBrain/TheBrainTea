@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { track } from "@/components/MarketingAnalytics";
+import { TEAM } from "@/lib/team-data";
 import { bookingPortraitStyle } from "@/lib/booking-consultants";
 
 // Service-first booking flow:
@@ -37,6 +39,8 @@ export default function BookingWizard({ services = [], initialService = "" }) {
 
   const preselected = services.find((s) => s.slug === initialService) || null;
 
+  useEffect(() => { if (preselected) track("booking_started", { booking_type: preselected.slug === "free-15-minute-call" ? "free_call" : "paid" }); }, []);
+
   const [step, setStep] = useState(preselected ? 2 : 1);
   const [selectedService, setSelectedService] = useState(preselected);
 
@@ -55,6 +59,8 @@ export default function BookingWizard({ services = [], initialService = "" }) {
     phone: "",
     age: "",
     emergencyContact: "",
+    referralSource: "",
+    referralDoctor: "",
     gdprConsent: false,
   });
 
@@ -122,7 +128,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
       setSelectedSlot(null);
       try {
         const res = await fetch(
-          `/api/bookings/available-slots?therapist=${selectedConsultant.slug}&date=${selectedDate}`,
+          `/api/bookings/available-slots?therapist=${selectedConsultant.slug}&date=${selectedDate}&service=${encodeURIComponent(selectedService.slug)}`,
         );
         const data = await res.json();
         if (cancelled) return;
@@ -141,7 +147,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
     return () => {
       cancelled = true;
     };
-  }, [selectedConsultant, selectedDate]);
+  }, [selectedConsultant, selectedDate, selectedService]);
 
   const handleClientDetailChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -155,6 +161,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
     if (step === 1) {
       if (!selectedService)
         return setErrorMsg("Please select a service to continue.");
+      track("booking_started", { booking_type: selectedService.slug === "free-15-minute-call" ? "free_call" : "paid" });
     } else if (step === 2) {
       if (!selectedConsultant)
         return setErrorMsg("Please choose a consultant to continue.");
@@ -162,9 +169,9 @@ export default function BookingWizard({ services = [], initialService = "" }) {
       if (!selectedDate || !selectedSlot)
         return setErrorMsg("Please select an available date and time slot.");
     } else if (step === 4) {
-      const { name, email, phone, age, emergencyContact, gdprConsent } =
+      const { name, email, phone, age, referralSource, referralDoctor, gdprConsent } =
         clientDetails;
-      if (!name || !email || !phone || !age || !emergencyContact)
+      if (!name || !email || !phone || !age || !referralSource || (referralSource === "doctor" && !referralDoctor.trim()))
         return setErrorMsg("Please fill out all client information fields.");
       if (!gdprConsent)
         return setErrorMsg(
@@ -197,6 +204,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
           date: selectedDate,
           time: selectedSlot.startTime,
           ...clientDetails,
+          ...Object.fromEntries(["utmSource", "utmCampaign", "gclid", "fbclid"].flatMap(key => { try { const v = sessionStorage.getItem(`tbt:${key}`); return v ? [[key, v]] : []; } catch { return []; } })),
         }),
       });
       const data = await res.json();
@@ -206,6 +214,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
         return;
       }
       const booking = data.booking;
+      if (booking.status !== "CONFIRMED") track("booking_submitted", { booking_type: selectedService.slug === "free-15-minute-call" ? "free_call" : "paid", value: booking.amountMinor / 100, currency: "INR", booking_id: booking.id });
       if (data.payment?.checkoutUrl) {
         window.location.assign(data.payment.checkoutUrl);
         return;
@@ -222,7 +231,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
     }
   };
 
-  const fee = selectedConsultant?.feeMinor ?? 0;
+  const fee = selectedService?.slug === "free-15-minute-call" ? 0 : selectedConsultant?.feeMinor ?? 0;
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -230,39 +239,40 @@ export default function BookingWizard({ services = [], initialService = "" }) {
         <h1 className="font-cormorant text-5xl font-semibold text-charcoal mb-3">
           Reserve Your Space
         </h1>
-        <p className="text-sage text-base">
+        <p className="text-forest-slate text-base">
           A deliberate step towards emotional clarity and grounded presence.
         </p>
       </div>
 
       {/* Progress Indicators */}
-      <div className="flex justify-between mb-10 border-b border-mist/35 pb-6 text-xs tracking-wider uppercase text-sage">
+      <div className="flex justify-between mb-10 border-b border-mist/35 pb-6 text-xs tracking-wider uppercase text-forest-slate">
         {STEPS.map((item) => (
           <div
             key={item.stepNum}
+            aria-current={step === item.stepNum ? "step" : undefined}
             className={`flex flex-col items-center gap-1 transition-all ${
               step >= item.stepNum
                 ? "opacity-100 font-semibold text-forest"
-                : "opacity-40"
+                : "opacity-100"
             }`}
           >
             <span
               className={`h-8 w-8 rounded-full flex items-center justify-center border ${
                 step >= item.stepNum
                   ? "border-forest bg-forest text-warm-white"
-                  : "border-sage/40 text-sage"
+                  : "border-sage/40 text-forest-slate"
               }`}
             >
               0{item.stepNum}
             </span>
-            <span className="text-[10px] md:text-xs mt-1">{item.label}</span>
+            <span className="text-xs mt-1 normal-case tracking-normal">{item.label}</span>
           </div>
         ))}
       </div>
 
-      <div className="glass-card p-8 md:p-12 rounded-2xl border border-mist/30 shadow-warm-soft relative">
+      <div className="glass-card p-5 sm:p-8 md:p-12 rounded-2xl border border-mist/30 shadow-warm-soft relative">
         {errorMsg && (
-          <div className="mb-6 p-4 rounded bg-rose-50 border border-red-200 text-red-700 text-sm font-medium">
+          <div role="alert" className="mb-6 p-4 rounded bg-rose-50 border border-red-200 text-red-700 text-sm font-medium">
             {errorMsg}
           </div>
         )}
@@ -273,7 +283,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
             <h2 className="font-cormorant text-3xl font-semibold text-charcoal mb-4 border-b border-mist/20 pb-2">
               Select a Service
             </h2>
-            <p className="text-sage mb-6 text-sm">
+            <p className="text-forest-slate mb-6 text-sm">
               Choose the kind of session you&apos;re looking for. Next, you will
               pick the consultant who offers it.
             </p>
@@ -297,29 +307,29 @@ export default function BookingWizard({ services = [], initialService = "" }) {
             ) : (
               <div className="space-y-4 mb-8">
                 {services.map((service) => (
-                  <div
+                  <label
                     key={service.id}
-                    onClick={() => setSelectedService(service)}
-                    className={`p-5 rounded-xl border cursor-pointer transition-all ${
+                    className={`block p-5 rounded-xl border cursor-pointer transition-all focus-within:ring-2 focus-within:ring-ocean ${
                       selectedService?.id === service.id
                         ? "border-forest bg-warm-white shadow-sm ring-1 ring-forest/10"
                         : "border-mist/40 bg-warm-white/40 hover:border-sage"
                     }`}
                   >
+                    <input type="radio" name="service" value={service.id} checked={selectedService?.id === service.id} onChange={() => setSelectedService(service)} className="sr-only" />
                     <div className="flex justify-between items-start gap-4">
                       <div>
-                        <h4 className="font-cormorant text-xl font-bold text-charcoal">
+                        <h3 className="font-cormorant text-xl font-bold text-charcoal">
                           {service.name}
-                        </h4>
-                        <p className="text-sage text-xs leading-relaxed mt-1">
+                        </h3>
+                        <p className="text-forest-slate text-sm leading-relaxed mt-1">
                           {service.description}
                         </p>
                       </div>
-                      <span className="text-xs text-sage shrink-0 mt-1">
-                        {service.durationMinutes} min
+                      <span className="text-xs text-forest-slate shrink-0 mt-1">
+                        {service.durationMinutes} min{service.startingFeeMinor != null && <> · {service.startingFeeMinor === 0 ? "Free" : `from ${rupees(service.startingFeeMinor)}`}</>}
                       </span>
                     </div>
-                  </div>
+                  </label>
                 ))}
               </div>
             )}
@@ -343,7 +353,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
             {!preselected && (
               <button
                 onClick={handlePrevStep}
-                className="mb-6 flex items-center gap-2 text-sage hover:text-charcoal transition-colors text-xs font-semibold"
+                className="mb-6 flex items-center gap-2 text-forest-slate hover:text-charcoal transition-colors text-xs font-semibold"
               >
                 ← Back to Services
               </button>
@@ -351,7 +361,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
             <h2 className="font-cormorant text-3xl font-semibold text-charcoal mb-2 border-b border-mist/20 pb-2">
               Choose Your Consultant
             </h2>
-            <p className="text-sage mb-6 text-sm">
+            <p className="text-forest-slate mb-6 text-sm">
               These practitioners offer{" "}
               <span className="font-semibold text-forest">
                 {selectedService?.name}
@@ -359,8 +369,10 @@ export default function BookingWizard({ services = [], initialService = "" }) {
               . Each sets their own session fee.
             </p>
 
+            {selectedService?.slug !== "free-15-minute-call" && services.some(service => service.slug === "free-15-minute-call") && <button type="button" onClick={() => { setSelectedService(services.find(service => service.slug === "free-15-minute-call")); setSelectedConsultant(null); setErrorMsg(""); }} className="mb-6 inline-flex min-h-[44px] items-center underline font-semibold text-forest-slate">Need help choosing? Book a free introductory call</button>}
+
             {loadingConsultants ? (
-              <p className="text-sage text-sm italic py-8 text-center">
+              <p className="text-forest-slate text-sm italic py-8 text-center">
                 Loading consultants…
               </p>
             ) : consultants.length === 0 ? (
@@ -370,43 +382,21 @@ export default function BookingWizard({ services = [], initialService = "" }) {
               </p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                {consultants.map((c) => (
-                  <div
-                    key={c.id}
-                    onClick={() => setSelectedConsultant(c)}
-                    className={`p-5 rounded-xl border cursor-pointer transition-all flex gap-4 ${
-                      selectedConsultant?.id === c.id
-                        ? "border-forest bg-warm-white shadow-sm ring-1 ring-forest/10"
-                        : "border-mist/40 bg-warm-white/40 hover:border-sage"
-                    }`}
-                  >
-                    {c.photo && (
-                      <span className="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-mist/30">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={c.photo}
-                          alt={c.name}
-                          style={bookingPortraitStyle(c)}
-                          className="h-full w-full object-cover"
-                        />
+                {consultants.map((c) => {
+                  const profile = TEAM.find(member => member.slug === c.slug || (member.slug === "madhumati-dhumak" && c.slug === "dr-madhumati-dhumak"));
+                  return <article key={c.id} className="rounded-xl border border-mist/40 bg-warm-white/50">
+                    <label className={`p-5 cursor-pointer flex gap-4 rounded-xl focus-within:ring-2 focus-within:ring-ocean ${selectedConsultant?.id === c.id ? "ring-2 ring-forest bg-warm-white" : "hover:bg-warm-white"}`}>
+                      <input type="radio" name="consultant" value={c.id} checked={selectedConsultant?.id === c.id} onChange={() => setSelectedConsultant(c)} className="sr-only" />
+                      {c.photo && <span className="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-mist/30"><img src={c.photo} alt="" style={bookingPortraitStyle(c)} className="h-full w-full object-cover" /></span>}
+                      <span className="min-w-0"><span className="block font-cormorant text-xl font-bold text-charcoal">{c.name}</span>
+                        <span className="block text-forest-slate text-sm leading-relaxed mt-1 line-clamp-2">{c.bio}</span>
+                        {profile?.languages?.length > 0 && <span className="block text-sm mt-1">{profile.languages.join(", ")}</span>}
+                        <span className="block text-forest-slate font-semibold text-sm mt-2">{rupees(selectedService?.slug === "free-15-minute-call" ? 0 : c.feeMinor)} / session</span>
                       </span>
-                    )}
-                    <div className="min-w-0">
-                      <h4 className="font-cormorant text-lg font-bold text-charcoal leading-tight">
-                        {c.name}
-                      </h4>
-                      <p className="text-sage text-[11px] leading-relaxed mt-1 line-clamp-3">
-                        {c.bio}
-                      </p>
-                      <span className="text-terracotta font-semibold text-sm mt-2 inline-block">
-                        {rupees(c.feeMinor)}{" "}
-                        <span className="text-sage font-normal text-xs">
-                          / session
-                        </span>
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                    </label>
+                    <details className="px-5 pb-4 text-sm"><summary className="cursor-pointer text-forest-slate font-semibold py-2">Read more</summary><p className="leading-relaxed">{c.bio}</p>{profile?.specialisations?.length > 0 && <p className="mt-2">Areas of focus: {profile.specialisations.join(", ")}</p>}<Link href={`/team#${c.slug}`} className="inline-flex min-h-[44px] items-center underline">View profile</Link></details>
+                  </article>;
+                })}
               </div>
             )}
 
@@ -428,7 +418,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
           <div className="animate-[fadeIn_0.5s_ease-out]">
             <button
               onClick={handlePrevStep}
-              className="mb-6 flex items-center gap-2 text-sage hover:text-charcoal transition-colors text-xs font-semibold"
+              className="mb-6 flex items-center gap-2 text-forest-slate hover:text-charcoal transition-colors text-xs font-semibold"
             >
               ← Back to Consultants
             </button>
@@ -438,11 +428,12 @@ export default function BookingWizard({ services = [], initialService = "" }) {
 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start mb-8">
               <div className="md:col-span-5 flex flex-col gap-3">
-                <label className="text-xs font-bold tracking-wider uppercase text-sage">
+                <label htmlFor="booking-date" className="text-xs font-bold tracking-wider uppercase text-forest-slate">
                   Select Appointment Date
                 </label>
                 <input
                   type="date"
+                  id="booking-date"
                   value={selectedDate}
                   min={new Date().toISOString().split("T")[0]}
                   onChange={(e) => setSelectedDate(e.target.value)}
@@ -451,24 +442,25 @@ export default function BookingWizard({ services = [], initialService = "" }) {
               </div>
 
               <div className="md:col-span-7 flex flex-col gap-3">
-                <label className="text-xs font-bold tracking-wider uppercase text-sage">
+                <p id="available-times-label" className="text-xs font-bold tracking-wider uppercase text-forest-slate">
                   Available Time Slots
-                </label>
+                </p>
                 {loadingSlots ? (
-                  <p className="text-sage text-sm italic">
+                  <p className="text-forest-slate text-sm italic">
                     Loading available slots...
                   </p>
                 ) : hasAvailableSlots(slots) ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div role="group" aria-labelledby="available-times-label" className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {slots.map((slot) => (
                       <button
                         key={slot.id}
                         type="button"
                         disabled={!slot.isAvailable}
+                        aria-pressed={selectedSlot?.id === slot.id}
                         onClick={() => setSelectedSlot(slot)}
                         className={`p-3 rounded-lg border text-center text-xs transition-all ${
                           !slot.isAvailable
-                            ? "bg-mist/10 text-sage/40 border-mist/10 cursor-not-allowed"
+                            ? "bg-mist/10 text-forest-slate/40 border-mist/10 cursor-not-allowed"
                             : selectedSlot?.id === slot.id
                               ? "border-forest bg-forest text-warm-white shadow-sm font-semibold"
                               : "border-mist/40 bg-warm-white/40 hover:border-sage text-charcoal"
@@ -504,7 +496,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
           <div className="animate-[fadeIn_0.5s_ease-out]">
             <button
               onClick={handlePrevStep}
-              className="mb-6 flex items-center gap-2 text-sage hover:text-charcoal transition-colors text-xs font-semibold"
+              className="mb-6 flex items-center gap-2 text-forest-slate hover:text-charcoal transition-colors text-xs font-semibold"
             >
               ← Back to Schedule
             </button>
@@ -514,15 +506,16 @@ export default function BookingWizard({ services = [], initialService = "" }) {
 
             <form className="space-y-6">
               <div>
-                <label className="text-xs font-bold tracking-wider uppercase text-sage block mb-1">
+                <label htmlFor="booking-name" className="text-xs font-bold tracking-wider uppercase text-forest-slate block mb-1">
                   Full Name
                 </label>
                 <input
                   type="text"
                   name="name"
+                    id="booking-name"
                   value={clientDetails.name}
                   onChange={handleClientDetailChange}
-                  placeholder="Jane Doe"
+                  placeholder="Your full name"
                   className="w-full bg-warm-white/50 border-t-0 border-l-0 border-r-0 border-b border-mist/60 focus:ring-0 focus:border-forest text-charcoal py-2 px-0 transition-colors text-base"
                   required
                 />
@@ -530,12 +523,13 @@ export default function BookingWizard({ services = [], initialService = "" }) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <label className="text-xs font-bold tracking-wider uppercase text-sage block mb-1">
+                  <label htmlFor="booking-email" className="text-xs font-bold tracking-wider uppercase text-forest-slate block mb-1">
                     Email Address
                   </label>
                   <input
                     type="email"
                     name="email"
+                    id="booking-email"
                     value={clientDetails.email}
                     onChange={handleClientDetailChange}
                     placeholder="jane@example.com"
@@ -544,15 +538,16 @@ export default function BookingWizard({ services = [], initialService = "" }) {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold tracking-wider uppercase text-sage block mb-1">
+                  <label htmlFor="booking-phone" className="text-xs font-bold tracking-wider uppercase text-forest-slate block mb-1">
                     Phone Number
                   </label>
                   <input
                     type="tel"
                     name="phone"
+                    id="booking-phone"
                     value={clientDetails.phone}
                     onChange={handleClientDetailChange}
-                    placeholder="+919876543210"
+                    placeholder="10-digit mobile number"
                     className="w-full bg-warm-white/50 border-t-0 border-l-0 border-r-0 border-b border-mist/60 focus:ring-0 focus:border-forest text-charcoal py-2 px-0 transition-colors text-base"
                     required
                   />
@@ -561,12 +556,13 @@ export default function BookingWizard({ services = [], initialService = "" }) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <label className="text-xs font-bold tracking-wider uppercase text-sage block mb-1">
+                  <label htmlFor="booking-age" className="text-xs font-bold tracking-wider uppercase text-forest-slate block mb-1">
                     Age
                   </label>
                   <input
                     type="number"
                     name="age"
+                    id="booking-age"
                     inputMode="numeric"
                     min="1"
                     max="120"
@@ -578,18 +574,11 @@ export default function BookingWizard({ services = [], initialService = "" }) {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold tracking-wider uppercase text-sage block mb-1">
-                    Emergency Contact
-                  </label>
-                  <input
-                    type="text"
-                    name="emergencyContact"
-                    value={clientDetails.emergencyContact}
-                    onChange={handleClientDetailChange}
-                    placeholder="John Doe (+919876543211)"
-                    className="w-full bg-warm-white/50 border-t-0 border-l-0 border-r-0 border-b border-mist/60 focus:ring-0 focus:border-forest text-charcoal py-2 px-0 transition-colors text-base"
-                    required
-                  />
+                  <label htmlFor="referralSource" className="text-xs font-bold uppercase text-forest-slate block mb-1">How did you hear about us?</label>
+                  <select id="referralSource" name="referralSource" value={clientDetails.referralSource} onChange={handleClientDetailChange} className="w-full p-3" required>
+                    <option value="">Please select</option><option value="google">Google search</option><option value="social">Instagram or Facebook</option><option value="friend_family">Friend or family</option><option value="doctor">Doctor</option><option value="workplace">Workplace</option><option value="school">School or college</option><option value="other">Other</option>
+                  </select>
+                  {clientDetails.referralSource === "doctor" && <label className="block mt-3">Doctor’s name<input name="referralDoctor" value={clientDetails.referralDoctor} onChange={handleClientDetailChange} className="w-full p-3" required /></label>}
                 </div>
               </div>
 
@@ -605,7 +594,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
                 />
                 <label
                   htmlFor="gdprConsent"
-                  className="text-xs text-sage leading-relaxed select-none"
+                  className="text-xs text-forest-slate leading-relaxed select-none"
                 >
                   I consent to the collection and secure storage of my contact
                   and health information in accordance with the{" "}
@@ -617,9 +606,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
                   >
                     Privacy Policy
                   </Link>{" "}
-                  and India IT Act guidelines. I understand my records are
-                  encrypted and accessible only to my therapist and clinical
-                  admins.
+                  and the applicable privacy practices described there.
                 </label>
               </div>
             </form>
@@ -641,7 +628,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
           <div className="animate-[fadeIn_0.5s_ease-out]">
             <button
               onClick={handlePrevStep}
-              className="mb-6 flex items-center gap-2 text-sage hover:text-charcoal transition-colors text-xs font-semibold"
+              className="mb-6 flex items-center gap-2 text-forest-slate hover:text-charcoal transition-colors text-xs font-semibold"
             >
               ← Back to Details
             </button>
@@ -651,7 +638,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
 
             <div className="bg-warm-white/50 p-6 rounded-xl border border-mist/20 flex flex-col gap-4 mb-8">
               <div className="flex justify-between items-center border-b border-mist/10 pb-3">
-                <span className="text-xs font-bold uppercase text-sage">
+                <span className="text-xs font-bold uppercase text-forest-slate">
                   Consultant
                 </span>
                 <span className="text-sm font-bold text-charcoal">
@@ -659,7 +646,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
                 </span>
               </div>
               <div className="flex justify-between items-center border-b border-mist/10 pb-3">
-                <span className="text-xs font-bold uppercase text-sage">
+                <span className="text-xs font-bold uppercase text-forest-slate">
                   Service
                 </span>
                 <span className="text-sm font-bold text-charcoal">
@@ -667,7 +654,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
                 </span>
               </div>
               <div className="flex justify-between items-center border-b border-mist/10 pb-3">
-                <span className="text-xs font-bold uppercase text-sage">
+                <span className="text-xs font-bold uppercase text-forest-slate">
                   Date & Time
                 </span>
                 <span className="text-sm font-bold text-charcoal">
@@ -685,17 +672,16 @@ export default function BookingWizard({ services = [], initialService = "" }) {
             </div>
 
             <div className="mb-8 p-7 rounded-xl border border-mist/40 bg-warm-white/50">
-              <h4 className="font-cormorant text-2xl font-semibold text-charcoal mb-2">
+              <h3 className="font-cormorant text-2xl font-semibold text-charcoal mb-2">
                 Completing your booking
-              </h4>
-              <p className="text-sm text-sage leading-relaxed mb-5">
-                Continue to secure payment to reserve this appointment. Your
-                time is confirmed only after payment succeeds.
+              </h3>
+              <p className="text-sm text-forest-slate leading-relaxed mb-5">
+                {fee === 0 ? "Your free call will be scheduled without payment." : "Complete your booking to see the next step for payment or confirmation."}
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row justify-between gap-4 pt-6 border-t border-mist/20">
-              <span className="text-xs text-sage leading-relaxed max-w-sm">
+              <span className="text-xs text-forest-slate leading-relaxed max-w-sm">
                 * Note: Sessions can be cancelled up to 48 hours, or rescheduled
                 up to 24 hours, before slot start.
               </span>
@@ -705,7 +691,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
                 disabled={isSubmitting}
                 className="bg-forest hover:bg-terracotta text-warm-white font-medium px-8 py-4 rounded-full transition-colors disabled:opacity-50 min-w-[200px] shadow-sm hover:shadow-md"
               >
-                {isSubmitting ? "Opening secure payment..." : "Continue to Payment"}
+                {isSubmitting ? "Submitting..." : fee === 0 ? "Book free call" : "Continue"}
               </button>
             </div>
           </div>

@@ -185,6 +185,7 @@ export default async function Services() {
     where: { isActive: true },
     orderBy: { createdAt: "asc" },
     select: {
+      id: true,
       slug: true,
       name: true,
       description: true,
@@ -203,10 +204,15 @@ export default async function Services() {
     image: s.image || FALLBACK_IMAGE,
   }));
 
-  const pricingPlans = [
-    { type: "Individual Counselling", price: "₹1,500" },
-    { type: "Couple Therapy", price: "₹2,000" },
-  ];
+  const consultants = await prisma.therapist.findMany({
+    where: { status: "APPROVED", isActive: true },
+    select: { feeMinor: true, services: { select: { id: true } }, serviceRates: { select: { serviceId: true, feeMinor: true } } },
+  });
+  const pricingPlans = dbServices.flatMap(service => {
+    const fees = consultants.filter(c => c.services.some(s => s.id === service.id))
+      .map(c => c.serviceRates.find(r => r.serviceId === service.id)?.feeMinor ?? c.feeMinor);
+    return fees.length ? [{ type: service.name, price: `₹${((service.slug === "free-15-minute-call" ? 0 : Math.min(...fees)) / 100).toLocaleString("en-IN")}` }] : [];
+  });
 
   return (
     <div className="bg-ivory min-h-screen font-dmsans">

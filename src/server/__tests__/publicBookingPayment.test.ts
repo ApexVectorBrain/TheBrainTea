@@ -21,6 +21,7 @@ describe("public booking request gateway guard", () => {
           age: 30,
           emergencyContact: "Emergency Contact",
           gdprConsent: true,
+          referralSource: "google",
           paymentOption: "PAY_NOW",
         }),
       }),

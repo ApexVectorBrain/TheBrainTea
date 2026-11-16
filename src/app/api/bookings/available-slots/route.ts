@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { releaseExpiredReservations } from "@/server/services/bookingService";
 import { SLOT_HOLDING_STATUSES } from "@/server/domain/bookingStatus";
 import { badRequest, handleApi, notFound } from "@/server/http";
-import { generateSlotsForWindows } from "@/server/domain/workingHours";
+import { generateSlotsForWindows, generateFreeCallSlots } from "@/server/domain/workingHours";
 import {
   clinicDayBounds,
   clinicDayOfWeek,
@@ -61,7 +61,8 @@ export const GET = handleApi(async (request: Request) => {
     }),
   ]);
 
-  const availableSlots = generateSlotsForWindows(weeklySlots)
+  const freeCall = searchParams.get("service") === "free-15-minute-call";
+  const availableSlots = (freeCall ? generateFreeCallSlots(weeklySlots) : generateSlotsForWindows(weeklySlots))
     .map((slot) => ({
       ...slot,
       id: `${weeklySlots[0].id}:${slot.startTime}`,

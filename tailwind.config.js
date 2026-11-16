@@ -12,18 +12,18 @@ module.exports = {
         "warm-sand": "#DAD7CA", // primary light bg
         "muted-sage": "#9FACA5", // secondary bg / divider
         "warm-tan": "#DCCDB2", // card bg
-        "teal-sage": "#698E8B", // buttons, links, accents
-        "forest-slate": "#55665D", // headings / labels
+        "teal-sage": "#3d5f5b", // buttons, links, accents
+        "forest-slate": "#43594F", // headings / labels
         "near-black": "#202623", // body text
 
         // Legacy compatibility mappings (public site)
-        forest: "#698E8B",
+        forest: "#3d5f5b",
         sage: "#9FACA5",
         mist: "#9FACA5",
         ivory: "#FDFBF7",
         sand: "#DAD7CA",
-        terracotta: "#698E8B",
-        charcoal: "#55665D",
+        terracotta: "#3d5f5b",
+        charcoal: "#43594F",
         "warm-white": "#FDFBF7",
 
         // Admin / Therapist panel palette (The Brain Tea ocean design system)

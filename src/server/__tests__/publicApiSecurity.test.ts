@@ -138,7 +138,7 @@ suite("public API data minimisation", () => {
           age: 35,
           emergencyContact: "EC (+919812345679)",
           gdprConsent: true,
-          paymentOption: "PAY_NOW",
+          referralSource: "google",
         },
       }),
     );

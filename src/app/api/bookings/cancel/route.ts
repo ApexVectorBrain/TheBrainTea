@@ -58,7 +58,7 @@ export const POST = handleApi(async (request: Request) => {
   });
 
   let finalBooking = cancelled;
-  if (booking.paymentStatus === "PAID") {
+  if (booking.paymentStatus === "PAID" && booking.amountMinor > 0) {
     finalBooking = await transitionBooking({
       bookingId,
       toStatus: "REFUND_PENDING",
@@ -69,7 +69,7 @@ export const POST = handleApi(async (request: Request) => {
 
   return NextResponse.json({
     message:
-      booking.paymentStatus === "PAID"
+      booking.paymentStatus === "PAID" && booking.amountMinor > 0
         ? "Appointment cancelled. Your refund is being processed."
         : "Appointment successfully cancelled.",
     // State-only — this endpoint is unauthenticated (the booking UUID is the

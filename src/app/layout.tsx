@@ -5,6 +5,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import WhatsAppButton from "../components/WhatsAppButton";
 import IntroOverlay from "../components/IntroOverlay";
+import MarketingAnalytics from "../components/MarketingAnalytics";
 import { SITE_URL } from "@/lib/site";
 
 const cormorant = Cormorant_Garamond({
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
     "psychotherapy Pune",
   ],
   metadataBase: new URL(SITE_URL),
-  alternates: { canonical: "/" },
+  ...(process.env.META_DOMAIN_VERIFICATION ? { verification: { other: { "facebook-domain-verification": process.env.META_DOMAIN_VERIFICATION } } } : {}),
   icons: {
     icon: [{ url: "/tbt-logo.png", type: "image/png" }],
     shortcut: "/tbt-logo.png",
@@ -42,7 +43,7 @@ export const metadata: Metadata = {
     title: "The Brain Tea | Pune Therapy Clinic",
     description:
       "Compassionate, safe, and professional mental health support in Pune for individuals, couples, and families.",
-    url: SITE_URL,
+    images: [{ url: "/social-share.jpg", width: 1200, height: 630, alt: "The Brain Tea counselling space" }],
     siteName: "The Brain Tea",
     locale: "en_IN",
     type: "website",
@@ -62,11 +63,16 @@ export default function RootLayout({
 }>) {
   const organizationSchema = {
     "@context": "https://schema.org",
-    "@type": "Organization",
+    "@type": ["MedicalClinic", "LocalBusiness"],
     name: "The Brain Tea",
     url: SITE_URL,
     logo: `${SITE_URL}/tbt-logo.png`,
     email: "admin@thebraintea.co.in",
+    telephone: "+91-93098-33817",
+    address: { "@type": "PostalAddress", streetAddress: "Flat No. 8, 5th Floor, Abhimanshree Apartments 2, above ICICI Direct, Sakal Nagar", addressLocality: "Aundh, Pune", addressRegion: "Maharashtra", postalCode: "411008", addressCountry: "IN" },
+    geo: { "@type": "GeoCoordinates", latitude: 18.54569, longitude: 73.81698 },
+    openingHoursSpecification: [{ "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"], opens: "09:00", closes: "20:00" }, { "@type": "OpeningHoursSpecification", dayOfWeek: "Sunday", opens: "10:00", closes: "16:00" }],
+    sameAs: ["https://www.instagram.com/thebraintea.community"],
     description:
       "A compassionate, safe, and professional mental health practice in Pune, dedicated to supporting individuals, couples, and families through evidence-based psychotherapy.",
   };
@@ -80,6 +86,7 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-ivory text-charcoal min-h-screen flex flex-col justify-between">
+        <MarketingAnalytics />
         <IntroOverlay />
         <Header />
         <main className="flex-grow">{children}</main>

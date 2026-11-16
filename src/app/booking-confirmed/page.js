@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import BookingConversion from "@/components/BookingConversion";
 import { CONTACT_PHONE } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -32,6 +33,8 @@ export default async function BookingConfirmedPage({ searchParams }) {
     redirect(`/booking/payment-status?bookingId=${booking.id}`);
   }
 
+  const isFreeCall = booking.service.slug === "free-15-minute-call";
+  const isConfirmed = booking.status === "CONFIRMED" && booking.paymentStatus === "PAID";
   const formattedDate = new Date(booking.dateTime).toLocaleDateString("en-IN", {
     weekday: "long",
     year: "numeric",
@@ -52,6 +55,7 @@ export default async function BookingConfirmedPage({ searchParams }) {
 
   return (
     <main className="flex-grow w-full max-w-4xl mx-auto px-6 md:px-12 py-28 text-center">
+      {booking.status === "CONFIRMED" && booking.paymentStatus === "PAID" && <BookingConversion id={booking.id} amount={booking.amountMinor} isFree={isFreeCall} />}
       <div className="glass-card rounded-2xl p-8 md:p-12 border border-mist/30 shadow-warm-soft max-w-2xl mx-auto flex flex-col items-center">
         {/* Checkmark Icon */}
         <div className="h-16 w-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mb-6 border border-emerald-100">
@@ -72,15 +76,14 @@ export default async function BookingConfirmedPage({ searchParams }) {
         </div>
 
         <span className="font-dmsans text-xs font-bold tracking-widest text-terracotta uppercase block mb-2">
-          Session Request Sent
+          {isFreeCall ? "Free Call Scheduled" : isConfirmed ? "Booking Confirmed" : "Session Request Sent"}
         </span>
         <h1 className="font-cormorant text-4xl font-semibold text-charcoal mb-4">
-          Contact Admin to Confirm
+          {isFreeCall ? "Your call is booked" : isConfirmed ? "Your appointment is confirmed" : "Contact Admin to Confirm"}
         </h1>
         <p className="font-dmsans text-sm text-sage mb-8 max-w-md">
           Your request has been saved for{" "}
-          <strong>{booking.client.email}</strong>. Please review the details
-          and contact Admin to arrange payment. This time is not yet reserved.
+          <strong>{booking.client.email}</strong>. {isFreeCall ? "Your free call is scheduled." : isConfirmed ? "Your appointment is confirmed." : "Please contact the clinic to arrange payment."}
         </p>
 
         {/* Details Table */}
@@ -143,7 +146,7 @@ export default async function BookingConfirmedPage({ searchParams }) {
               }`}
             >
               {booking.paymentStatus === "PAID"
-                ? "Paid and confirmed"
+                ? isFreeCall ? "Free and confirmed" : "Paid and confirmed"
                 : "Awaiting admin confirmation"}
             </span>
           </div>

@@ -97,6 +97,18 @@ export default function PrivacyPolicyPage() {
         </li>
       </ul>
 
+      <h2>Optional analytics and referral information</h2>
+      <p>
+        When you book, we ask how you heard about us and, if you select a
+        doctor, the doctor&apos;s name. If you accept optional analytics, the
+        site may store campaign and advertising click identifiers for the
+        current browsing session and attach them to your booking. Optional
+        analytics tags are loaded only after you accept them. You can change
+        your choice using Cookie preferences in the footer. Withdrawing your
+        choice stops optional tags on later page loads; information already
+        submitted with a booking is managed as part of that record.
+      </p>
+
       <h2>3. Clinical Confidentiality</h2>
       <p>
         Everything you discuss in a session is strictly confidential.

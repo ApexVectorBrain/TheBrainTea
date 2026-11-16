@@ -8,7 +8,7 @@ export const SITE_TAGLINE = "A space to unwind and heal";
  * details registered on the PhonePe merchant dashboard.
  */
 export const SITE_LEGAL_NAME = "The Brain Tea Mental Health Clinic";
-export const SITE_URL = "https://www.thebraintea.co.in";
+export const SITE_URL = "https://thebraintea.co.in";
 /** Effective / last-updated date shown on the legal pages. */
 export const LEGAL_EFFECTIVE_DATE = "24 July 2026";
 
@@ -42,8 +42,8 @@ export const CONTACT_PHONE = "+91 93098 33817";
 export const CONTACT_EMAIL = "admin@thebraintea.co.in";
 export const CONTACT_MAP_URL = "https://maps.app.goo.gl/HCiZkhywCh6Hshsr8";
 export const CONTACT_ADDRESS = {
-  line1: "Flat No. 8, 5th Floor, Abhimanshree Society,",
-  line2: "Baner-Pashan Link Road, above ICICI Direct, Pune - 411008",
+  line1: "Flat No. 8, 5th Floor, Abhimanshree Apartments 2,",
+  line2: "above ICICI Direct, Sakal Nagar, Aundh, Pune 411008",
   landmark: "Near Sakal Nagar Metro station",
 };
 export const CONTACT_HOURS = {
@@ -68,3 +68,6 @@ export const MAIN_NAV = [
   { name: "Internship", href: "/internship" },
   { name: "FAQ", href: "/faq" },
 ] as const;
+
+export const CAMPAIGN_PATHS = ["/anxiety-counselling-pune", "/couples-counselling-pune", "/teen-counselling-pune", "/online-counselling", "/career-counselling-pune"] as const;
+export function isCampaignRoute(pathname: string) { return (CAMPAIGN_PATHS as readonly string[]).includes(pathname); }

@@ -56,9 +56,9 @@ export default function Contact() {
                     Clinic Address
                   </h4>
                   <p className="font-dmsans text-sm text-sage leading-relaxed mt-1">
-                    Flat No. 8, 5th Floor, Abhimanshree Society,
+                    Flat No. 8, 5th Floor, Abhimanshree Apartments 2,
                     <br />
-                    Baner-Pashan Link Road, above ICICI Direct, Pune - 411008
+                    above ICICI Direct, Sakal Nagar, Aundh, Pune 411008
                   </p>
                   <p className="font-dmsans text-xs text-sage/70 mt-1">
                     Near Sakal Nagar Metro station
@@ -136,7 +136,7 @@ export default function Contact() {
               />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-forest-slate/70 to-transparent px-5 pb-4 pt-10">
                 <span className="font-dmsans text-[11px] font-semibold uppercase tracking-[0.18em] text-warm-white">
-                  Our space in Baner, Pune
+                  Our space in Sakal Nagar, Aundh, Pune
                 </span>
               </div>
             </div>

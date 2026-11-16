@@ -82,3 +82,15 @@ describe("consultant working hours", () => {
     ]);
   });
 });
+
+
+describe("free call slots", () => {
+  it("generates twenty quarter-hour starts within the configured window", async () => {
+    const { generateFreeCallSlots } = await import("../workingHours");
+    const slots = generateFreeCallSlots([{ startTime: "09:00", endTime: "14:00" }]);
+    expect(slots).toHaveLength(20);
+    expect(slots[0]).toEqual({ startTime: "09:00", endTime: "09:15" });
+    expect(slots[19]).toEqual({ startTime: "13:45", endTime: "14:00" });
+    expect(generateFreeCallSlots([])).toEqual([]);
+  });
+});
