@@ -40,6 +40,7 @@ export const GET = handleApi(
     const booking = await prisma.booking.findUnique({
       where: { id },
       select: {
+        guardianName: true, guardianPhone: true, guardianConsentAt: true,
         id: true,
         dateTime: true,
         durationMinutes: true,

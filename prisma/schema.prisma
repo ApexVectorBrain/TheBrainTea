@@ -205,6 +205,9 @@ model Booking {
   paymentStatus      String    @default("UNPAID")
   // Reservation TTL: AWAITING_PAYMENT holds expire after this and free the slot
   expiresAt          DateTime?
+  guardianName       String?
+  guardianPhone      String?
+  guardianConsentAt  DateTime?
   referralSource     String?
   referralDoctor     String?
   utmSource          String?

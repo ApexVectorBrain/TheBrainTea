@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { publicBookingView } from "../publicBooking";
+import { publicBookingView, stripNotes } from "../publicBooking";
 
 // The public booking view is an allow-list: internal financial and clinical
 // fields must never appear in a response to an unauthenticated caller, even
@@ -49,6 +49,9 @@ describe("publicBookingView", () => {
     >;
     for (const banned of [
       "commissionBps",
+      "guardianName",
+      "guardianPhone",
+      "guardianConsentAt",
       "notes",
       "cancellationReason",
       "therapistId",
@@ -67,7 +70,7 @@ describe("publicBookingView", () => {
   });
 
   it("nested therapist/service carry only public fields", () => {
-    const view = publicBookingView(fullRow);
+    const view = publicBookingView({ ...fullRow, guardianName: "Private Parent", guardianPhone: "Private Phone", guardianConsentAt: new Date() } as typeof fullRow);
     expect(view.therapist).toEqual({
       name: "Dr X",
       slug: "dr-x",
@@ -92,5 +95,11 @@ describe("publicBookingView", () => {
     const view = publicBookingView({ ...fullRow, therapist: null, service: null });
     expect(view.therapist).toBeNull();
     expect(view.service).toBeNull();
+  });
+});
+
+describe("staff list privacy", () => {
+  it("removes guardian fields and notes while preserving ordinary fields", () => {
+    expect(stripNotes([{ id: "booking", notes: "secret", guardianName: "Parent", guardianPhone: "private", guardianConsentAt: new Date() }])).toEqual([{ id: "booking" }]);
   });
 });

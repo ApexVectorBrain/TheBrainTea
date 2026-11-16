@@ -42,8 +42,8 @@ export const CONTACT_PHONE = "+91 93098 33817";
 export const CONTACT_EMAIL = "admin@thebraintea.co.in";
 export const CONTACT_MAP_URL = "https://maps.app.goo.gl/HCiZkhywCh6Hshsr8";
 export const CONTACT_ADDRESS = {
-  line1: "Flat No. 8, 5th Floor, Abhimanshree Apartments 2,",
-  line2: "above ICICI Direct, Sakal Nagar, Aundh, Pune 411008",
+  line1: "Apartments 2, Flat No. 8, 5th Floor, Ward No. 8, Abhimanshree,",
+  line2: "above ICICI Direct, Sakal Nagar, Aundh, Pune, Maharashtra 411008",
   landmark: "Near Sakal Nagar Metro station",
 };
 export const CONTACT_HOURS = {

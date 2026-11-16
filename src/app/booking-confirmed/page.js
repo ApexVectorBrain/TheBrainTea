@@ -55,7 +55,7 @@ export default async function BookingConfirmedPage({ searchParams }) {
 
   return (
     <main className="flex-grow w-full max-w-4xl mx-auto px-6 md:px-12 py-28 text-center">
-      {booking.status === "CONFIRMED" && booking.paymentStatus === "PAID" && <BookingConversion id={booking.id} amount={booking.amountMinor} isFree={isFreeCall} />}
+      {booking.status === "CONFIRMED" && booking.paymentStatus === "PAID" && <BookingConversion id={booking.id} amount={booking.amountMinor} isFree={isFreeCall} service={booking.service.slug} />}
       <div className="glass-card rounded-2xl p-8 md:p-12 border border-mist/30 shadow-warm-soft max-w-2xl mx-auto flex flex-col items-center">
         {/* Checkmark Icon */}
         <div className="h-16 w-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mb-6 border border-emerald-100">

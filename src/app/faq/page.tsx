@@ -12,10 +12,11 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
 
 export default function FAQ() {
   const faqs = [
+    { question: "What is the free discovery call?", answer: "The free 10-minute discovery call helps us understand what support you are looking for and explain the next steps. We reserve a 15-minute slot for the call." },
     {
       question: "Is everything I share kept confidential?",
       answer:
-        "Yes, absolute confidentiality is the cornerstone of our therapeutic practice. Everything you discuss in our sessions is strictly confidential. Information is only shared with your explicit written consent, except in rare circumstances mandated by law (such as immediate threat of serious harm to yourself or others).",
+        "Sessions are confidential. We explain the few safety exceptions in your first session. Information is only shared with your explicit written consent, except in rare circumstances mandated by law (such as immediate threat of serious harm to yourself or others).",
     },
     {
       question: "How do I know if therapy is right for me?",

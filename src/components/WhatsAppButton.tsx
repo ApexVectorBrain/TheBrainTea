@@ -29,7 +29,7 @@ export default function WhatsAppButton() {
       </AnimatePresence>
 
       <motion.a
-        href={WHATSAPP_URL}
+        data-track-position="floating" href={WHATSAPP_URL}
         target="_blank"
         rel="noopener noreferrer"
         onMouseEnter={() => setIsHovered(true)}

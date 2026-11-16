@@ -69,7 +69,7 @@ export default function RootLayout({
     logo: `${SITE_URL}/tbt-logo.png`,
     email: "admin@thebraintea.co.in",
     telephone: "+91-93098-33817",
-    address: { "@type": "PostalAddress", streetAddress: "Flat No. 8, 5th Floor, Abhimanshree Apartments 2, above ICICI Direct, Sakal Nagar", addressLocality: "Aundh, Pune", addressRegion: "Maharashtra", postalCode: "411008", addressCountry: "IN" },
+    address: { "@type": "PostalAddress", streetAddress: "Apartments 2, Flat No. 8, 5th Floor, Ward No. 8, Abhimanshree, above ICICI Direct, Sakal Nagar", addressLocality: "Aundh, Pune", addressRegion: "Maharashtra", postalCode: "411008", addressCountry: "IN" },
     geo: { "@type": "GeoCoordinates", latitude: 18.54569, longitude: 73.81698 },
     openingHoursSpecification: [{ "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"], opens: "09:00", closes: "20:00" }, { "@type": "OpeningHoursSpecification", dayOfWeek: "Sunday", opens: "10:00", closes: "16:00" }],
     sameAs: ["https://www.instagram.com/thebraintea.community"],

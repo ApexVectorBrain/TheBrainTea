@@ -1,11 +1,19 @@
 "use client";
 import { useEffect } from "react";
 import { track } from "./MarketingAnalytics";
-export default function BookingConversion({ id, amount, isFree }: { id: string; amount: number; isFree: boolean }) {
+export default function BookingConversion({ id, amount, isFree, service }: { id: string; amount: number; isFree: boolean; service: string }) {
   useEffect(() => {
-    const key = `tbt:conversion:${id}`;
-    try { if (localStorage.getItem("tbt-analytics-consent") !== "accepted" || sessionStorage.getItem(key)) return; sessionStorage.setItem(key, "1"); } catch { return; }
-    track("booking_confirmed", { booking_type: isFree ? "free_call" : "paid", value: amount / 100, currency: "INR", booking_id: id });
-  }, [id, amount, isFree]);
+    const event = isFree ? "discovery_call_booked" : "booking_confirmed";
+    function emit() {
+      const key = `tbt:conversion:${event}:${id}`;
+      try {
+        if (localStorage.getItem("tbt-analytics-consent") !== "accepted" || sessionStorage.getItem(key)) return;
+        track(event, isFree ? { booking_id: id } : { booking_id: id, value: amount / 100, currency: "INR", service });
+        sessionStorage.setItem(key, "1");
+      } catch { return; }
+    }
+    emit(); window.addEventListener("tbt-consent-changed", emit);
+    return () => window.removeEventListener("tbt-consent-changed", emit);
+  }, [id, amount, isFree, service]);
   return null;
 }

@@ -29,6 +29,7 @@ export default async function BookPage({ searchParams }) {
     },
   });
 
+  services.sort((a, b) => Number(b.slug === "free-15-minute-call") - Number(a.slug === "free-15-minute-call"));
   const bookableServices = services.map(({ therapists, ...service }) => ({ ...service, startingFeeMinor: service.slug === "free-15-minute-call" ? 0 : Math.min(...therapists.map(t => t.serviceRates.find(r => r.serviceId === service.id)?.feeMinor ?? t.feeMinor)) }));
 
   return (

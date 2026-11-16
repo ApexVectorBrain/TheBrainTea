@@ -94,13 +94,14 @@ export default function Header() {
 
   const isDashboard = isDashboardRoute(pathname);
   if (isDashboard) return null;
-  if (isCampaignRoute(pathname)) return <header className="absolute top-0 inset-x-0 z-40 flex items-center justify-between px-6 py-4 bg-ivory"><Link href="/" aria-label="The Brain Tea home"><Logo className="w-14 h-14" /></Link><Link href="/book" className="rounded-full bg-forest-slate text-white px-6 py-3">Book</Link></header>;
+  if (isCampaignRoute(pathname)) return <header className="absolute top-0 inset-x-0 z-40 flex items-center justify-between px-6 py-4 bg-ivory"><Link href="/" aria-label="The Brain Tea home"><Logo className="w-14 h-14" /></Link></header>;
 
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "About", href: "/about" },
     { name: "Meet The Team", href: "/team" },
     { name: "Services", href: "/services" },
+    { name: "Workshops", href: "/workshops" },
     { name: "Internship", href: "/internship" },
     { name: "FAQ", href: "/faq" },
   ];

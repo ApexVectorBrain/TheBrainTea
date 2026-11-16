@@ -40,3 +40,46 @@ Send the team the staging-site origin followed by each path below. These pages m
 - `/privacy`, `/terms` and `/refund-policy` — policy wording, consent and operational review.
 
 Ask the clinic to approve clinical, privacy and operational claims. Ask marketing to approve campaign wording, audience, visuals, search snippets, tracking definitions and the share image, and supply the GTM container ID and Meta verification value. A staging walkthrough should cover phone and desktop sizes, payment and free-call confirmations, cancellation and consent choices before launch.
+
+## November review implementation
+
+Changes are developed sequentially and held for one final release. Testimonials
+remain unchanged per Madhumati. The discovery-call display name is now ten
+minutes; the stable `free-15-minute-call` slug and fifteen-minute reservation stay.
+The setup script updates the existing service name and couples description without
+resetting consultant assignments. Run only after verifying the database target.
+
+Guardian name, phone and booking-consent timestamp are additive Booking fields.
+Apply the schema before deploying this code. Public bookings below age 18 require
+all three inputs; existing records receive no fabricated consent. Staff detail
+views display these details; anonymous responses and staff lists omit them.
+Clinic approval of the consent wording is still required.
+
+Campaign routes share the requested layout and supplied headline/audience copy.
+Practitioner matches and most FAQ answers still need clinic confirmation; current
+neutral guidance is not final approved copy. Confirm Aundh versus Baner, supported
+ages, online languages/locations, payment support and career testing. Languages
+missing in team-data.ts must be supplied by the clinic; do not infer them.
+Populate src/lib/workshops.ts with confirmed titles, ISO timestamps including
++05:30, feeMinor and capacity before release. No workshop data has been invented.
+
+PUBLIC_MARKETING_LAUNCH_READY=true enables campaign/workshop indexing and sitemap
+inclusion. Leave unset on previews. Enable only after all pending content is
+approved on the production deployment; retain sensitive-page noindex behavior.
+
+Tracking contract: discovery_call_booked {booking_id}; booking_started {service};
+booking_confirmed {booking_id,value,currency,service}; whatsapp_click and
+phone_click {position}; workshop_interest {workshop_name}. A workshop click emits
+one WhatsApp event plus one workshop-interest event. Confirmation conversions are
+browser events requiring the confirmation page and consent; delayed consent on
+that page is supported. Deduplication is per browser session and booking/event.
+Keep booking_submitted diagnostic-only. Configure the four main ad conversions in
+GTM and verify actual IDs, consent and sanitized payloads in Preview before ads.
+
+Release checks: mobile 390 px, desktop 1440 px, guardian ages 17/18, free/paid
+booking, leave/overlap rules, consent accepted/rejected and delayed consent,
+production canonical/robots/sitemap, workshop links, and all campaign CTAs.
+No live schema push, catalogue write, advertising setup or deployment is implied
+by the local implementation.
+
+Clinic confirmation: use the Aundh address supplied by the owner: Apartments 2, Flat No. 8, 5th Floor, Ward No. 8, Abhimanshree, above ICICI Direct, Sakal Nagar, Aundh, Pune, Maharashtra 411008. The Baner location in the review PDF is superseded. Other content and marketing inputs remain pending.

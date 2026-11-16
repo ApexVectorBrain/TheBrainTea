@@ -41,6 +41,7 @@ export const RESERVATION_TTL_MINUTES = 30;
 const BOOKING_TRANSACTION_OPTIONS = { maxWait: 10_000, timeout: 20_000 };
 
 export interface CreateBookingInput {
+  guardianName?: string; guardianPhone?: string; guardianConsent?: boolean;
   referralSource?: string; referralDoctor?: string; utmSource?: string; utmCampaign?: string; gclid?: string; fbclid?: string;
   therapistSlug: string;
   serviceSlug: string;
@@ -182,6 +183,7 @@ async function assertNoOverlappingBooking(
 }
 
 export async function createBooking(input: CreateBookingInput) {
+  if (input.client.age < 18 && (!input.guardianName?.trim() || input.guardianName.trim().length < 2 || !input.guardianPhone?.trim() || input.guardianPhone.trim().length < 8 || input.guardianConsent !== true)) throw badRequest("Parent or guardian name, phone and consent are required for under-18 bookings");
   const providerName = defaultPaymentProviderName();
   // Manual is deliberately retained for desk-arranged payments. Every other
   // configured provider uses the secure online checkout reservation flow.
@@ -259,6 +261,9 @@ export async function createBooking(input: CreateBookingInput) {
         therapistId: therapist.id,
         serviceId: service.id,
         clientId: client.id,
+        guardianName: input.client.age < 18 ? input.guardianName.trim() : null,
+        guardianPhone: input.client.age < 18 ? input.guardianPhone.trim() : null,
+        guardianConsentAt: input.client.age < 18 ? new Date() : null,
         referralSource: input.referralSource, referralDoctor: input.referralDoctor,
         utmSource: input.utmSource, utmCampaign: input.utmCampaign, gclid: input.gclid, fbclid: input.fbclid,
         dateTime: input.dateTime,

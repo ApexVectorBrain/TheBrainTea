@@ -147,7 +147,7 @@ async function main() {
       durationMinutes: 50,
       priceMinor: 220000,
       description:
-        "Structured mediation to enhance relational dynamics, dismantle communication barriers, and restore intimacy — for couples and families at any stage.",
+        "Sessions for couples and families to work through conflict, communication and boundaries.",
       tagline: "Reconnect through structured, guided conversation.",
       image: "/team/office2.jpg",
       suitableFor: [

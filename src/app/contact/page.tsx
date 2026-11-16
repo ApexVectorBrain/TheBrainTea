@@ -56,9 +56,9 @@ export default function Contact() {
                     Clinic Address
                   </h4>
                   <p className="font-dmsans text-sm text-sage leading-relaxed mt-1">
-                    Flat No. 8, 5th Floor, Abhimanshree Apartments 2,
+                    Apartments 2, Flat No. 8, 5th Floor, Ward No. 8, Abhimanshree,
                     <br />
-                    above ICICI Direct, Sakal Nagar, Aundh, Pune 411008
+                    above ICICI Direct, Sakal Nagar, Aundh, Pune, Maharashtra 411008
                   </p>
                   <p className="font-dmsans text-xs text-sage/70 mt-1">
                     Near Sakal Nagar Metro station
@@ -146,7 +146,7 @@ export default function Contact() {
               {/* Using a clean filter on standard iframe embed to keep aesthetics matching the ivory/sand look */}
               <iframe
                 title="The Brain Tea Location Map"
-                src="https://www.google.com/maps?q=Abhimanshree+Society%2C+Baner-Pashan+Link+Road%2C+Pune+411008&output=embed"
+                src="https://www.google.com/maps?q=Apartments+2%2C+Flat+8%2C+Abhimanshree%2C+above+ICICI+Direct%2C+Sakal+Nagar%2C+Aundh%2C+Pune+411008&output=embed"
                 width="100%"
                 height="100%"
                 style={{

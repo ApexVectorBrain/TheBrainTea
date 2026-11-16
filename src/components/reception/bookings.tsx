@@ -46,6 +46,7 @@ export interface BookingRow {
 }
 
 export interface BookingDetail extends BookingRow {
+  guardianName?: string; guardianPhone?: string; guardianConsentAt?: string;
   taxMinor: number;
   cancellationReason: string | null;
   expiresAt: string | null;
@@ -321,7 +322,7 @@ export function BookingDetailModal({
                 Client
               </div>
               <div className="font-semibold text-ocean-deep">
-                {detail.client.name}
+                {detail.client.name}{detail.guardianName && <span className="block mt-3 text-sm">Parent/guardian: {detail.guardianName} · {detail.guardianPhone}<br />Booking consent: {detail.guardianConsentAt ? "Recorded" : "Not recorded"}</span>}
               </div>
               <div className="text-xs text-ink-muted">
                 {detail.client.email}

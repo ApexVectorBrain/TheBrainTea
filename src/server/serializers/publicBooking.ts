@@ -56,6 +56,9 @@ export function stripNotes<T extends { notes?: unknown }>(
   return rows.map((row) => {
     const rest = { ...row } as Record<string, unknown>;
     delete rest.notes;
+    delete rest.guardianName;
+    delete rest.guardianPhone;
+    delete rest.guardianConsentAt;
     return rest as Omit<T, "notes">;
   });
 }

@@ -85,7 +85,7 @@ export default function Home() {
       num: "01",
       title: "Reach Out",
       description:
-        "Send us a WhatsApp message or fill out the contact form. We'll respond within 24 hours.",
+        "Send us a WhatsApp message or fill out the contact form. We reply within 15 minutes, 9 am–8 pm (Sundays 10 am–4 pm).",
     },
     {
       num: "02",
@@ -174,8 +174,7 @@ export default function Home() {
                 </h1>
                 <p className="text-sm md:text-base text-forest-slate leading-relaxed mb-8 font-dmsans text-pretty">
                   Compassionate, evidence-based therapy for individuals,
-                  couples, and families. A warm, clinical sanctuary to begin
-                  your healing journey.
+                  couples, and families. A space where you lead, at your own pace.
                 </p>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                   <Link
@@ -184,7 +183,7 @@ export default function Home() {
                   >
                     Book a Consultation
                   </Link>
-                  <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="border border-forest-slate text-forest-slate text-center font-semibold px-6 py-3.5 rounded-full text-sm">Chat on WhatsApp</a>
+                  <a data-track-position="hero" href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="border border-forest-slate text-forest-slate text-center font-semibold px-6 py-3.5 rounded-full text-sm">Chat on WhatsApp</a>
                   <Link
                     href="/services"
                     className="border border-teal-sage/30 text-teal-sage hover:bg-teal-sage hover:text-warm-sand text-center font-semibold px-8 py-3.5 rounded-full transition-all duration-300 btn-shimmer text-sm"
@@ -345,7 +344,7 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <div className="relative z-30 text-center mt-8"><a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[44px] items-center rounded-full bg-warm-white px-6 py-3 text-forest-slate font-semibold">Ask us on WhatsApp</a></div>
+          <div className="relative z-30 text-center mt-8"><a data-track-position="hero" href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[44px] items-center rounded-full bg-warm-white px-6 py-3 text-forest-slate font-semibold">Ask us on WhatsApp</a></div>
         </div>
 
         {/* Section Transition Curve (concave dip flowing back to warm white) */}
@@ -491,12 +490,10 @@ export default function Home() {
               {/* Safe Space Assurance Badge */}
               <div className="bg-muted-sage/10 border border-muted-sage/20 p-5 rounded-2xl space-y-2 mb-6 max-w-lg shadow-sm">
                 <h3 className="font-cormorant text-lg font-semibold text-teal-sage flex items-center gap-2">
-                  <span>🍃</span> Sanctuary &amp; Confidentiality Guarantee
+                  <span>🍃</span> Confidential sessions
                 </h3>
                 <p className="text-sm text-forest-slate leading-relaxed font-dmsans">
-                  Every session is conducted with absolute privacy under strict
-                  clinical ethics. Your session speed, topics of discussion, and
-                  emotional boundaries are completely controlled by you.
+                  Sessions are confidential. We explain the few safety exceptions in your first session. Your pace and boundaries guide our work.
                 </p>
               </div>
 
@@ -590,7 +587,7 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             {/* WhatsApp CTA */}
             <a
-              href={whatsappUrl}
+              data-track-position="hero" href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba59] text-white font-semibold px-8 py-3.5 rounded-full shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 btn-shimmer"

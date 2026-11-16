@@ -39,7 +39,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
 
   const preselected = services.find((s) => s.slug === initialService) || null;
 
-  useEffect(() => { if (preselected) track("booking_started", { booking_type: preselected.slug === "free-15-minute-call" ? "free_call" : "paid" }); }, []);
+  useEffect(() => { if (preselected) track("booking_started", { service: preselected.slug }); }, []);
 
   const [step, setStep] = useState(preselected ? 2 : 1);
   const [selectedService, setSelectedService] = useState(preselected);
@@ -58,6 +58,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
     email: "",
     phone: "",
     age: "",
+    guardianName: "", guardianPhone: "", guardianConsent: false,
     emergencyContact: "",
     referralSource: "",
     referralDoctor: "",
@@ -154,6 +155,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
     setClientDetails((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
+      ...(name === "age" && Number(value) >= 18 ? { guardianName: "", guardianPhone: "", guardianConsent: false } : {}),
     }));
   };
 
@@ -161,7 +163,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
     if (step === 1) {
       if (!selectedService)
         return setErrorMsg("Please select a service to continue.");
-      track("booking_started", { booking_type: selectedService.slug === "free-15-minute-call" ? "free_call" : "paid" });
+      track("booking_started", { service: selectedService.slug });
     } else if (step === 2) {
       if (!selectedConsultant)
         return setErrorMsg("Please choose a consultant to continue.");
@@ -173,6 +175,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
         clientDetails;
       if (!name || !email || !phone || !age || !referralSource || (referralSource === "doctor" && !referralDoctor.trim()))
         return setErrorMsg("Please fill out all client information fields.");
+      if (Number(age) < 18 && (!clientDetails.guardianName.trim() || !clientDetails.guardianPhone.trim() || !clientDetails.guardianConsent)) return setErrorMsg("Please provide parent or guardian details and consent.");
       if (!gdprConsent)
         return setErrorMsg(
           "You must consent to the Privacy Policy and IT Act terms.",
@@ -204,7 +207,10 @@ export default function BookingWizard({ services = [], initialService = "" }) {
           date: selectedDate,
           time: selectedSlot.startTime,
           ...clientDetails,
-          ...Object.fromEntries(["utmSource", "utmCampaign", "gclid", "fbclid"].flatMap(key => { try { const v = sessionStorage.getItem(`tbt:${key}`); return v ? [[key, v]] : []; } catch { return []; } })),
+          guardianName: Number(clientDetails.age) < 18 ? clientDetails.guardianName : undefined,
+          guardianPhone: Number(clientDetails.age) < 18 ? clientDetails.guardianPhone : undefined,
+          guardianConsent: Number(clientDetails.age) < 18 ? clientDetails.guardianConsent : undefined,
+          ...Object.fromEntries(["utmSource", "utmCampaign", "gclid", "fbclid"].flatMap(key => { try { const v = localStorage.getItem("tbt-analytics-consent") === "accepted" ? sessionStorage.getItem(`tbt:${key}`) : null; return v ? [[key, v]] : []; } catch { return []; } })),
         }),
       });
       const data = await res.json();
@@ -369,7 +375,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
               . Each sets their own session fee.
             </p>
 
-            {selectedService?.slug !== "free-15-minute-call" && services.some(service => service.slug === "free-15-minute-call") && <button type="button" onClick={() => { setSelectedService(services.find(service => service.slug === "free-15-minute-call")); setSelectedConsultant(null); setErrorMsg(""); }} className="mb-6 inline-flex min-h-[44px] items-center underline font-semibold text-forest-slate">Need help choosing? Book a free introductory call</button>}
+            {selectedService?.slug !== "free-15-minute-call" && services.some(service => service.slug === "free-15-minute-call") && <button type="button" onClick={() => { setSelectedService(services.find(service => service.slug === "free-15-minute-call")); setSelectedConsultant(null); setErrorMsg(""); }} className="mb-6 inline-flex min-h-[44px] items-center underline font-semibold text-forest-slate">Need help choosing? Book a free 10-minute discovery call</button>}
 
             {loadingConsultants ? (
               <p className="text-forest-slate text-sm italic py-8 text-center">
@@ -574,6 +580,7 @@ export default function BookingWizard({ services = [], initialService = "" }) {
                   />
                 </div>
                 <div>
+                  {Number(clientDetails.age) > 0 && Number(clientDetails.age) < 18 && <fieldset className="mb-6 space-y-3"><legend className="font-semibold">Parent or legal guardian</legend><label className="block">Name<input name="guardianName" value={clientDetails.guardianName} onChange={handleClientDetailChange} required minLength={2} maxLength={120} className="block w-full p-3" /></label><label className="block">Phone<input type="tel" name="guardianPhone" value={clientDetails.guardianPhone} onChange={handleClientDetailChange} required minLength={8} maxLength={20} className="block w-full p-3" /></label><label className="flex gap-3"><input type="checkbox" name="guardianConsent" checked={clientDetails.guardianConsent} onChange={handleClientDetailChange} required />I am the parent or legal guardian and consent to this booking for the child.</label></fieldset>}
                   <label htmlFor="referralSource" className="text-xs font-bold uppercase text-forest-slate block mb-1">How did you hear about us?</label>
                   <select id="referralSource" name="referralSource" value={clientDetails.referralSource} onChange={handleClientDetailChange} className="w-full p-3" required>
                     <option value="">Please select</option><option value="google">Google search</option><option value="social">Instagram or Facebook</option><option value="friend_family">Friend or family</option><option value="doctor">Doctor</option><option value="workplace">Workplace</option><option value="school">School or college</option><option value="other">Other</option>

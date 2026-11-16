@@ -95,9 +95,9 @@ export default function Footer() {
           <div className="font-dmsans text-sm text-warm-sand/80 space-y-3 leading-relaxed">
             <p>
               <span className="block font-medium text-warm-sand">Address:</span>
-              Flat No. 8, 5th Floor, Abhimanshree Apartments 2,
+              Apartments 2, Flat No. 8, 5th Floor, Ward No. 8, Abhimanshree,
               <br />
-              above ICICI Direct, Sakal Nagar, Aundh, Pune 411008
+              above ICICI Direct, Sakal Nagar, Aundh, Pune, Maharashtra 411008
               <br />
               <span className="text-warm-sand/60 text-xs">
                 Near Sakal Nagar Metro station
@@ -151,7 +151,7 @@ export default function Footer() {
           reserved.
         </p>
         <p className="mt-2 md:mt-0">
-          Confidentiality guaranteed. Professional Mental Health Services.
+          Sessions are confidential, with safety exceptions explained in your first session. Professional Mental Health Services.
         </p>
       </div>
     </footer>

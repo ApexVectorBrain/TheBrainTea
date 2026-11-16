@@ -149,7 +149,7 @@ export default async function TeamPage() {
                               {member.languages.join(", ")}
                             </p>
                           </div>
-                        ) : null}
+                        ) : <p className="text-sm text-forest-slate">Languages: please confirm with the clinic.</p>}
                       </div>
                     </div>
 
