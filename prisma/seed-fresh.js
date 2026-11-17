@@ -10,6 +10,7 @@
  */
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
+const approvedFees = require("./approved-consultant-fees.json");
 const { newPublicConsultants } = require("./public-roster.json");
 
 const prisma = new PrismaClient();
@@ -233,7 +234,7 @@ She believes therapy is not about “fixing” a person, but about creating the 
         slug: consultant.slug,
         bio: consultant.bio,
         photo: consultant.photo,
-        feeMinor: consultant.feeMinor ?? 150000,
+        feeMinor: approvedFees[consultant.slug] ?? consultant.feeMinor ?? 150000,
         status: "APPROVED",
         isActive: true,
         services: { connect: [{ id: individualCounselling.id }] },

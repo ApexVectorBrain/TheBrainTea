@@ -1,85 +1,112 @@
-# Marketing and launch handoff
+# Launch checklist — attention needed today
 
-The advertising team supplies `NEXT_PUBLIC_GTM_ID` (format `GTM-XXXXXXX`), Meta domain-verification code, approved campaign copy, clinician registration and languages, and a 1200 x 630 share image. Do not use example IDs or unverified qualifications. Set public environment variables in the hosting provider and redeploy; never put secrets into public variables. GTM is not loaded until visitors accept optional analytics cookies. Coordinate tag consent behavior and confirm no names, phones, therapist names, health concerns or other sensitive data are sent. The booking UUID is a pseudonymous identifier: review its use with the privacy lead before enabling tags.
+Updated 17 November 2026. This document contains only unfinished work.
+The full release is not live yet. Complete changes one at a time, check each,
+then publish one final release. Keep all work on `feat/november-website-review`
+until the owner authorizes merging and deployment.
 
-1. Apply the additive Prisma schema to a staging database (`npx prisma db push`), then run `node prisma/setup-free-call.js`. On first creation this script attaches active approved consultants to the free call; review participation and schedules before launch. Later runs preserve the service offering assignments, so add or remove consultants through the admin portal. Netlify currently runs this script at each deploy. Verify a free call reserves a 15-minute slot, cannot overlap a paid session or leave, generates the correct notifications and never opens checkout. Confirm cancellation, email, and calendar behavior with the clinic. Do not seed or reset a populated database.
-2. Confirm the database prices and per-service consultant overrides in the admin portal. Team, services and booking read the same live rates; check each service and consultant on staging.
-3. Set `NEXT_PUBLIC_GTM_ID` only after the marketing team provides its real container ID. In GTM Preview verify analytics is absent before consent and that accepting consent enables it. Check `booking_started`, `booking_submitted` (a request, not a confirmed payment), `booking_confirmed` (confirmed free call), `whatsapp_click` and `phone_click`. Paid gateway confirmations are emitted on the confirmation page after the booking is marked paid and confirmed; verify redirect, return and deduplication behavior before optimizing ads. Do not treat a pending request as a paid conversion. Test declined consent and browser storage restrictions. Attribution parameters are captured only after consent and only from the current landing URL; ask marketing to validate attribution reporting.
-4. The five campaign routes are draft placeholders with noindex, not approved final landing pages. Obtain and review approved copy, practitioner matches, qualifications, fees, photos, FAQ and destination links. Complete the requested ad-page structure and remove noindex only after approval, then add to the sitemap and test mobile performance, metadata and booking links. Confirm the free-call service is enabled before using those links.
-5. Obtain the Meta verification value, set `META_DOMAIN_VERIFICATION` in the hosting environment and redeploy; verify in Meta Business Settings. Never expose account access tokens in browser code.
-6. Confirm the address, hours and Google Maps listing with the clinic. Confirm practitioner registration, languages, and service offerings before publishing claims. Update `src/lib/team-data.ts` and coordinate existing database roster records, keeping prices in the database.
-7. In Search Console, verify the domain, submit `/sitemap.xml`, inspect the canonical URLs and request recrawls. Confirm the admin login has noindex and remains crawlable. The URL-removal tool is temporary and should not replace noindex. Validate structured data, social previews and final landing pages after deployment.
-8. Use a staging environment for the full mobile booking, consent, cancellation, payment, calendar and email checks; run Lighthouse and accessibility checks. Confirm tracking, campaign copy, price and clinic approval before ads go live. Verify production after deployment.
+## 1. What you need from Madhumati now
 
-The guide proposed a 15-minute-call service and moving emergency contact collection to intake; confirm the clinic's intake workflow covers that information. Do not turn on ads until the clinic has confirmed operational capacity and the free-call workflow is tested with its calendar provider.
+Send these questions together so the remaining content can be finished today:
 
-## Material to send for review
+- Please confirm the languages spoken by Ananya Sunil Nair, Ananya Saxena,
+  Sharayu, Gauri, Krutika and Shwetha. Only Madhumati's languages are currently
+  populated in the team data.
+- The PDF already supplies these practitioner suggestions. Ask Madhumati only
+  to confirm or correct them, as the PDF requests:
+  - Anxiety: Shwetha Jayakrishnan, Sharayu Harpale, Krutika A. Sonigra, Gauri Ghorpade.
+  - Couples/marriage: Krutika A. Sonigra, Gauri Ghorpade, Madhumati Dhumak.
+  - Children/teenagers: Madhumati Dhumak (adolescents); confirm any others and the youngest age accepted.
+  - Online: all seven psychologists.
+  - Career/academic: the PDF explicitly leaves the lead practitioner for the clinic to confirm.
+- Please confirm who offers the free discovery call and that their schedules
+  are ready to receive bookings.
+- Please confirm the parent/guardian checkbox wording:
+  “I am the parent or legal guardian and consent to this booking for the child.”
+  Confirm how emergency-contact details will be collected during intake.
+- Please let me know the details about the December workshop.
 
-Send marketing a staging link and request approval for:
+### Campaign answers still needed
 
-- The five draft ad routes, proposed copy, calls to action, mobile layout and proposed target audiences. They remain `noindex` and require approved copy before launch.
-- The 1200 × 630 share image at `public/social-share.jpg`, page titles/descriptions, canonical URLs, structured data, and how Google and social previews will appear.
-- The analytics event names and definitions, consent behavior, whether a pseudonymous booking ID should be transmitted, click attribution, and the real GTM container ID. Request the Meta domain verification value.
-- Current booking/fee presentation and the introductory-call messaging. Agree how marketing will verify conversions in GTM Preview and Search Console.
+The PDF supplies all campaign headlines, supporting lines, audiences, shared
+steps, buttons, practitioner suggestions and FAQ questions; do not request those
+again. It supplies only one explicit FAQ answer (session count). The table below
+lists unanswered questions, not a request to rewrite the campaign copy. Reuse
+existing clinic FAQ content where it directly answers a question (first session,
+online availability and Google Meet); ask Madhumati only about remaining gaps.
 
-Separately, the clinic should confirm its address/hours/map location, practitioner credentials and languages, live prices, available services and age ranges, and who offers the free call. Confirm the emergency-contact intake process and the policy for minors before launching a child/teen service. Those are operational/clinical facts and should not be inferred from marketing copy.
+| Page | Answers needed from Madhumati |
+| --- | --- |
+| Anxiety | No new copy request: use the existing clinic first-session/online answers and the PDF session-count answer. |
+| Couples/marriage | What if a partner is unsure about coming? Do you take sides? Are pre-marital sessions offered? |
+| Children/teenagers | What is shared with parents and what stays private? Does a parent attend the first session? Can sessions fit around exams? |
+| Online | Use the existing Google Meet answer. How should effectiveness compared with in-person sessions be explained? Can clients pay from outside India? Confirm which countries the clinic can serve; the PDF already specifies English, Hindi and Marathi for the service overall. Per-practitioner languages are still needed. |
+| Career/academic | Are aptitude tests offered? Can parents join? Are sessions in person, online, or both? |
 
-The site contains preliminary mobile and keyboard improvements and an optimized intro, but a fresh Lighthouse, contrast and real-device accessibility review must be performed on staging before advertising. Provide the team the resulting report as well as the staging link.
+## 2. What you need to arrange with marketing / the domain administrator
 
-## Pages to send for approval
+- **Google DNS verification:** ask whoever manages DNS for `thebraintea.co.in`
+  to add the following TXT record. Keep existing TXT records.
+  - Host/name: `@` (or the DNS provider's root-domain format).
+  - Value: `google-site-verification=xbrrefTpMHx5zfSvyXQ1j_yUGACMRU9s2QyBFY8DWDY`
+  - After DNS propagation, marketing must complete verification in Search Console.
+- **GTM:** marketing must configure and publish the actual analytics/advertising
+  tags in the supplied container. Adding the container ID to the website does
+  not configure conversions by itself.
+- Agree whether the pseudonymous `booking_id` is permitted in the tags. Never
+  send client/guardian names, ages, phones, psychologist names or booking-reason
+  text. Check that automatic tags do not collect sensitive booking URLs or fields.
+- After all website changes are complete, use GTM Preview to check consent and
+  the events below. No website review is requested before completion.
 
-Send the team the staging-site origin followed by each path below. These pages must be reviewed on the staging deployment; they have not been published by this work.
+| Event | Meaning / required fields |
+| --- | --- |
+| `discovery_call_booked` | Confirmed free call; `booking_id` |
+| `booking_started` | Service selected; `service` |
+| `booking_confirmed` | Confirmed paid session; `booking_id`, `value` in rupees, `currency: INR`, `service` |
+| `whatsapp_click` | WhatsApp link; `position` |
+| `phone_click` | Phone link; `position` |
+| `workshop_interest` | Workshop WhatsApp link; `workshop_name` |
 
-- `/` — homepage, first-screen actions and introductory-call wording.
-- `/about` — practice description and abbreviated practitioner cards.
-- `/team` — practitioner details and database-driven fees.
-- `/services` and each `/services/<slug>` — service descriptions, availability and starting fees.
-- `/book` and `/book?service=free-15-minute-call` — booking flow, referral question, 15-minute call and confirmation.
-- `/contact` and `/faq` — contact information, hours, location and answers.
-- `/anxiety-counselling-pune`, `/couples-counselling-pune`, `/teen-counselling-pune`, `/online-counselling`, `/career-counselling-pune` — draft campaign pages. They are not approved copy and remain noindex.
-- `/privacy`, `/terms` and `/refund-policy` — policy wording, consent and operational review.
+Marketing should configure the four main advertising results:
+`discovery_call_booked`, `booking_confirmed`, `whatsapp_click`, and `phone_click`.
+Do not use pending requests / `booking_submitted` as confirmed conversions.
+Browser booking conversions require a visit to the confirmation page.
 
-Ask the clinic to approve clinical, privacy and operational claims. Ask marketing to approve campaign wording, audience, visuals, search snippets, tracking definitions and the share image, and supply the GTM container ID and Meta verification value. A staging walkthrough should cover phone and desktop sizes, payment and free-call confirmations, cancellation and consent choices before launch.
+## 3. Developer work before going live
 
-## November review implementation
+- Insert Madhumati's languages, campaign practitioner assignments, FAQ answers
+  and any corrected consent wording. Add confirmed workshops to
+  `src/lib/workshops.ts`; the page currently has no workshop entries.
+- Commit and push the latest marketing-ID, fee and content changes to the
+  feature branch. The latest ID/fee changes are currently local only.
+- Run final desktop/mobile checks after the content is complete, including
+  390 px and 1440 px layouts, keyboard use, contrast and loading performance.
+- On a separate test database, verify free and paid bookings, under-18 guardian
+  validation, availability/overlap/leave rules, cancellation, payment status,
+  email and Google Calendar behavior. Local unit tests do not replace these checks.
+- Verify no GTM loading/events before consent; accepting, declining and delayed
+  consent; attribution/referral capture; event payloads and duplicate conversions.
+- Verify the intended production database and take a backup before deployment.
+  Netlify applies the additive schema and catalogue/fee scripts before building.
+  Its fee sync updates existing paid-service overrides as well as consultant fees;
+  confirm the resulting team/services/booking prices. Never run destructive seeds.
+- After all content is complete, set `PUBLIC_MARKETING_LAUNCH_READY=true` only
+  for the production deployment. Keep previews non-indexable. This enables
+  campaign/workshop indexing and their sitemap inclusion.
+- Once the work is complete, provide the finished site for the owner's final
+  walkthrough and obtain authorization to merge/deploy. Do not create a pull
+  request unless the owner asks for one.
 
-Changes are developed sequentially and held for one final release. Testimonials
-remain unchanged per Madhumati. The discovery-call display name is now ten
-minutes; the stable `free-15-minute-call` slug and fifteen-minute reservation stay.
-The setup script updates the existing service name and couples description without
-resetting consultant assignments. Run only after verifying the database target.
+## 4. Immediately after deployment
 
-Guardian name, phone and booking-consent timestamp are additive Booking fields.
-Apply the schema before deploying this code. Public bookings below age 18 require
-all three inputs; existing records receive no fabricated consent. Staff detail
-views display these details; anonymous responses and staff lists omit them.
-Clinic approval of the consent wording is still required.
-
-Campaign routes share the requested layout and supplied headline/audience copy.
-Practitioner matches and most FAQ answers still need clinic confirmation; current
-neutral guidance is not final approved copy. Confirm Aundh versus Baner, supported
-ages, online languages/locations, payment support and career testing. Languages
-missing in team-data.ts must be supplied by the clinic; do not infer them.
-Populate src/lib/workshops.ts with confirmed titles, ISO timestamps including
-+05:30, feeMinor and capacity before release. No workshop data has been invented.
-
-PUBLIC_MARKETING_LAUNCH_READY=true enables campaign/workshop indexing and sitemap
-inclusion. Leave unset on previews. Enable only after all pending content is
-approved on the production deployment; retain sensitive-page noindex behavior.
-
-Tracking contract: discovery_call_booked {booking_id}; booking_started {service};
-booking_confirmed {booking_id,value,currency,service}; whatsapp_click and
-phone_click {position}; workshop_interest {workshop_name}. A workshop click emits
-one WhatsApp event plus one workshop-interest event. Confirmation conversions are
-browser events requiring the confirmation page and consent; delayed consent on
-that page is supported. Deduplication is per browser session and booking/event.
-Keep booking_submitted diagnostic-only. Configure the four main ad conversions in
-GTM and verify actual IDs, consent and sanitized payloads in Preview before ads.
-
-Release checks: mobile 390 px, desktop 1440 px, guardian ages 17/18, free/paid
-booking, leave/overlap rules, consent accepted/rejected and delayed consent,
-production canonical/robots/sitemap, workshop links, and all campaign CTAs.
-No live schema push, catalogue write, advertising setup or deployment is implied
-by the local implementation.
-
-Clinic confirmation: use the Aundh address supplied by the owner: Apartments 2, Flat No. 8, 5th Floor, Ward No. 8, Abhimanshree, above ICICI Direct, Sakal Nagar, Aundh, Pune, Maharashtra 411008. The Baner location in the review PDF is superseded. Other content and marketing inputs remain pending.
+- Confirm the live homepage contains the Meta verification tag, then tell
+  marketing it is live so they can verify the domain in Meta Business Settings.
+- Confirm the supplied GTM container loads only with consent and that the
+  published conversion tags fire correctly on the live domain.
+- Check live fees on team, services and booking; complete a controlled booking
+  smoke test and check the confirmation, email and calendar result.
+- Check live canonicals, public indexing, `/robots.txt` and `/sitemap.xml`.
+  Marketing should submit the sitemap and inspect URLs in Search Console.
+- Check workshop enquiries, WhatsApp/phone links, and all five campaign CTAs.
+- Start ads after the live booking and tracking checks pass.

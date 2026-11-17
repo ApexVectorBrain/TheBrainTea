@@ -44,7 +44,6 @@ export const TEAM: TeamMember[] = [
       "Neurodivergent Individual",
     ],
     languages: ["English", "Hindi", "Marathi"],
-    fee: "₹1,800 / session · Sliding scale available",
     intro: [
       "She believes that meaningful healing begins when people feel genuinely seen, heard, and understood. Her approach is deeply individualized because no two people experience life in the same way. She integrates evidence-based therapeutic approaches to create a space that adapts to each client's unique needs, pace, and goals.",
       "Her work combines insight with action, helping clients not only understand the patterns that keep them stuck but also develop healthier ways of relating to themselves and the people around them. Above all, she strives to create a therapeutic relationship built on trust, authenticity, and compassion- where clients can safely explore, heal, and grow.",
@@ -68,7 +67,6 @@ export const TEAM: TeamMember[] = [
       "Art Therapy",
       "Crisis Counselling",
     ],
-    fee: "₹1,500 / session",
     intro: [
       "Ananya takes a client-centered, integrative approach, adapting her work to each client’s story, needs, and goals. She believes that every client has an innate ability to heal and it's her duty to create a safe space to enable the client's healing and subsequent growth!",
       "She employs a client-paced, trauma informed, activity based, exploratory approach using multiple modalities as her foundation; aka, an eclectic approach. Her goal as a therapist is to help her clients' experience everything their life has to offer, to the fullest!",
@@ -93,7 +91,6 @@ export const TEAM: TeamMember[] = [
       "Rehabilitation Support",
       "Expressive Arts Therapy",
     ],
-    fee: "₹1,500 / session",
     intro: [
       "Ananya believes therapy works best as a collaborative process, built on trust, openness, and safety. Her warm, inclusive, and non-judgmental practice gives clients room to explore and understand their experiences through approaches tailored to their needs.",
     ],
@@ -116,7 +113,6 @@ export const TEAM: TeamMember[] = [
       "Relationship Difficulties",
       "Life Transitions",
     ],
-    fee: "₹1,500 / session",
     intro: [
       "Sharayu brings clinical expertise and genuine human connection together, creating a space where clients can feel heard, understood, and accepted without judgment. Her empathetic, collaborative, evidence-based approach helps people recognise unhelpful patterns, build healthier coping skills, and make meaningful, sustainable change.",
     ],

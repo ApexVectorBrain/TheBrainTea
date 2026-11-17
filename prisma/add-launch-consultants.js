@@ -8,6 +8,7 @@
  */
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
+const approvedFees = require("./approved-consultant-fees.json");
 
 const prisma = new PrismaClient();
 
@@ -184,7 +185,7 @@ async function main() {
           name: consultant.name,
           bio: consultant.bio,
           photo: consultant.photo,
-          feeMinor: 150000,
+          feeMinor: approvedFees[consultant.slug] ?? 150000,
           status: "APPROVED",
           isActive: true,
           services: { connect: [{ id: individual.id }] },
@@ -200,7 +201,7 @@ async function main() {
         slug: consultant.slug,
         bio: consultant.bio,
         photo: consultant.photo,
-        feeMinor: 150000,
+        feeMinor: approvedFees[consultant.slug] ?? 150000,
         status: "APPROVED",
         isActive: true,
         services: { connect: [{ id: individual.id }] },

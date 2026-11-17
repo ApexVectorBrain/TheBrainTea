@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     "psychotherapy Pune",
   ],
   metadataBase: new URL(SITE_URL),
-  ...(process.env.META_DOMAIN_VERIFICATION ? { verification: { other: { "facebook-domain-verification": process.env.META_DOMAIN_VERIFICATION } } } : {}),
+  other: { "facebook-domain-verification": process.env.META_DOMAIN_VERIFICATION || "5togvgo3br4ztxntblgzpuvqcpnnjv" },
   icons: {
     icon: [{ url: "/tbt-logo.png", type: "image/png" }],
     shortcut: "/tbt-logo.png",
