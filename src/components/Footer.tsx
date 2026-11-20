@@ -154,6 +154,9 @@ export default function Footer() {
           Sessions are confidential, with safety exceptions explained in your first session. Professional Mental Health Services.
         </p>
       </div>
+      <p className="mt-6 px-6 text-center text-sm font-medium font-dmsans text-warm-sand/80">
+        Made by Apex Vector
+      </p>
     </footer>
   );
 }

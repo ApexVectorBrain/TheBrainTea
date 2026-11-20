@@ -11,7 +11,7 @@ export const campaigns = {
     "questions": [
       "What happens in the first session?",
       "How many sessions will I need?",
-      "Can I do this online?"
+      "Can I do sessions online?"
     ],
     "practitioners": [
       "Shwetha Jayakrishnan",
@@ -69,7 +69,7 @@ export const campaigns = {
     ],
     "questions": [
       "Which app do you use?",
-      "Is it as effective as in person?",
+      "Is online counselling as effective as in-person counselling?",
       "Can I pay from outside India?"
     ],
     "practitioners": [
@@ -94,17 +94,29 @@ export const campaigns = {
     "questions": [
       "Do you do aptitude tests?",
       "Can parents join?",
-      "Is it in person or online?"
+      "Is the assessment in person or online?"
     ],
     "practitioners": []
   }
 } as const;
 
-// Answers supported by the PDF and the existing clinic FAQ. Remaining clinical
-// and operational answers must be confirmed rather than inferred from questions.
-export const campaignFaqAnswers: Record<string, string> = {
-  "What happens in the first session?": "The first session is a collaborative conversation. We get to know you, discuss what brings you to therapy and your goals, and give you space to ask questions.",
-  "How many sessions will I need?": "We agree on a plan together after the first one.",
-  "Can I do this online?": "Yes, online video consultations are available via Google Meet. You will need a stable internet connection and a quiet, private space.",
-  "Which app do you use?": "Online sessions are conducted via Google Meet. You will need a stable internet connection and a quiet, private space.",
-};
+type CampaignQuestion = (typeof campaigns)[keyof typeof campaigns]["questions"][number];
+
+// Clinic-supplied answers, received 20 November 2026.
+export const campaignFaqAnswers = {
+  "What happens in the first session?": "The first session is an opportunity to understand what brings you in, your concerns, and what you'd like to work towards. There's no pressure to share everything at once.",
+  "How many sessions will I need?": "There's no fixed number. We'll collaboratively decide a plan after our first session, based on your needs, goals and pace.",
+  "Can I do sessions online?": "Yes! Online sessions are conducted through Google Meet. Your meeting link is shared once your appointment and payment are confirmed.",
+  "What if my partner isn’t sure about coming?": "That's okay. You can begin individually to explore your concerns, and we can discuss how to approach couple sessions when both partners feel ready.",
+  "Do you take sides?": "We don't take sides or assign blame. We work towards understanding each person's perspective, patterns and needs, while creating space for constructive change.",
+  "Do you offer pre-marital sessions?": "Yes! Pre-marital sessions help couples explore communication, expectations, values, conflict, boundaries and life together before marriage.",
+  "What do you tell parents, and what stays private?": "We respect your privacy. Information is kept confidential, with exceptions when safety concerns or legal/ethical obligations require disclosure. These boundaries are explained at the beginning.",
+  "Does a parent need to come to the first session?": "Depending on your age and consent requirements, a parent or guardian may be involved initially. We also ensure you have space to speak privately.",
+  "Can sessions fit around exams?": "Absolutely. We understand academic schedules and work collaboratively to find timings that suit you.",
+  "Which app do you use?": "Online sessions are conducted through Google Meet. Your meeting link is shared after your slot is confirmed and payment is completed.",
+  "Is online counselling as effective as in-person counselling?": "Online counselling can be effective for many concerns. Suitability depends on your needs, circumstances and the nature of support required.",
+  "Can I pay from outside India?": "Yes! International payments are accepted through PhonePe using international cards, subject to payment eligibility and availability.",
+  "Do you do aptitude tests?": "Yes. We offer aptitude and other psychometric assessments depending on your needs and the purpose of the assessment.",
+  "Can parents join?": "Parents may be involved where appropriate, particularly for younger clients. Their involvement is discussed beforehand, keeping the individual's comfort and confidentiality in mind.",
+  "Is the assessment in person or online?": "Assessments may be conducted in person or online, depending on the test, its requirements and suitability."
+} satisfies Record<CampaignQuestion, string>;

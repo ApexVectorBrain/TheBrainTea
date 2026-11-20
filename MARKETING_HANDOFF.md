@@ -1,6 +1,6 @@
 # Launch checklist — attention needed today
 
-Updated 17 November 2026. This document contains only unfinished work.
+Updated 20 November 2026. This document contains only unfinished work.
 The full release is not live yet. Complete changes one at a time, check each,
 then publish one final release. Keep all work on `feat/november-website-review`
 until the owner authorizes merging and deployment.
@@ -24,24 +24,11 @@ Send these questions together so the remaining content can be finished today:
 - Please confirm the parent/guardian checkbox wording:
   “I am the parent or legal guardian and consent to this booking for the child.”
   Confirm how emergency-contact details will be collected during intake.
-- Please let me know the details about the December workshop.
-
-### Campaign answers still needed
-
-The PDF supplies all campaign headlines, supporting lines, audiences, shared
-steps, buttons, practitioner suggestions and FAQ questions; do not request those
-again. It supplies only one explicit FAQ answer (session count). The table below
-lists unanswered questions, not a request to rewrite the campaign copy. Reuse
-existing clinic FAQ content where it directly answers a question (first session,
-online availability and Google Meet); ask Madhumati only about remaining gaps.
-
-| Page | Answers needed from Madhumati |
-| --- | --- |
-| Anxiety | No new copy request: use the existing clinic first-session/online answers and the PDF session-count answer. |
-| Couples/marriage | What if a partner is unsure about coming? Do you take sides? Are pre-marital sessions offered? |
-| Children/teenagers | What is shared with parents and what stays private? Does a parent attend the first session? Can sessions fit around exams? |
-| Online | Use the existing Google Meet answer. How should effectiveness compared with in-person sessions be explained? Can clients pay from outside India? Confirm which countries the clinic can serve; the PDF already specifies English, Hindi and Marathi for the service overall. Per-practitioner languages are still needed. |
-| Career/academic | Are aptitude tests offered? Can parents join? Are sessions in person, online, or both? |
+- December workshops are listed as every weekend in December 2026, as the owner
+  confirmed. Exact dates/times, fees and seat counts can be added when available;
+  WhatsApp enquiries cover these details for now. Do not request the workshop
+  concepts again. For letter writing, arrange consented postal-address collection
+  with the clinic and mailing in mid-2027; no address should enter analytics.
 
 ## 2. What you need to arrange with marketing / the domain administrator
 
@@ -75,11 +62,14 @@ Browser booking conversions require a visit to the confirmation page.
 
 ## 3. Developer work before going live
 
-- Insert Madhumati's languages, campaign practitioner assignments, FAQ answers
-  and any corrected consent wording. Add confirmed workshops to
-  `src/lib/workshops.ts`; the page currently has no workshop entries.
-- Commit and push the latest marketing-ID, fee and content changes to the
-  feature branch. The latest ID/fee changes are currently local only.
+- Insert Madhumati's remaining languages, confirmed campaign practitioner assignments
+  and any corrected consent wording. FAQ answers are supplied; do not request them again.
+- Check the new workshop cards and all 15 supplied campaign FAQ answers on mobile
+  and desktop, including the conditional international-card payment wording.
+  Marketing/clinic should verify international card support on the merchant account
+  before advertising it; supplied copy is not a live gateway acceptance test.
+- Commit and push the new FAQ/workshop changes to the feature branch when requested.
+  Marketing-ID and fee changes were already pushed on 17 November.
 - Run final desktop/mobile checks after the content is complete, including
   390 px and 1440 px layouts, keyboard use, contrast and loading performance.
 - On a separate test database, verify free and paid bookings, under-18 guardian
